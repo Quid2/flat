@@ -1,0 +1,43 @@
+name:                flat
+version:             0.1.0.0
+synopsis:            Principled and efficient binary serialization.
+homepage:            http://github.com/tittoassini/flat
+license:             MIT
+license-file:        LICENSE
+author:              Pasqualino Titto Assini
+maintainer:          tittoassini@gmail.com
+category:            System
+build-type:          Simple
+cabal-version:       >=1.10
+
+library
+  exposed-modules: Data.Binary.Bits.Get,Data.ByteString.Builder.Extra,Data.Flat.Bits,Data.Flat.Class,Data.Flat.Encoder,Data.Flat.Encoding,Data.Flat.Filler,Data.Flat.Instances,Data.Flat.Run,Data.Flat.Types,Data.Flat,Data.Seq,Data.Shift,Data.ZigZag
+  --other-modules: Data
+  build-depends:       base
+                     , binary >= 0.7.5.0
+                     , bytestring
+                     , dlist
+                     , pretty >= 1.1.2.0
+                     , text
+  -- ,binary-bits,dlist,array,sequence,bits,bytestring >= 0.10.6,OddWord
+  hs-source-dirs:      src
+  default-language:    Haskell2010
+  ghc-options:  -O2 -funbox-strict-fields
+  -- -fprof-auto
+  cpp-options: -DENC_8 -DOP_ENC -DPKG_QUID2 -DLIST_BYTE -DENCLIST_DIV
+  default-extensions: CPP
+
+test-suite flat-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  other-modules: Test.Data,Test.Data2,Test.Data.Flat,Test.Data2.Flat
+  build-depends:       base
+                     , flat
+                     , tasty,tasty-hunit,tasty-quickcheck,ghc-prim,derive,text,bytestring
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
+
+source-repository head
+  type:     git
+  location: https://github.com/tittoassini/flat
