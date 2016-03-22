@@ -1,8 +1,11 @@
 {-# LANGUAGE FlexibleInstances    #-}
-{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE TypeSynonymInstances,ScopedTypeVariables #-}
 module Data.Flat.Run(flat,unflat
-                    ,Decoded
-                    ,showBits) where
+                    ,Decoded,DeserializeFailure
+                    ,Encoded(..)
+                    ,showBits
+                    ,encoded,decoded
+                    ) where
 
 import           Control.Exception
 import           Data.Binary.Bits.Get
@@ -22,6 +25,17 @@ unflat = runGetOrFail decode
 
 --unflatIncremental = Get.runGetIncremental
 -- runGet decode
+encoded :: Flat a => a -> Encoded a
+encoded = Encoded . flat
+
+-- TODO: detect left over data and give error
+decoded :: Flat a => Encoded a -> Decoded a 
+decoded = unflat . bytes
+
+-- |Encoded data, mainly useful to show it in a nicer way
+newtype Encoded a = Encoded {bytes::L.ByteString}
+
+instance Show (Encoded a) where show = unwords . map showBits . L.unpack . bytes
 
 type Decoded a = Either DeserializeFailure a
 
