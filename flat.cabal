@@ -1,5 +1,5 @@
 name:                flat
-version:             0.1.0.0
+version:             0.1.1
 synopsis:            Principled and efficient binary serialization.
 homepage:            http://github.com/tittoassini/flat
 license:             MIT
