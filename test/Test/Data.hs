@@ -42,8 +42,30 @@ data N = One
        | Five
   deriving (Eq, Ord, Read, Show, Typeable, Data, Generic, Enum)
 
-data Forest a = Forest (List (Tr a)) deriving (Eq, Ord, Read, Show, Typeable, Data, Generic)
+-- toForestD :: Forest a -> ForestD (Tr2 a)
+ -- toForestD (Forest lt) = undefined -- Forest2 (ForestD (map (\t -> let Tr2 tt = treeConv t in tt) . toList $ lt))
 
+-- toForestD (Forest lt) = undefined -- Forest2 (ForestD (map (\t -> let Tr2 tt = treeConv t in tt) . toList $ lt))
+
+toForest2 :: Forest a -> Forest2 a
+toForest2 (Forest f) = Forest2 (ForestD $ fmap toTr f)
+
+toTr :: Tr a -> TrD (Forest2 a) a
+toTr (Tr a f) = TrD a (toForest2 f)
+
+toTr2 :: Tr a -> Tr2 a
+toTr2 (Tr a (Forest f)) = Tr2 (TrD a (ForestD $ fmap toTr2 f))
+
+-- tying the recursive knot, equivalent to Forest/Tree
+data Forest2 a = Forest2 (ForestD (TrD (Forest2 a) a)) deriving (Eq, Ord, Read, Show, Typeable, Data, Generic)
+data Tr2 a = Tr2 (TrD (ForestD (Tr2 a)) a) deriving (Eq, Ord, Read, Show, Typeable, Data, Generic)
+
+-- First-order non mutually recursive
+data ForestD t = ForestD (List t) deriving (Eq, Ord, Read, Show, Typeable, Data, Generic)
+data TrD f a = TrD a f deriving (Eq, Ord, Read, Show, Typeable, Data, Generic)
+
+-- Explicit mutually recursive
+data Forest a = Forest (List (Tr a)) deriving (Eq, Ord, Read, Show, Typeable, Data, Generic)
 data Tr a = Tr a (Forest a) deriving (Eq, Ord, Read, Show, Typeable, Data, Generic)
 
 data Words = Words Word8 Word16 Word32 Word64
@@ -71,13 +93,13 @@ data Expr = ValB Bool | Or Expr Expr | If Expr Expr Expr  deriving (Eq, Ord, Rea
 
 data List a = C a (List a)
             | N
-  deriving (Eq, Ord, Read, Show, Typeable, Data, Generic ,Generic1,Functor,Foldable)
+  deriving (Eq, Ord, Read, Show, Typeable, Traversable, Data, Generic ,Generic1,Functor,Foldable)
 
 data ListS a = Nil | Cons a (ListS a)
-  deriving (Eq, Ord, Read, Show, Typeable, Data, Generic ,Generic1)
+  deriving (Eq, Ord, Read, Show, Typeable, Functor, Foldable, Traversable, Data, Generic ,Generic1)
 
 -- non-regular Haskell datatypes like:
--- Binary instances but no HasModel
+-- Binary instances but no Model
 data Nest a = NilN | ConsN (a, Nest (a, a)) deriving (Eq, Ord, Read, Show, Typeable, Data, Generic)
 
 data TN a = LeafT a | BranchT (TN (a,a)) deriving (Eq, Ord, Read, Show, Typeable, Data, Generic)

@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE TypeSynonymInstances,ScopedTypeVariables #-}
-module Data.Flat.Run(flat,unflat
+module Data.Flat.Run(flat,unflat,runGet
                     ,Decoded,DeserializeFailure
                     ,Encoded(..)
                     ,showBits
@@ -23,6 +23,9 @@ flat a = bitEncoder (encode a)
 unflat :: Flat a => L.ByteString -> Decoded a
 unflat = runGetOrFail decode
 
+--unflatWith :: Get a -> L.ByteString -> a
+-- unflatWith = runGet
+
 --unflatIncremental = Get.runGetIncremental
 -- runGet decode
 encoded :: Flat a => a -> Encoded a
@@ -32,7 +35,7 @@ encoded = Encoded . flat
 decoded :: Flat a => Encoded a -> Decoded a 
 decoded = unflat . bytes
 
--- |Encoded data, mainly useful to show it in a nicer way
+-- |Encoded data, mainly useful to show data in a nicer way
 newtype Encoded a = Encoded {bytes::L.ByteString}
 
 instance Show (Encoded a) where show = unwords . map showBits . L.unpack . bytes
