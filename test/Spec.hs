@@ -63,7 +63,7 @@ properties = testGroup "Properties"
     ,rt "List N" (prop_Flat_roundtrip:: RT (List N))
     ,rt "[Int16]" (prop_Flat_roundtrip:: RT [Int16])
     ,rt "String" (prop_Flat_roundtrip:: RT String)
-    ,rt "Text" (prop_Flat_roundtrip:: RT T.Text)
+    --,rt "Text" (prop_Flat_roundtrip:: RT T.Text)
     ,rt "ByteString" (prop_Flat_roundtrip:: RT B.ByteString)
     ,rt "Lazy ByteString" (prop_Flat_roundtrip:: RT L.ByteString)
   ]
@@ -137,10 +137,10 @@ unitTests = testGroup "Serialisation Unit tests" $ concat [
             ,s (cs 600) s600
 #endif
             -- Aligned structures
-            ,s (T.pack "") [1,0]
-            ,s (Just $ T.pack "abc") [128+1,3,97,98,99,0]
-            ,s (T.pack "abc") (al s3)
-            ,s (T.pack $ cs 600) (al s600)
+            --,s (T.pack "") [1,0]
+            --,s (Just $ T.pack "abc") [128+1,3,97,98,99,0]
+            --,s (T.pack "abc") (al s3)
+            --,s (T.pack $ cs 600) (al s600)
             ,s (B.pack $ csb 3) (al c3)
             ,s (B.pack $ csb 600) (al s600)
             ,s (L.pack $ csb 3) (al c3)
