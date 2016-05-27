@@ -1,5 +1,5 @@
-Principled and efficient binary serialization.
+Haskell implementation of [Flat](http://quid2.org) a minimalist binary data format.
 
 ### Installation
 
-Currently needs to be installed as part of the [quid2](https://github.com/tittoassini/quid2) project.
+Install as part of the [quid2](https://github.com/tittoassini/quid2) project.
