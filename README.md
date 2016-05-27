@@ -1,4 +1,4 @@
-Haskell implementation of [Flat](http://quid2.org) a minimalist binary data format.
+Haskell implementation of [Flat](http://quid2.org), a minimalist binary data format.
 
 ### Installation
 
