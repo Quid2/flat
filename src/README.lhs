@@ -37,6 +37,8 @@ A little utility function, `bits` encodes the value, `prettyShow` displays it ni
 > pp :: Flat a => a -> String
 > pp = prettyShow . bits
 
+Some encodings:
+
 > e1 = pp Center
 
 > e2 = pp (Nil::List Direction)
@@ -45,17 +47,7 @@ A little utility function, `bits` encodes the value, `prettyShow` displays it ni
 
 These encodings shows a pecularity of Flat, it uses an optimal bit-encoding rather than more usual byte-oriented one.
 
-Instances for a few common data types (Bool,Tuples, Lists, String, Text ..) are already defined (in `Data.Flat.Instances):
+... to be continued 
 
--- Serialize a value
-e1 = encoded $ Couple One Due
--- One has been encoded as '00', Due as '01', the rest is byte-padding.
 
--- Now get it back
-d1 = decoded e1 :: Decoded (Couple Number Numero)
-
--- One more time
-d2 :: Decoded (Couple Numero Number)
-d2 = decoded . Encoded . bytes $ e1
-
-See the [source code](http://github.com/tittoassini/flat/src/README.lhs) of this file. 
+See the [source code](https://github.com/tittoassini/flat/src/README.lhs) of this file. 
