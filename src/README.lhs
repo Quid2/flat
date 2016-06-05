@@ -49,5 +49,4 @@ These encodings shows a pecularity of Flat, it uses an optimal bit-encoding rath
 
 ... to be continued 
 
-
 See the [source code](https://github.com/tittoassini/flat/src/README.lhs) of this file. 

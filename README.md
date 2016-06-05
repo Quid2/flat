@@ -50,6 +50,8 @@ pp :: Flat a => a -> String
 pp = prettyShow . bits
 ```
 
+Some encodings:
+
 ```haskell
 e1 = pp Center
 ```
@@ -65,26 +67,8 @@ e3 = pp $ Cons North (Cons South Nil)
 ```
 e3 -> "<0000011>"
 
-
 These encodings shows a pecularity of Flat, it uses an optimal bit-encoding rather than more usual byte-oriented one.
 
-Instances for a few common data types (Bool,Tuples, Lists, String, Text ..) are already defined (in `Data.Flat.Instances):
+... to be continued 
 
--- To be able to serialize them we need a Flat instance
--- No big deal, it can be derived automatically.
-instance Flat Number
-instance Flat Numero
-instance (Flat a , Flat b) => Flat (Couple a b)
-
--- Serialize a value
-e1 = encoded $ Couple One Due
--- One has been encoded as '00', Due as '01', the rest is byte-padding.
-
--- Now get it back
-d1 = decoded e1 :: Decoded (Couple Number Numero)
-
--- One more time
-d2 :: Decoded (Couple Numero Number)
-d2 = decoded . Encoded . bytes $ e1
-
-See the [source code](http://github.com/tittoassini/flat/src/README.lhs) of this file. 
+See the [source code](https://github.com/tittoassini/flat/src/README.lhs) of this file. 
