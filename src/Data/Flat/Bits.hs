@@ -1,6 +1,6 @@
 {-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-module Data.Flat.Bits where
+module Data.Flat.Bits(Bits(..),bits,prettyShow) where
 
 import           Data.ByteString.Lazy           (ByteString, toStrict, unpack)
 import qualified Data.ByteString.Lazy           as L
@@ -17,7 +17,7 @@ data Bits = Bits
   deriving Show
 
 instance Pretty Bits where
-  pPrint (Bits bs n) = text . concat $ (map showBits . init $ bs) ++ [take n . showBits . last $ bs]
+  pPrint (Bits bs n) = char '<' <> (text . concat $ (map showBits . init $ bs) ++ [take n . showBits . last $ bs]) <> char '>'
 
 -- |Convert a value to Bits
 bits :: forall a. Flat a => a -> Bits

@@ -39,7 +39,6 @@ instance Flat Bool where
   encode = eBool
   decode = dBool
 
-
 ------------------- Lists
 
 {-
@@ -54,32 +53,33 @@ data List a = L0 | L1 a1 (List a) | L2 a1 a2 (List a) | L255 a1 .. a255 (List a)
 ByteString == BLOB
 -}
 
--- Indicates UTF-8 coding
--- data UTF8 a = UTF8 a deriving (Show,Eq,Typeable,Generic)
--- instance Flat a => Flat (UTF8 a)
-data UTF8 = UTF8 deriving (Show,Eq,Typeable,Generic)
+ -- Indicates UTF-8 coding
+ -- data UTF8 a = UTF8 a deriving (Show,Eq,Typeable,Generic)
+ -- instance Flat a => Flat (UTF8 a)
+
+data UTF8 = UTF8 deriving (Show,Eq,Generic)
 instance Flat UTF8
 
-data NoEnc = NoEnc deriving (Show,Eq,Typeable,Generic)
-instance Flat NoEnc
+data NoEncoding = NoEncoding deriving (Show,Eq,Generic)
+instance Flat NoEncoding
 
--- data Text e = Text (PreAligned (e (List255 Word8)))
-
-#if defined(LIST_BYTE)
--- data BLOB encoding = BLOB (PreAligned (encoding (List255 Word8))) deriving (Typeable,Generic)
+-- data String e = Text (PreAligned (e (Array Word8)))
+-- data BLOB encoding = BLOB (PreAligned (encoding (Array Word8))) deriving (Typeable,Generic)
 -- or simply, to avoid higher-order kinds:
-data BLOB encoding = BLOB encoding (PreAligned (List255 Word8)) deriving (Typeable,Generic)
--- data BLOB = BLOB (PreAligned (List255 Word8))
+data BLOB encoding = BLOB encoding (PreAligned (Array Word8)) deriving (Typeable,Generic)
+-- data BLOB = BLOB (PreAligned (Array Word8))
 -- data Encoded encoding = CLOB encoding BLOB
 
 instance Flat e => Flat (BLOB e)
 
-data List255 a = List255 [a]
+b1 :: BLOB UTF8
+b1 = BLOB UTF8 (PreAligned (FillerEnd) (Array [97,98,99]))
 
-instance Flat a => Flat (List255 a) where
-    encode (List255 l) = encodeList l
-    decode = List255 <$> decodeList
-#endif
+data Array a = Array [a]
+
+instance Flat a => Flat (Array a) where
+    encode (Array l) = encodeList l
+    decode = Array <$> decodeList
 
 dList = do
     tag <- dBool
@@ -100,9 +100,9 @@ dListReverse = go []
 ee = encode "abc" -- [True,True,True]
 
 -- #define LIST_BYTE
--- #define ENCLIST_DIV
+#define ENCLIST_DIV
 
--- Different implementations of encoding for List255 (none very good)
+-- Different implementations of encoding for Array (none very good)
 #ifdef ENCLIST_GO
 encodeList :: Flat a => [a] -> Encoding
 encodeList l = go mempty l (length l)
@@ -179,7 +179,6 @@ instance Flat a => Flat [a] where
     decode = decodeList
 #endif
 
-#ifdef LIST_BYTE
 instance Flat T.Text where
   -- 100 times slower
   -- encode l = (mconcat . map (\t -> T.foldl' (\r x -> r <> encode x) (eWord8 . fromIntegral . T.length$ t) t) . T.chunksOf 255 $ l) <> eWord8 0
@@ -189,7 +188,6 @@ instance Flat T.Text where
    -- 4 times slower
    encode = encode . T.encodeUtf8
    decode = T.decodeUtf8 <$> decode
-#endif
 
 b = T.chunksOf 255 (T.pack "")
 
@@ -334,7 +332,7 @@ instance Flat Char where
 
   -- decode =  do
   --     tag <- dBool
-  --     if tag
+ --     if tag
   --       then chr . fromIntegral <$> (decode :: Get Word32)
   --       else chr . fromIntegral <$> dBits 7
 

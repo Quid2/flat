@@ -1,4 +1,3 @@
-
 Haskell implementation of [Flat](http://quid2.org), a minimalist binary data format ([specs](http://quid2.org/docs/Flat.pdf)).
 
  ### Installation
@@ -15,66 +14,38 @@ There is `Generics` based support to automatically define instances.
 
 So, let's enable `Generics`:
 
-```haskell
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
-```
+> {-# LANGUAGE DeriveGeneric #-}
+> {-# LANGUAGE NoMonomorphismRestriction #-}
 
 Import the Flat library:
 
-```haskell
-import Data.Flat
-```
+> import Data.Flat
 
 Define a couple of custom data types:
 
-```haskell
-data Direction = North | South | Center | East | West deriving (Show,Generic)
-```
+> data Direction = North | South | Center | East | West deriving (Show,Generic)
 
-```haskell
-data List a = Cons a (List a) | Nil deriving (Show,Generic)
-```
+> data List a = Cons a (List a) | Nil deriving (Show,Generic)
 
 Automatically derive the instances:
 
-```haskell
-instance Flat Direction
-instance Flat a => Flat (List a)
-```
+> instance Flat Direction
+> instance Flat a => Flat (List a)
 
 A little utility function, `bits` encodes the value, `prettyShow` displays it nicely:
 
-```haskell
-pp :: Flat a => a -> String
-pp = prettyShow . bits
-```
+> pp :: Flat a => a -> String
+> pp = prettyShow . bits
 
-```haskell
-e1 = pp Center
-```
-e1 -> "<10>"
+> e1 = pp Center
 
-```haskell
-e2 = pp (Nil::List Direction)
-```
-e2 -> "<1>"
+> e2 = pp (Nil::List Direction)
 
-```haskell
-e3 = pp $ Cons North (Cons South Nil)
-```
-e3 -> "<0000011>"
-
+> e3 = pp $ Cons North (Cons South Nil)
 
 These encodings shows a pecularity of Flat, it uses an optimal bit-encoding rather than more usual byte-oriented one.
 
 Instances for a few common data types (Bool,Tuples, Lists, String, Text ..) are already defined (in `Data.Flat.Instances):
-
--- To be able to serialize them we need a Flat instance
--- No big deal, it can be derived automatically.
-instance Flat Number
-instance Flat Numero
-instance (Flat a , Flat b) => Flat (Couple a b)
 
 -- Serialize a value
 e1 = encoded $ Couple One Due

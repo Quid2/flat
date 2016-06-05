@@ -3,7 +3,6 @@ version:             0.1.1
 synopsis:            Principled and efficient binary serialization.
 homepage:            http://github.com/tittoassini/flat
 license:             MIT
-license-file:        LICENSE
 author:              Pasqualino Titto Assini
 maintainer:          tittoassini@gmail.com
 category:            System

@@ -153,6 +153,8 @@ data Odd = SuccO Even
 
 -- data Dict (c :: Constraint) where
 --   Dict :: c => Dict c
+data Direction = North | South | Center | East | West
+               deriving (Eq, Ord, Read, Show, Typeable, Data, Generic)
 
 data Stream a = Stream a (Stream a)
             deriving (Eq, Ord, Read, Show, Typeable, Data, Generic,Functor,Foldable,Traversable)

@@ -4,7 +4,7 @@ module Test.Data.Flat(module Test.Data) where
 import Data.Flat
 import Test.Data
 import Test.Data2.Flat()
-
+instance Flat Direction
 instance Flat Words
 instance Flat Ints
 instance Flat Void
