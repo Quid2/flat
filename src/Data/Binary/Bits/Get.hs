@@ -421,7 +421,10 @@ runBitGet m b = case G.runGetOrFail (BitG.runBitGet (BitG.block m)) b of
 runPartialGet :: BitGet b
               -> L.ByteString
               -> Int -- num of msbs to skip
-              -> Either String (b,L.ByteString,Int)
+              -> Either String (b
+                               ,L.ByteString -- ^ left over bytes
+                               ,Int -- ^ decoded bits in first byte
+                               )
 runPartialGet bg bs n = case B.runGetOrFail (runPartialBitGet n bg) bs of
                Left (_,_,s) -> Left s
                Right (bs,_,(a,n)) -> Right (a,bs,n)

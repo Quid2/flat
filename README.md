@@ -1,17 +1,19 @@
 
 Haskell implementation of [Flat](http://quid2.org), a minimalist binary data format ([specs](http://quid2.org/docs/Flat.pdf)).
 
- ### Installation
+### Installation
 
 Install as part of the [quid2](https://github.com/tittoassini/quid2) project.
 
- ### Brief Tutorial for Haskellers
+### Brief Tutorial for Haskellers
 
 Flat is a binary data format, similar to `binary` or `cereal`.
 
-To (de)serialise a data type it needs to be an instance of the 'Flat' class.
+To (de)serialise a data type it needs to be an instance of the `Flat` class.
 
-There is `Generics` based support to automatically define instances.
+Instances for a few common data types (Bool,Tuples, Lists, String, Text ..) are already defined (in `Data.Flat.Instances):
+
+There is `Generics` based support to automatically derive instances of additional types.
 
 So, let's enable `Generics`:
 
@@ -26,7 +28,7 @@ Import the Flat library:
 import Data.Flat
 ```
 
-Define a couple of custom data types:
+Define a couple of custom data types, deriving `Generic`:
 
 ```haskell
 data Direction = North | South | Center | East | West deriving (Show,Generic)
@@ -36,39 +38,70 @@ data Direction = North | South | Center | East | West deriving (Show,Generic)
 data List a = Cons a (List a) | Nil deriving (Show,Generic)
 ```
 
-Automatically derive the instances:
+Automatically derive the `Flat` instances:
 
 ```haskell
 instance Flat Direction
 instance Flat a => Flat (List a)
 ```
 
-A little utility function, `bits` encodes the value, `prettyShow` displays it nicely:
+A little utility function: `bits` encodes the value, `prettyShow` displays it nicely:
 
 ```haskell
-pp :: Flat a => a -> String
-pp = prettyShow . bits
+p :: Flat a => a -> String
+p = prettyShow . bits
 ```
 
-Some encodings:
+Let's see some encodings:
 
 ```haskell
-e1 = pp Center
+p1 = p Center
 ```
-e1 -> "<10>"
+p1 -> "<10>"
 
 ```haskell
-e2 = pp (Nil::List Direction)
+p2 = p (Nil::List Direction)
 ```
-e2 -> "<1>"
+p2 -> "<1>"
 
 ```haskell
-e3 = pp $ Cons North (Cons South Nil)
+p3 = p $ Cons North (Cons South Nil)
 ```
-e3 -> "<0000011>"
+p3 -> "<0000011>"
 
-These encodings shows a pecularity of Flat, it uses an optimal bit-encoding rather than more usual byte-oriented one.
+These encodings shows a pecularity of Flat, it uses an optimal bit-encoding rather than the usual byte-oriented one.
 
-... to be continued 
+For the serialisation to work with byte-oriented devices, we need to add some final padding, this is done automatically by the function `flat`:
 
-See the [source code](https://github.com/tittoassini/flat/src/README.lhs) of this file. 
+```haskell
+f :: Flat a => a -> String
+f = prettyShow . flat
+```
+
+```haskell
+f1 = f Center
+```
+f1 -> "10000001"
+
+```haskell
+f2 = f (Nil::List Direction)
+```
+f2 -> "10000001"
+
+```haskell
+f3 = f $ Cons North (Cons South Nil)
+```
+f3 -> "00000111"
+
+The padding is a sequence of 0s terminated by a 1, till the next byte boundary.
+
+For decoding, use `unflat`:
+
+```haskell
+d1 = unflat (flat $ Cons North (Cons South Nil)) :: Decoded (List Direction)
+```
+d1 -> Right (Cons North (Cons South Nil))
+
+
+-----
+See the [source code](https://github.com/tittoassini/flat/blob/master/src/README.lhs) of this file. 

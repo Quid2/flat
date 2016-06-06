@@ -124,6 +124,7 @@ unitTests = testGroup "Serialisation Unit tests" $ concat [
             ,s Unit []
             ,s (Un False) [0]
             ,s (One,Two,Three) [16+8]
+            ,s (Five,Five,Five) [255,128]
             --,s (NECons True (Elem True)) [128+64+16]
             ,s "" [0]
 #ifdef LIST_BIT
@@ -156,11 +157,13 @@ unitTests = testGroup "Serialisation Unit tests" $ concat [
       ti v | v >= 0    = testCase (unwords ["Int",show v]) $ teq v (2 * fromIntegral v ::Word64)
            | otherwise = testCase (unwords ["Int",show v]) $ teq v (2 * fromIntegral (-v) - 1 ::Word64)
       teq a b = ser a @?= ser b
-      s v e = [testCase (unwords ["flat",show v]) $ ser v @?= e
-              ,testCase (unwords ["unflat",show v]) $ Right v @?= des e]
+      s v e = [testCase (unwords ["flat raw",show v]) $ serRaw v @?= e
+              ,testCase (unwords ["unflat raw",show v]) $ Right v @?= desRaw e]
       -- Aligned values unflat to the original value, modulo the added filler.
-      a v e = [testCase (unwords ["flat postAligned",show v]) $ ser (postAligned v) @?= e
-              ,testCase (unwords ["unflat postAligned",show v]) $ let Right (PostAligned v' _) = des e in v @?= v']
+      a v e = [testCase (unwords ["flat",show v]) $ ser v @?= e
+              ,testCase (unwords ["unflat",show v]) $ let Right v' = des e in v @?= v']
+      -- a v e = [testCase (unwords ["flat postAligned",show v]) $ ser (postAligned v) @?= e
+      --         ,testCase (unwords ["unflat postAligned",show v]) $ let Right (PostAligned v' _) = des e in v @?= v']
       cs n = replicate n 'c' -- take n $ cycle ['a'..'z']
       csb = map (fromIntegral . ord) . cs
 
@@ -171,6 +174,12 @@ ser = L.unpack . flat
 
 des :: Flat a => [Word8] -> Decoded a
 des = unflat . L.pack
+
+serRaw :: Flat a => a -> [Word8]
+serRaw = L.unpack . flatRaw
+
+desRaw :: Flat a => [Word8] -> Decoded a
+desRaw = unflatRaw . L.pack
 
 type RT a = a -> Bool
 type RTL a = Large a -> Bool

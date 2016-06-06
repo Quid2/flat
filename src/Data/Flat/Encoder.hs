@@ -16,6 +16,7 @@ import           Foreign.Ptr
 bitEncoder :: Encoding -> ByteString
 bitEncoder = toLazyByteString . toBitBuilder
 
+-- Note: last byte is 0-padded (not an issue if encoded value is terminated with a Filler)
 toBitBuilder :: Encoding -> Builder
 toBitBuilder =
   \e -> builder (step e 0 0)

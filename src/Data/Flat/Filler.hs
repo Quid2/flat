@@ -5,7 +5,7 @@ module Data.Flat.Filler(Filler(..),fillerLength
 
 import           Data.Flat.Class
 import           Data.Flat.Encoding
-import           Data.Flat.Run
+-- import           Data.Flat.Run
 import           Data.Typeable
 
 -- |A meaningless sequence of 0 bits terminated with a 1 bit (easier to implement than the reverse)
