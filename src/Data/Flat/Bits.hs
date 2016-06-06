@@ -17,7 +17,7 @@ data Bits = Bits
   deriving Show
 
 instance Pretty Bits where
-  pPrint (Bits bs n) = char '<' <> (text . concat $ (map prettyWord8 . init $ bs) ++ [take n . prettyWord8 . last $ bs]) <> char '>'
+  pPrint (Bits bs n) = hsep $ (map pPrint . init $ bs) ++ [text . take n . prettyWord8 . last $ bs]
 
 -- |Convert a value to Bits
 bits :: forall a. Flat a => a -> Bits

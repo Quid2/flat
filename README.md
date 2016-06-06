@@ -11,7 +11,7 @@ Flat is a binary data format, similar to `binary` or `cereal`.
 
 To (de)serialise a data type it needs to be an instance of the `Flat` class.
 
-Instances for a few common data types (Bool,Tuples, Lists, String, Text ..) are already defined (in `Data.Flat.Instances):
+Instances for a few common data types (Bool,Tuples, Lists, String, Text ..) are already defined (in `Data.Flat.Instances`):
 
 There is `Generics` based support to automatically derive instances of additional types.
 
@@ -55,23 +55,23 @@ p = prettyShow . bits
 Let's see some encodings:
 
 ```haskell
-p1 = p Center
+p1 = p West
 ```
-p1 -> "<10>"
+p1 -> "111"
 
 ```haskell
 p2 = p (Nil::List Direction)
 ```
-p2 -> "<1>"
+p2 -> "1"
 
 ```haskell
-p3 = p $ Cons North (Cons South Nil)
+p3 = p $ Cons North (Cons South (Cons Center (Cons East (Cons West Nil))))
 ```
-p3 -> "<0000011>"
+p3 -> "00000101 00110011 11"
 
 These encodings shows a pecularity of Flat, it uses an optimal bit-encoding rather than the usual byte-oriented one.
 
-For the serialisation to work with byte-oriented devices, we need to add some final padding, this is done automatically by the function `flat`:
+For the serialisation to work with byte-oriented devices, we need to add some padding, this is done automatically by the function `flat`:
 
 ```haskell
 f :: Flat a => a -> String
@@ -79,9 +79,10 @@ f = prettyShow . flat
 ```
 
 ```haskell
-f1 = f Center
+f1 = f West
 ```
-f1 -> "10000001"
+f1 -> "11100001"
+>
 
 ```haskell
 f2 = f (Nil::List Direction)
@@ -89,9 +90,9 @@ f2 = f (Nil::List Direction)
 f2 -> "10000001"
 
 ```haskell
-f3 = f $ Cons North (Cons South Nil)
+f3 = f $ Cons North (Cons South (Cons Center (Cons East (Cons West Nil))))
 ```
-f3 -> "00000111"
+f3 -> "00000101 00110011 11000001"
 
 The padding is a sequence of 0s terminated by a 1, till the next byte boundary.
 
@@ -102,6 +103,5 @@ d1 = unflat (flat $ Cons North (Cons South Nil)) :: Decoded (List Direction)
 ```
 d1 -> Right (Cons North (Cons South Nil))
 
-
 -----
-See the [source code](https://github.com/tittoassini/flat/blob/master/src/README.lhs) of this file. 
+[Source code](https://github.com/tittoassini/flat/blob/master/src/README.lhs). 
