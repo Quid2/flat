@@ -9,7 +9,7 @@ Install as part of the [quid2](https://github.com/tittoassini/quid2) project.
 
 Flat is a binary data format, similar to `binary` or `cereal`.
 
-To (de)serialise a data type it needs to be an instance of the `Flat` class.
+To (de)serialise a data type, make it an instance of the `Flat` class.
 
 Instances for a few common data types (Bool,Tuples, Lists, String, Text ..) are already defined (in `Data.Flat.Instances`):
 
