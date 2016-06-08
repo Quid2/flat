@@ -56,32 +56,24 @@ Let's see some encodings:
 
 ```haskell
 p West
-```
-
-```haskell
 "111"
 ```
 
 ```haskell
 p (Nil::List Direction)
-```
-
-```haskell
 "0"
 ```
 
 ```haskell
 aList = Cons North (Cons South (Cons Center (Cons East (Cons West Nil))))
 p aList
-```
-
-```haskell
 "10010111 01110111 10"
 ```
 
 These encodings shows a pecularity of Flat, it uses an optimal bit-encoding rather than the usual byte-oriented one (so that `aList` fits in less than 3 bytes rather than 11).
 
 For the serialisation to work with byte-oriented devices, we need to add some padding, this is done automatically by the function `flat`:
+
 
 ```haskell
 f :: Flat a => a -> String
@@ -90,25 +82,16 @@ f = prettyShow . flat
 
 ```haskell
 f West
-```
-
-```haskell
 "11100001"
 ```
 
 ```haskell
 f (Nil::List Direction)
-```
-
-```haskell
 "00000001"
 ```
 
 ```haskell
 f $ Cons North (Cons South (Cons Center (Cons East (Cons West Nil))))
-```
-
-```haskell
 "10010111 01110111 10000001"
 ```
 
@@ -118,9 +101,6 @@ For decoding, use `unflat`:
 
 ```haskell
 unflat (flat $ Cons North (Cons South Nil)) :: Decoded (List Direction)
-```
-
-```haskell
 Right (Cons North (Cons South Nil))
 ```
 
