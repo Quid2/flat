@@ -91,7 +91,7 @@ f $ Cons North (Cons South (Cons Center (Cons East (Cons West Nil))))
 "10010111 01110111 10000001"
 ```
 
-The padding is a sequence of 0s terminated by a 1, till the next byte boundary (why? check the [specs](http://quid2.org/docs/Flat.pdf)).
+The padding is a sequence of 0s terminated by a 1 (why? check the [specs](http://quid2.org/docs/Flat.pdf)) running till the next byte boundary.
 
 For decoding, use `unflat`:
 
