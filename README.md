@@ -35,7 +35,7 @@ data Direction = North | South | Center | East | West deriving (Show,Generic)
 ```
 
 ```haskell
-data List a = Cons a (List a) | Nil deriving (Show,Generic)
+data List a = Nil | Cons a (List a) deriving (Show,Generic)
 ```
 
 Automatically derive the `Flat` instances:
@@ -45,7 +45,7 @@ instance Flat Direction
 instance Flat a => Flat (List a)
 ```
 
-A little utility function: `bits` encodes the value, `prettyShow` displays it nicely:
+Define a utility function: `bits` encodes the value, `prettyShow` displays it nicely:
 
 ```haskell
 p :: Flat a => a -> String
@@ -62,14 +62,14 @@ p1 -> "111"
 ```haskell
 p2 = p (Nil::List Direction)
 ```
-p2 -> "1"
+p2 -> "0"
 
 ```haskell
 p3 = p $ Cons North (Cons South (Cons Center (Cons East (Cons West Nil))))
 ```
-p3 -> "00000101 00110011 11"
+p3 -> "10010111 01110111 10"
 
-These encodings shows a pecularity of Flat, it uses an optimal bit-encoding rather than the usual byte-oriented one.
+These encodings shows a pecularity of Flat, it uses an optimal bit-encoding rather than the usual byte-oriented one  (so that `p3` fits in less than 3 bytes rather than 11).
 
 For the serialisation to work with byte-oriented devices, we need to add some padding, this is done automatically by the function `flat`:
 
@@ -82,19 +82,18 @@ f = prettyShow . flat
 f1 = f West
 ```
 f1 -> "11100001"
->
 
 ```haskell
 f2 = f (Nil::List Direction)
 ```
-f2 -> "10000001"
+f2 -> "00000001"
 
 ```haskell
 f3 = f $ Cons North (Cons South (Cons Center (Cons East (Cons West Nil))))
 ```
-f3 -> "00000101 00110011 11000001"
+f3 -> "10010111 01110111 10000001"
 
-The padding is a sequence of 0s terminated by a 1, till the next byte boundary.
+The padding is a sequence of 0s terminated by a 1, till the next byte boundary (why? check the [specs](http://quid2.org/docs/Flat.pdf)).
 
 For decoding, use `unflat`:
 
@@ -104,4 +103,4 @@ d1 = unflat (flat $ Cons North (Cons South Nil)) :: Decoded (List Direction)
 d1 -> Right (Cons North (Cons South Nil))
 
 -----
-[Source code](https://github.com/tittoassini/flat/blob/master/src/README.lhs). 
+[Source code](https://github.com/tittoassini/flat/blob/master/src/README.lhs)

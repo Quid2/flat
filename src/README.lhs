@@ -27,14 +27,14 @@ Define a couple of custom data types, deriving `Generic`:
 
 > data Direction = North | South | Center | East | West deriving (Show,Generic)
 
-> data List a = Cons a (List a) | Nil deriving (Show,Generic)
+> data List a = Nil | Cons a (List a) deriving (Show,Generic)
 
 Automatically derive the `Flat` instances:
 
 > instance Flat Direction
 > instance Flat a => Flat (List a)
 
-A little utility function: `bits` encodes the value, `prettyShow` displays it nicely:
+Define a utility function: `bits` encodes the value, `prettyShow` displays it nicely:
 
 > p :: Flat a => a -> String
 > p = prettyShow . bits
@@ -47,7 +47,7 @@ Let's see some encodings:
 
 > p3 = p $ Cons North (Cons South (Cons Center (Cons East (Cons West Nil))))
 
-These encodings shows a pecularity of Flat, it uses an optimal bit-encoding rather than the usual byte-oriented one.
+These encodings shows a pecularity of Flat, it uses an optimal bit-encoding rather than the usual byte-oriented one  (so that `p3` fits in less than 3 bytes rather than 11).
 
 For the serialisation to work with byte-oriented devices, we need to add some padding, this is done automatically by the function `flat`:
 
@@ -60,11 +60,11 @@ For the serialisation to work with byte-oriented devices, we need to add some pa
 
 > f3 = f $ Cons North (Cons South (Cons Center (Cons East (Cons West Nil))))
 
-The padding is a sequence of 0s terminated by a 1, till the next byte boundary.
+The padding is a sequence of 0s terminated by a 1, till the next byte boundary (why? check the [specs](http://quid2.org/docs/Flat.pdf)).
 
 For decoding, use `unflat`:
 
 > d1 = unflat (flat $ Cons North (Cons South Nil)) :: Decoded (List Direction)
 
 -----
-[Source code](https://github.com/tittoassini/flat/blob/master/src/README.lhs). 
+[Source code](https://github.com/tittoassini/flat/blob/master/src/README.lhs)
