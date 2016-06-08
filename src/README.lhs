@@ -26,7 +26,6 @@ Import the Flat library:
 Define a couple of custom data types, deriving `Generic`:
 
 > data Direction = North | South | Center | East | West deriving (Show,Generic)
-
 > data List a = Nil | Cons a (List a) deriving (Show,Generic)
 
 Automatically derive the `Flat` instances:

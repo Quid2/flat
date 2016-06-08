@@ -32,9 +32,6 @@ Define a couple of custom data types, deriving `Generic`:
 
 ```haskell
 data Direction = North | South | Center | East | West deriving (Show,Generic)
-```
-
-```haskell
 data List a = Nil | Cons a (List a) deriving (Show,Generic)
 ```
 
@@ -73,7 +70,6 @@ p aList
 These encodings shows a pecularity of Flat, it uses an optimal bit-encoding rather than the usual byte-oriented one (so that `aList` fits in less than 3 bytes rather than 11).
 
 For the serialisation to work with byte-oriented devices, we need to add some padding, this is done automatically by the function `flat`:
-
 
 ```haskell
 f :: Flat a => a -> String
