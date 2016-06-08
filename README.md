@@ -100,5 +100,11 @@ unflat (flat $ Cons North (Cons South Nil)) :: Decoded (List Direction)
 Right (Cons North (Cons South Nil))
 ```
 
+### Known Bugs and Infelicities
+
+* Depends on unreleased library [model](https://github.com/tittoassini/model)
+* Encoding and decoding of String/Text is very slow
+* Messy source code
+
 -----
 [Source code](https://github.com/tittoassini/flat/blob/master/src/README.lhs)

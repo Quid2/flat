@@ -48,31 +48,33 @@ unflatRaw = runGetOrFail decode
 unflatChk :: Flat a => L.ByteString -> Decoded a
 unflatChk bs = case unflatPart bs of
                  Left e -> Left e
-                 Right (v,bs,n) | L.null bs -> Right v -- && n ==0 
+                 Right (v,bs,n) | L.null bs -> Right v -- && n ==0
                                 | otherwise -> Left $ unwords ["Partial decoding, left over data:",prettyLBS bs,show n]
 
+unflatPart :: Flat a => L.ByteString -> Either String (a, L.ByteString, Int)
 unflatPart bs = runPartialGet decode bs 0
-
 
 -- unflatWith :: Get a -> L.ByteString -> a
 -- unflatWith = runGet
 
 --unflatIncremental = Get.runGetIncremental
 -- runGet decode
-encoded :: Flat a => a -> Encoded a
-encoded = Encoded . flat
 
--- TODO: detect left over data and give error
-decoded :: Flat a => Encoded a -> Decoded a
-decoded = unflat . bytes
+-- encoded :: Flat a => a -> Encoded a
+-- encoded = Encoded . flat
 
--- |Encoded data, mainly useful to show data in a nicer way
-newtype Encoded a = Encoded {bytes::L.ByteString} deriving Show
+-- -- TODO: detect left over data and give error
+-- decoded :: Flat a => Encoded a -> Decoded a
+-- decoded = unflat . bytes
 
-instance Pretty (Encoded a) where pPrint = text . prettyLBS . bytes
+-- -- |Encoded data, mainly useful to show data in a nicer way
+-- newtype Encoded a = Encoded {bytes::L.ByteString} deriving Show
+
+-- instance Pretty (Encoded a) where pPrint = text . prettyLBS . bytes
 
 instance Pretty L.ByteString where pPrint = text . prettyLBS
 
+prettyLBS :: L.ByteString -> String
 prettyLBS = unwords . map prettyWord8 . L.unpack
 
 instance Pretty Word8 where pPrint = text . prettyWord8
