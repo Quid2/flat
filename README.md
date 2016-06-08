@@ -55,21 +55,31 @@ p = prettyShow . bits
 Let's see some encodings:
 
 ```haskell
-p1 = p West
+p West
 ```
-p1 -> "111"
 
 ```haskell
-p2 = p (Nil::List Direction)
+"111"
 ```
-p2 -> "0"
 
 ```haskell
-p3 = p $ Cons North (Cons South (Cons Center (Cons East (Cons West Nil))))
+p (Nil::List Direction)
 ```
-p3 -> "10010111 01110111 10"
 
-These encodings shows a pecularity of Flat, it uses an optimal bit-encoding rather than the usual byte-oriented one  (so that `p3` fits in less than 3 bytes rather than 11).
+```haskell
+"0"
+```
+
+```haskell
+aList = Cons North (Cons South (Cons Center (Cons East (Cons West Nil))))
+p aList
+```
+
+```haskell
+"10010111 01110111 10"
+```
+
+These encodings shows a pecularity of Flat, it uses an optimal bit-encoding rather than the usual byte-oriented one (so that `aList` fits in less than 3 bytes rather than 11).
 
 For the serialisation to work with byte-oriented devices, we need to add some padding, this is done automatically by the function `flat`:
 
@@ -79,28 +89,40 @@ f = prettyShow . flat
 ```
 
 ```haskell
-f1 = f West
+f West
 ```
-f1 -> "11100001"
 
 ```haskell
-f2 = f (Nil::List Direction)
+"11100001"
 ```
-f2 -> "00000001"
 
 ```haskell
-f3 = f $ Cons North (Cons South (Cons Center (Cons East (Cons West Nil))))
+f (Nil::List Direction)
 ```
-f3 -> "10010111 01110111 10000001"
+
+```haskell
+"00000001"
+```
+
+```haskell
+f $ Cons North (Cons South (Cons Center (Cons East (Cons West Nil))))
+```
+
+```haskell
+"10010111 01110111 10000001"
+```
 
 The padding is a sequence of 0s terminated by a 1, till the next byte boundary (why? check the [specs](http://quid2.org/docs/Flat.pdf)).
 
 For decoding, use `unflat`:
 
 ```haskell
-d1 = unflat (flat $ Cons North (Cons South Nil)) :: Decoded (List Direction)
+unflat (flat $ Cons North (Cons South Nil)) :: Decoded (List Direction)
 ```
-d1 -> Right (Cons North (Cons South Nil))
+
+```haskell
+Right (Cons North (Cons South Nil))
+```
 
 -----
 [Source code](https://github.com/tittoassini/flat/blob/master/src/README.lhs)

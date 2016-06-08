@@ -45,9 +45,10 @@ Let's see some encodings:
 
 > p2 = p (Nil::List Direction)
 
-> p3 = p $ Cons North (Cons South (Cons Center (Cons East (Cons West Nil))))
+> aList = Cons North (Cons South (Cons Center (Cons East (Cons West Nil))))
+> p3 = p aList
 
-These encodings shows a pecularity of Flat, it uses an optimal bit-encoding rather than the usual byte-oriented one  (so that `p3` fits in less than 3 bytes rather than 11).
+These encodings shows a pecularity of Flat, it uses an optimal bit-encoding rather than the usual byte-oriented one (so that `aList` fits in less than 3 bytes rather than 11).
 
 For the serialisation to work with byte-oriented devices, we need to add some padding, this is done automatically by the function `flat`:
 
