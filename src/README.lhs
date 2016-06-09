@@ -14,9 +14,11 @@ Instances for a few common data types (Bool,Tuples, Lists, String, Text ..) are 
 
 There is `Generics` based support to automatically derive instances of additional types.
 
+Let's see some code.
+
 Setup a couple of extensions:
 
-> {-# LANGUAGE DeriveGeneric,DeriveAnyClass #-}
+> {-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
 
 Import the Flat library:
 
@@ -32,7 +34,7 @@ Define a utility function: `bits` encodes the value, `prettyShow` displays it ni
 > p :: Flat a => a -> String
 > p = prettyShow . bits
 
-Let's see some encodings:
+Some encodings:
 
 > p1 = p West
 
@@ -58,7 +60,7 @@ The padding is a sequence of 0s terminated by a 1 (why? check the [specs](http:/
 
 For decoding, use `unflat`:
 
-> d1 = unflat (flat $ Cons North (Cons South Nil)) :: Decoded (List Direction)
+> d1 = unflat . flat $ Cons North (Cons South Nil) :: Decoded (List Direction)
 
  ### Known Bugs and Infelicities
 
