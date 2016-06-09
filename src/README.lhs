@@ -14,24 +14,18 @@ Instances for a few common data types (Bool,Tuples, Lists, String, Text ..) are 
 
 There is `Generics` based support to automatically derive instances of additional types.
 
-So, let's enable `Generics`:
+Setup a couple of extensions:
 
-> {-# LANGUAGE DeriveGeneric #-}
-> {-# LANGUAGE NoMonomorphismRestriction #-}
+> {-# LANGUAGE DeriveGeneric,DeriveAnyClass #-}
 
 Import the Flat library:
 
 > import Data.Flat
 
-Define a couple of custom data types, deriving `Generic`:
+Define a couple of custom data types, deriving `Generic` and `Flat`:
 
-> data Direction = North | South | Center | East | West deriving (Show,Generic)
-> data List a = Nil | Cons a (List a) deriving (Show,Generic)
-
-Automatically derive the `Flat` instances:
-
-> instance Flat Direction
-> instance Flat a => Flat (List a)
+> data Direction = North | South | Center | East | West deriving (Show,Generic,Flat)
+> data List a = Nil | Cons a (List a) deriving (Show,Generic,Flat)
 
 Define a utility function: `bits` encodes the value, `prettyShow` displays it nicely:
 
