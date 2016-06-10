@@ -4,7 +4,8 @@
 {-# LANGUAGE TypeSynonymInstances      #-}
 module Data.Flat.Run(flat,unflat,flatRaw,unflatRaw
                     ,DeserializeFailure
-                    --,runGet,Encoded(..),encoded,decoded
+                    ,runGet
+                    --,Encoded(..),encoded,decoded
                     ,Decoded
                     ,prettyWord8
                     ) where
@@ -36,6 +37,9 @@ flatRaw = bitEncoder . encode
 unflatRaw :: Flat a => L.ByteString -> Decoded a
 unflatRaw = runGetOrFail decode
 
+--unflatRawWith :: Get a -> L.ByteString -> a
+--unflatRawWith = runGet
+
 -- unflat = runGetOrFail decode
 -- unflat bs = case unflatRaw bs of
 --               Left e -> Left e
@@ -54,8 +58,6 @@ unflatChk bs = case unflatPart bs of
 unflatPart :: Flat a => L.ByteString -> Either String (a, L.ByteString, Int)
 unflatPart bs = runPartialGet decode bs 0
 
--- unflatWith :: Get a -> L.ByteString -> a
--- unflatWith = runGet
 
 --unflatIncremental = Get.runGetIncremental
 -- runGet decode
