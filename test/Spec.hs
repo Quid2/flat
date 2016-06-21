@@ -6,6 +6,7 @@
 {-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE TemplateHaskell           #-}
 -- | Tests for the flat module
+module Main where
 
 import           Data.Char
 import           Data.DeriveTH
@@ -24,6 +25,8 @@ import           Data.List
 import           Data.Ord
 import           Test.Data
 import           Test.Data.Flat
+import Data.Either
+import Data.Proxy
 
 t = main
 
@@ -69,8 +72,14 @@ properties = testGroup "Properties"
   ]
    where rt n = QC.testProperty (unwords ["round trip",n])
 
+unitTests0 = testGroup "Serialisation Unit tests" $ concat [
+            ]
+
 unitTests = testGroup "Serialisation Unit tests" $ concat [
-             s () []
+            errDec (Proxy::Proxy Bool) []
+            ,errDec (Proxy::Proxy Bool) [128]
+            ,errDec (Proxy::Proxy Bool) [128+1,1,2,4,8]
+            ,s () []
             ,s ((),()) []
             ,a () [1]
             ,a True [128+1]
@@ -167,6 +176,10 @@ unitTests = testGroup "Serialisation Unit tests" $ concat [
       cs n = replicate n 'c' -- take n $ cycle ['a'..'z']
       csb = map (fromIntegral . ord) . cs
 
+errDec :: forall a . (Flat a, Eq a, Show a) => Proxy a -> [Word8] -> [TestTree]
+--errDec _ bs = [testCase "bad decode" $ let ev = (des bs::Decoded a) in ev @?= Left ""]
+errDec _ bs = [testCase "bad decode" $ let ev = (des bs::Decoded a) in isRight ev @?= False]
+
 uc = map ord "\x4444\x5555\x10001\xD800"
 
 ser :: Flat a => a -> [Word8]
@@ -245,3 +258,4 @@ derive makeArbitrary ''B
 
 -- instance Arbitrary Word7 where arbitrary  = toEnum <$> choose (0, 127)
 -- derive makeArbitrary ''ASCII
+

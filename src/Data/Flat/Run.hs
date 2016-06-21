@@ -53,7 +53,10 @@ unflatChk :: Flat a => L.ByteString -> Decoded a
 unflatChk bs = case unflatPart bs of
                  Left e -> Left e
                  Right (v,bs,n) | L.null bs -> Right v -- && n ==0
-                                | otherwise -> Left $ unwords ["Partial decoding, left over data:",prettyLBS bs,show n]
+                                | otherwise -> Left $ unwords $ if n == 0
+                                                                then ["Partial decoding, left over data:",prettyLBS bs]
+                                                                else ["Partial decoding, left over data:",prettyLBS bs,"minus",show n,"bits"]
+
 
 unflatPart :: Flat a => L.ByteString -> Either String (a, L.ByteString, Int)
 unflatPart bs = runPartialGet decode bs 0
