@@ -1,9 +1,5 @@
 Haskell implementation of [Flat](http://quid2.org), a minimalist binary data format ([specs](http://quid2.org/docs/Flat.pdf)).
 
- ### Installation
-
-Install as part of the [quid2](https://github.com/tittoassini/quid2) project.
-
  ### Brief Tutorial for Haskellers
 
 Flat is a binary data format, similar to `binary` or `cereal`.
@@ -62,9 +58,12 @@ For decoding, use `unflat`:
 
 > d1 = unflat . flat $ Cons North (Cons South Nil) :: Decoded (List Direction)
 
+ ### Installation
+
+Can be installed from this repository or as part of the [quid2](https://github.com/tittoassini/quid2) project.
+
  ### Known Bugs and Infelicities
 
-* Depends on unreleased library [model](https://github.com/tittoassini/model)
 * Encoding and decoding of String/Text is very slow
 * Messy source code
 
