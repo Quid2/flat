@@ -40,6 +40,7 @@ zzDecode64 w = (fromIntegral (w `shiftR` 1)) `xor` (negate (fromIntegral (w .&. 
 zzDecodeInteger :: Integer -> Integer
 zzDecodeInteger w = (fromIntegral (w `shiftR` 1)) `xor` (negate (fromIntegral (w .&. 1)))
 
+zzDecode w = (fromIntegral (w `shiftR` 1)) `xor` (negate (fromIntegral (w .&. 1)))
 
 {-# INLINE zzEncodeInteger #-}
 zzEncodeInteger :: Integer -> Integer

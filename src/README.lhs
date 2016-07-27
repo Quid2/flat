@@ -1,6 +1,6 @@
 Haskell implementation of [Flat](http://quid2.org), a minimalist binary data format ([specs](http://quid2.org/docs/Flat.pdf)).
 
- ### Brief Tutorial for Haskellers
+ ### How To Use It For Fun and Profit
 
 Flat is a binary data format, similar to `binary` or `cereal`.
 

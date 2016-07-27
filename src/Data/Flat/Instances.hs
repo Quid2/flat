@@ -1,10 +1,12 @@
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE BangPatterns              #-}
 {-# LANGUAGE CPP                       #-}
 {-# LANGUAGE DeriveGeneric             #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE NoMonomorphismRestriction,DeriveAnyClass #-}
 module Data.Flat.Instances (
-    -- ,ASCII(..),Word7
-    ) where
+  Array(..)
+  ,BLOB(..),blob,unblob,FlatEncoding(..),UTF8Encoding(..)
+  ) where
 
 import           Data.Binary.Bits.Get
 import qualified Data.ByteString      as B
@@ -22,15 +24,12 @@ import qualified Data.Text.Encoding   as T
 import           Data.Typeable
 import           Data.Word
 import           Data.ZigZag
+import Data.Flat.Run
 --import           Data.Word.Odd                 (Word7)
 --import           Data.Flat.IEEE754
 #include "MachDeps.h"
 
 ---------- Flat Instances
-instance Flat a => Flat (Maybe a)
-
-instance (Flat a,Flat b) => Flat (Either a b)
-
 instance Flat () where
   encode = mempty
   decode = pure ()
@@ -38,6 +37,10 @@ instance Flat () where
 instance Flat Bool where
   encode = eBool
   decode = dBool
+
+instance Flat a => Flat (Maybe a)
+
+instance (Flat a,Flat b) => Flat (Either a b)
 
 ------------------- Lists
 
@@ -57,29 +60,79 @@ ByteString == BLOB
  -- data UTF8 a = UTF8 a deriving (Show,Eq,Typeable,Generic)
  -- instance Flat a => Flat (UTF8 a)
 
-data UTF8 = UTF8 deriving (Show,Eq,Generic)
-instance Flat UTF8
+data UTF8Encoding = UTF8Encoding deriving (Show,Eq,Generic,Flat)
 
 data NoEncoding = NoEncoding deriving (Show,Eq,Generic)
-instance Flat NoEncoding
+
+data FlatEncoding = FlatEncoding deriving (Eq,Ord,Show,Generic,Flat)
+
+-- b1 :: BLOB UTF8
+b1 = flat $ blob FlatEncoding (L.pack [97,98,99])
+
+data BLOB encoding = BLOB encoding (PreAligned L.ByteString) deriving (Eq,Ord,Show,Generic,Flat)
 
 -- data String e = Text (PreAligned (e (Array Word8)))
 -- data BLOB encoding = BLOB (PreAligned (encoding (Array Word8))) deriving (Typeable,Generic)
 -- or simply, to avoid higher-order kinds:
-data BLOB encoding = BLOB encoding (PreAligned (Array Word8)) deriving (Typeable,Generic)
+-- data BLOB encoding = BLOB encoding (PreAligned (Array Word8)) deriving (Eq,Ord,Show,Generic,Flat)
 -- data BLOB = BLOB (PreAligned (Array Word8))
 -- data Encoded encoding = CLOB encoding BLOB
 
-instance Flat e => Flat (BLOB e)
+blob :: encoding -> L.ByteString -> BLOB encoding
+blob enc = BLOB enc . preAligned
 
-b1 :: BLOB UTF8
-b1 = BLOB UTF8 (PreAligned (FillerEnd) (Array [97,98,99]))
+unblob :: BLOB encoding -> L.ByteString
+unblob (BLOB _ pa) = preValue pa 
 
-data Array a = Array [a]
+-- bytes :: Flat a => a -> Bytes
+-- bytes = Bytes . preAligned . Array . L.unpack . flat
+-- bytes :: L.ByteString -> Bytes
+-- bytes = Bytes . preAligned
 
-instance Flat a => Flat (Array a) where
-    encode (Array l) = encodeList l
-    decode = Array <$> decodeList
+-- unbytes :: Bytes -> [Word8]
+-- unbytes (Bytes (PreAligned _ (Array bs))) = bs
+--unbytes :: Bytes -> L.ByteString
+--unbytes (Bytes (PreAligned _ bs)) = bs
+
+-- A pre-aligned sequence of bytes.
+-- data Bytes = Bytes (PreAligned (Array Word8)) deriving (Eq,Ord, Show,Generic,Flat)
+-- data Bytes = Bytes (PreAligned L.ByteString) deriving (Eq,Ord, Show,Generic,Flat)
+
+-- type Bytes = BLOB NoEncoding
+
+-- data Bytes = Bytes {unbytes::L.ByteString} deriving (Eq,Ord, Show,Generic,Flat)
+
+-- maps to PreAligned (Array Word8), prealigned adds one extra byte if we are already on byte border.
+-- or simply Array Word8
+
+-- == PreAligned (Array Word8)
+-- instance Flat B.ByteString where
+--   encode bs = eFiller <> eBytes bs
+--   decode = (decode :: Get Filler) >> dBytes
+
+-- instance Flat L.ByteString where
+--   encode bs = eFiller <> eLazyBytes bs
+--   decode = (decode :: Get Filler) >> dLazyBytes
+
+-- == Array Word8 (prob: encoder might fail if used on their own)
+instance Flat B.ByteString where
+  encode = eBytes
+  decode = dBytes
+
+instance Flat L.ByteString where
+  encode = eLazyBytes
+  decode = dLazyBytes
+
+-- data Array a = Array0 | Array1 a ...
+data Array a = Array [a] deriving (Eq, Ord, Show, Generic)
+
+instance {-# OVERLAPPABLE #-} Flat a => Flat (Array a) where
+    encode (Array l) = encodeArray l
+    decode = Array <$> decodeArray
+
+instance {-# OVERLAPPING #-} Flat (Array Word8) where
+    encode (Array l) = encode $ B.pack l
+    decode = Array . B.unpack <$> decode
 
 dList = do
     tag <- dBool
@@ -104,8 +157,8 @@ ee = encode "abc" -- [True,True,True]
 
 -- Different implementations of encoding for Array (none very good)
 #ifdef ENCLIST_GO
-encodeList :: Flat a => [a] -> Encoding
-encodeList l = go mempty l (length l)
+encodeArray :: Flat a => [a] -> Encoding
+encodeArray l = go mempty l (length l)
     where
       go e !l 0 = e <> eWord8 0
       go e !l n = let c = min 255 n
@@ -116,11 +169,11 @@ encodeList l = go mempty l (length l)
       goElems e (!x:xs) n = goElems (e <> encode x) xs (n-1)
 
 #elif defined (ENCLIST_DIV)
-encodeList l = let (d,m) = length l `divMod` 255
-                   ns = cons d $ if m==0 then [0] else [m,0]
-                   cons 0 t = t
-                   cons n t = cons (n-1) (255:t)
-               in gos ns l
+encodeArray l = let (d,m) = length l `divMod` 255
+                    ns = cons d $ if m==0 then [0] else [m,0]
+                    cons 0 t = t
+                    cons n t = cons (n-1) (255:t)
+                in gos ns l
   where
     gos [] [] = mempty
     gos (n:ns) l = eWord8 (fromIntegral n) <> go ns n l
@@ -128,8 +181,8 @@ encodeList l = let (d,m) = length l `divMod` 255
     go ns n (h:t) = encode h <> go ns (n-1) t
 
 #elif defined(ENCLIST_FOLDL2)
-encodeList :: Flat a => [a] -> Encoding
-encodeList l = let (e,0,_) = encList l in e <> eWord8 0
+encodeArray :: Flat a => [a] -> Encoding
+encodeArray l = let (e,0,_) = encList l in e <> eWord8 0
 
 encList l  = foldl' (\(!r,!l,!s) x ->
                       if s==0
@@ -139,7 +192,7 @@ encList l  = foldl' (\(!r,!l,!s) x ->
              (mempty,length l,0) l
 #endif
 
-decodeList = DL.toList <$> getAsL_
+decodeArray = DL.toList <$> getAsL_
 
 -- TODO: test if it would it be faster with DList.unfoldr :: (b -> Maybe (a, b)) -> b -> Data.DList.DList a
 getAsL_ = do
@@ -175,30 +228,23 @@ instance Flat a => Flat [a] where
 #endif
 
 #elif defined(LIST_BYTE)
-    encode = encodeList
-    decode = decodeList
+    encode = encodeArray
+    decode = decodeArray
 #endif
 
+-- BLOB UTF8Encoding
 instance Flat T.Text where
   -- 100 times slower
   -- encode l = (mconcat . map (\t -> T.foldl' (\r x -> r <> encode x) (eWord8 . fromIntegral . T.length$ t) t) . T.chunksOf 255 $ l) <> eWord8 0
     -- -- 200 times slower
     -- encode = encode . T.unpack
-    -- decode = T.pack <$> decodeList
+    -- decode = T.pack <$> decodeArray
    -- 4 times slower
-   encode = encode . T.encodeUtf8
-   decode = T.decodeUtf8 <$> decode
+   encode = encode . blob UTF8Encoding . L.fromStrict . T.encodeUtf8
+   decode = T.decodeUtf8 . L.toStrict . (unblob :: BLOB UTF8Encoding -> L.ByteString) <$> decode
 
 b = T.chunksOf 255 (T.pack "")
 
--- maps to BLOB NoEnc
-instance Flat B.ByteString where
-  encode bs = eFiller <> eBytes bs
-  decode = (decode :: Get Filler) >> dBytes
-
-instance Flat L.ByteString where
-  encode bs = eFiller <> eLazyBytes bs
-  decode = (decode :: Get Filler) >> dLazyBytes
 
 --------------- Numbers (TODO:Floats)
 -- See https://hackage.haskell.org/package/arith-encode
@@ -229,12 +275,16 @@ instance Flat Word8 where
   encode = eWord8
   decode = dWord8
 
--- Word16 to Word64 are encoded as:
+{- Word16 to Word64 are encoded as:
 -- data VarWord = VarWord (NonEmptyList Word7)
 -- data NonEmptyList a = Elem a | Cons a (NonEmptyList a)
 -- data Word7 = U0 .. U127
--- VarWord is a sequence of bytes, where every byte except the last one has the most significant bit (msb) set.
-
+-- VarWord is a sequence of Word7, where every byte except the last one has the most significant bit (msb) set.
+Example:
+3450 :: Word16/32/64.. = 11010(26) 1111010(122) coded as:
+Word16 (Cons V122 (Elem V26))
+so Least Significant Byte first.
+-}
 instance Flat Word16 where
   encode = eUnsigned
   decode = dUnsigned

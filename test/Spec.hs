@@ -151,13 +151,14 @@ unitTests = testGroup "Serialisation Unit tests" $ concat [
             --,s (Just $ T.pack "abc") [128+1,3,97,98,99,0]
             --,s (T.pack "abc") (al s3)
             --,s (T.pack $ cs 600) (al s600)
-            ,s (B.pack $ csb 3) (al c3)
-            ,s (B.pack $ csb 600) (al s600)
-            ,s (L.pack $ csb 3) (al c3)
-            ,s (L.pack $ csb 600) (al s600)
+            ,s (B.pack $ csb 3) (bsl c3)
+            ,s (B.pack $ csb 600) (bsl s600)
+            ,s (L.pack $ csb 3) (bsl c3)
+            ,s (L.pack $ csb 600) (bsl s600)
             ]
     where
-      al = (1:)
+      --al = (1:) -- prealign
+      bsl = id -- noalign
       s3 = [3,97,98,99,0]
       c3 = [3,99,99,99,0]
       s600 = concat [[255],csb 255,[255],csb 255,[90],csb 90,[0]]

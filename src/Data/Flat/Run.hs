@@ -77,12 +77,15 @@ unflatPart bs = runPartialGet decode bs 0
 
 -- instance Pretty (Encoded a) where pPrint = text . prettyLBS . bytes
 
-instance Pretty L.ByteString where pPrint = text . prettyLBS
+-- instance Pretty L.ByteString where pPrint = text . prettyLBS
 
 prettyLBS :: L.ByteString -> String
 prettyLBS = unwords . map prettyWord8 . L.unpack
 
-instance Pretty Word8 where pPrint = text . prettyWord8
+newtype Bits8 = Bits8 {bits8::Word8}
+instance Pretty Bits8 where pPrint = text . prettyWord8 . bits8
+
+instance Pretty Word8 where pPrint = text . show
 
 prettyWord8 :: Word8 -> String
 prettyWord8 = printf "%08b"
