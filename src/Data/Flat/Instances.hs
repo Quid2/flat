@@ -1,8 +1,9 @@
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE BangPatterns              #-}
 {-# LANGUAGE CPP                       #-}
+{-# LANGUAGE DeriveAnyClass            #-}
 {-# LANGUAGE DeriveGeneric             #-}
-{-# LANGUAGE NoMonomorphismRestriction,DeriveAnyClass #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 module Data.Flat.Instances (
   Array(..)
   ,BLOB(..),blob,unblob,FlatEncoding(..),UTF8Encoding(..)
@@ -10,21 +11,23 @@ module Data.Flat.Instances (
 
 import           Data.Binary.Bits.Get
 import qualified Data.ByteString      as B
---import           Data.ByteString.Builder.Extra hiding (builder, tag8)
 import qualified Data.ByteString.Lazy as L
 import           Data.Char
 import qualified Data.DList           as DL
 import           Data.Flat.Class
 import           Data.Flat.Encoding
 import           Data.Flat.Filler
+import           Data.Flat.Run
 import           Data.Int
+import qualified Data.Map             as M
 import           Data.Monoid
 import qualified Data.Text            as T
 import qualified Data.Text.Encoding   as T
 import           Data.Typeable
 import           Data.Word
 import           Data.ZigZag
-import Data.Flat.Run
+
+--import           Data.ByteString.Builder.Extra hiding (builder, tag8)
 --import           Data.Word.Odd                 (Word7)
 --import           Data.Flat.IEEE754
 #include "MachDeps.h"
@@ -65,10 +68,12 @@ data UTF8Encoding = UTF8Encoding deriving (Show,Eq,Generic,Flat)
 data NoEncoding = NoEncoding deriving (Show,Eq,Generic)
 
 data FlatEncoding = FlatEncoding deriving (Eq,Ord,Show,Generic,Flat)
+-- data FlatEncoding deriving (Eq,Ord,Show,Generic,Flat)
 
 -- b1 :: BLOB UTF8
 b1 = flat $ blob FlatEncoding (L.pack [97,98,99])
 
+-- The encoding is embedded as a value in order to support encodings that might have multiple values/variations.
 data BLOB encoding = BLOB encoding (PreAligned L.ByteString) deriving (Eq,Ord,Show,Generic,Flat)
 
 -- data String e = Text (PreAligned (e (Array Word8)))
@@ -82,7 +87,7 @@ blob :: encoding -> L.ByteString -> BLOB encoding
 blob enc = BLOB enc . preAligned
 
 unblob :: BLOB encoding -> L.ByteString
-unblob (BLOB _ pa) = preValue pa 
+unblob (BLOB _ pa) = preValue pa
 
 -- bytes :: Flat a => a -> Bytes
 -- bytes = Bytes . preAligned . Array . L.unpack . flat
@@ -113,6 +118,10 @@ unblob (BLOB _ pa) = preValue pa
 -- instance Flat L.ByteString where
 --   encode bs = eFiller <> eLazyBytes bs
 --   decode = (decode :: Get Filler) >> dLazyBytes
+
+instance (Flat a, Flat b,Ord a) => Flat (M.Map a b) where
+  encode = encode . M.toList
+  decode = M.fromList <$> decode
 
 -- == Array Word8 (prob: encoder might fail if used on their own)
 instance Flat B.ByteString where
@@ -280,8 +289,11 @@ instance Flat Word8 where
 -- data NonEmptyList a = Elem a | Cons a (NonEmptyList a)
 -- data Word7 = U0 .. U127
 -- VarWord is a sequence of Word7, where every byte except the last one has the most significant bit (msb) set.
+
+as in google protocol buffer VarInt 
+
 Example:
-3450 :: Word16/32/64.. = 11010(26) 1111010(122) coded as:
+3450 :: Word16/32/64.. = 0000110101111010 = 11010(26) 1111010(122) coded as:
 Word16 (Cons V122 (Elem V26))
 so Least Significant Byte first.
 -}
