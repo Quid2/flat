@@ -19,8 +19,7 @@ import           Data.Flat.Class
 import           Data.Flat.Encoder
 import           Data.Flat.Filler
 import           Data.Word
-import           Text.PrettyPrint.HughesPJClass
-import           Text.Printf
+import Data.Flat.Pretty
 
 -- |Encode byte-padded value.
 flat :: Flat a => a -> L.ByteString
@@ -54,8 +53,8 @@ unflatChk bs = case unflatPart bs of
                  Left e -> Left e
                  Right (v,bs,n) | L.null bs -> Right v -- && n ==0
                                 | otherwise -> Left $ unwords $ if n == 0
-                                                                then ["Partial decoding, left over data:",prettyLBS bs]
-                                                                else ["Partial decoding, left over data:",prettyLBS bs,"minus",show n,"bits"]
+                                                                then ["Partial decoding, left over data:",prettyShow bs]
+                                                                else ["Partial decoding, left over data:",prettyShow bs,"minus",show n,"bits"]
 
 
 unflatPart :: Flat a => L.ByteString -> Either String (a, L.ByteString, Int)
@@ -77,18 +76,9 @@ unflatPart bs = runPartialGet decode bs 0
 
 -- instance Pretty (Encoded a) where pPrint = text . prettyLBS . bytes
 
--- instance Pretty L.ByteString where pPrint = text . prettyLBS
-
-prettyLBS :: L.ByteString -> String
-prettyLBS = unwords . map prettyWord8 . L.unpack
-
 newtype Bits8 = Bits8 {bits8::Word8}
 instance Pretty Bits8 where pPrint = text . prettyWord8 . bits8
 
-instance Pretty Word8 where pPrint = text . show
-
-prettyWord8 :: Word8 -> String
-prettyWord8 = printf "%08b"
 
 type Decoded a = Either DeserializeFailure a
 

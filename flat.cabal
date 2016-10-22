@@ -10,7 +10,7 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 library
-  exposed-modules: Data.Binary.Bits.Get,Data.ByteString.Builder.Extra,Data.Flat.Bits,Data.Flat.Class,Data.Flat.Encoder,Data.Flat.Encoding,Data.Flat.Filler,Data.Flat.Instances,Data.Flat.Run,Data.Flat.Types,Data.Flat,Data.Seq,Data.Shift,Data.ZigZag
+  exposed-modules: Data.Binary.Bits.Get,Data.ByteString.Builder.Extra,Data.Flat.Bits,Data.Flat.Class,Data.Flat.Encoder,Data.Flat.Encoding,Data.Flat.Filler,Data.Flat.Instances,Data.Flat.Pretty,Data.Flat.Run,Data.Flat.Types,Data.Flat,Data.Seq,Data.Shift,Data.ZigZag
   build-depends:       base
                      , binary >= 0.7.5.0
                      , bytestring

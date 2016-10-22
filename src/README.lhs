@@ -14,11 +14,12 @@ Let's see some code.
 
 Setup a couple of extensions:
 
-> {-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
+> {-# LANGUAGE DeriveGeneric, DeriveAnyClass, NoMonomorphismRestriction #-}
 
 Import the Flat library:
 
 > import Data.Flat
+> import Data.Flat.Pretty
 
 Define a couple of custom data types, deriving `Generic` and `Flat`:
 
@@ -27,7 +28,6 @@ Define a couple of custom data types, deriving `Generic` and `Flat`:
 
 Define a utility function: `bits` encodes the value, `prettyShow` displays it nicely:
 
-> p :: Flat a => a -> String
 > p = prettyShow . bits
 
 Some encodings:
@@ -66,7 +66,7 @@ It is not yet on [hackage](https://hackage.haskell.org/) so to use in your [stac
 packages:
 - location:
     git: https://github.com/tittoassini/flat
-    commit: 
+    commit:
 ````
 
  ### Compatibility

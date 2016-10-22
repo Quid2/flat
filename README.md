@@ -1,7 +1,7 @@
 
 Haskell implementation of [Flat](http://quid2.org), a minimalist binary data format ([specs](http://quid2.org/docs/Flat.pdf)).
 
-### Brief Tutorial for Haskellers
+### How To Use It For Fun and Profit
 
 Flat is a binary data format, similar to `binary` or `cereal`.
 
@@ -16,13 +16,14 @@ Let's see some code.
 Setup a couple of extensions:
 
 ```haskell
-{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric, DeriveAnyClass, NoMonomorphismRestriction #-}
 ```
 
 Import the Flat library:
 
 ```haskell
 import Data.Flat
+import Data.Flat.Pretty
 ```
 
 Define a couple of custom data types, deriving `Generic` and `Flat`:
@@ -35,7 +36,6 @@ data List a = Nil | Cons a (List a) deriving (Show,Generic,Flat)
 Define a utility function: `bits` encodes the value, `prettyShow` displays it nicely:
 
 ```haskell
-p :: Flat a => a -> String
 p = prettyShow . bits
 ```
 
@@ -92,12 +92,23 @@ Right (Cons North (Cons South Nil))
 
 ### Installation
 
-Can be installed from this repository or as part of the [quid2](https://github.com/tittoassini/quid2) project.
+It is not yet on [hackage](https://hackage.haskell.org/) so to use in your [stack](https://docs.haskellstack.org/en/stable/README/) projects, add a reference to its github location under the 'packages' section:
+
+````
+packages:
+- location:
+    git: https://github.com/tittoassini/flat
+    commit:
+````
+
+### Compatibility
+
+Tested with [ghc](https://www.haskell.org/ghc/) 7.10.3 and 8.0.1.
 
 ### Known Bugs and Infelicities
 
 * Encoding and decoding of String/Text is very slow
 * Messy source code
-
+* Contains code 'lifted' and modified from the binary-bits package
 -----
 [Source code](https://github.com/tittoassini/flat/blob/master/src/README.lhs)
