@@ -98,7 +98,7 @@ It is not yet on [hackage](https://hackage.haskell.org/) so to use in your [stac
 packages:
 - location:
     git: https://github.com/tittoassini/flat
-    commit:
+    commit: 9403e01
 ````
 
 ### Compatibility
@@ -110,5 +110,6 @@ Tested with [ghc](https://www.haskell.org/ghc/) 7.10.3 and 8.0.1.
 * Encoding and decoding of String/Text is very slow
 * Messy source code
 * Contains code 'lifted' and modified from the binary-bits package
+
 -----
 [Source code](https://github.com/tittoassini/flat/blob/master/src/README.lhs)
