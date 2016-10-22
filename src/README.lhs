@@ -60,12 +60,23 @@ For decoding, use `unflat`:
 
  ### Installation
 
-Can be installed from this repository or as part of the [quid2](https://github.com/tittoassini/quid2) project.
+It is not yet on [hackage](https://hackage.haskell.org/) so to use in your [stack](https://docs.haskellstack.org/en/stable/README/) projects, add a reference to its github location under the 'packages' section:
+
+````
+packages:
+- location:
+    git: https://github.com/tittoassini/flat
+    commit: 
+````
+
+ ### Compatibility
+
+Tested with [ghc](https://www.haskell.org/ghc/) 7.10.3 and 8.0.1.
 
  ### Known Bugs and Infelicities
 
 * Encoding and decoding of String/Text is very slow
 * Messy source code
-
+* Contains code 'lifted' and modified from the binary-bits package
 -----
 [Source code](https://github.com/tittoassini/flat/blob/master/src/README.lhs)

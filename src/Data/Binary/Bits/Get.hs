@@ -1,4 +1,7 @@
-{-# LANGUAGE RankNTypes, MagicHash, BangPatterns, CPP #-}
+{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE CPP          #-}
+{-# LANGUAGE MagicHash    #-}
+{-# LANGUAGE RankNTypes   #-}
 
 -----------------------------------------------------------------------------
 -- |
@@ -73,7 +76,7 @@ module Data.Binary.Bits.Get
             -- ** Read in Blocks
             ,dBool
             ,dWord8,dBits,dUnsigned,dBytes,dLazyBytes
-
+            ,dropBits
             , bool
             , word8
             , word16be
@@ -83,28 +86,33 @@ module Data.Binary.Bits.Get
             , Data.Binary.Bits.Get.getByteString
             , Data.Binary.Bits.Get.getLazyByteString
             , Data.Binary.Bits.Get.isEmpty
-
+            ,funny,funny2
             ) where
 
-import qualified Data.Binary.Get as B ( runGet, Get, getByteString, getLazyByteString, isEmpty ,runGetOrFail)
-import qualified Data.Binary.Get.Internal as B ( get, put, ensureN )
+import qualified Data.Binary.Get          as B (Get, getByteString,
+                                                getLazyByteString, isEmpty,
+                                                runGet, runGetOrFail)
+import qualified Data.Binary.Get.Internal as B (ensureN, get, put)
 
-import Data.ByteString as S
-import qualified Data.ByteString.Lazy as L
-import Data.ByteString.Unsafe
-
-import Data.Bits
-import Data.Word
-import Control.Applicative
-
-import Prelude as P
+import           Control.Applicative
+import           Data.Bits
+import           Data.ByteString          as S
+import qualified Data.ByteString.Lazy     as L
+import           Data.ByteString.Unsafe
+import           Data.Word
+import           Prelude                  as P
 
 #if defined(__GLASGOW_HASKELL__) && !defined(__HADDOCK__)
-import GHC.Base
-import GHC.Word
+import           GHC.Base
+import           GHC.Word
 #endif
 
 type Get = BitGet --BitG.Block --
+
+funny2 = funny . funny
+
+funny :: Int -> Int
+funny n = shiftR (shiftL n 3) 6
 
 {-# INLINE dBool #-}
 {-# INLINE dWord8  #-}
@@ -119,10 +127,10 @@ dWord8 = word8 8
 
 dBits = word8
 -}
-
 dBool = getBool
 dWord8 = getWord8 8
 dBits = getWord8
+
 
 {-# INLINE dUnsigned #-}
 {-# INLINE dUnsigned_ #-}
@@ -135,7 +143,7 @@ decodeUnsigned = BG $ do
 -}
 
 dBytes :: BitGet ByteString
-dBytes = S.concat <$> dBytes_ 
+dBytes = S.concat <$> dBytes_
 
 dLazyBytes :: BitGet L.ByteString
 dLazyBytes = L.fromChunks <$> dBytes_
@@ -235,6 +243,11 @@ block (Block i p) = do
   s <- getState
   putState $! (incS i s)
   return $! p s
+
+dropBits i = do
+  ensureBits i
+  s <- getState
+  putState $! (incS i s)
 
 incS :: Int -> S -> S
 incS o (S bs n) =
@@ -451,8 +464,8 @@ mkInitState = do
   str <- B.get
   B.put S.empty
   return (S str 0)
-  
-runPartialBitGet :: Int 
+
+runPartialBitGet :: Int
                  -> BitGet a
                  -> B.Get (a,Int)
 runPartialBitGet n0 bg = do
@@ -461,7 +474,7 @@ runPartialBitGet n0 bg = do
   (S str' n,a) <- runState bg s
   putBack str'
   return (a,n)
- 
+
 putBack :: S.ByteString -> B.Get ()
 putBack bs = do
  remaining <- B.get
