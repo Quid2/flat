@@ -92,7 +92,7 @@ Right (Cons North (Cons South Nil))
 
 ### Installation
 
-It is not yet on [hackage](https://hackage.haskell.org/) so to use in your [stack](https://docs.haskellstack.org/en/stable/README/) projects, add a reference to its github location under the 'packages' section:
+It is not yet on [hackage](https://hackage.haskell.org/) but you can still use it in your [stack](https://docs.haskellstack.org/en/stable/README/) projects by adding a reference to its github location under the 'packages' section:
 
 ````
 packages:
