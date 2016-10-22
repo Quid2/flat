@@ -7,7 +7,6 @@ module Data.Flat.Run(flat,unflat,flatRaw,unflatRaw
                     ,runGet
                     --,Encoded(..),encoded,decoded
                     ,Decoded
-                    --,prettyWord8
                     ) where
 
 import           Control.Exception

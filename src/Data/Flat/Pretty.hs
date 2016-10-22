@@ -1,13 +1,17 @@
 module Data.Flat.Pretty(Pretty(..),text,prettyShow,prettyWord8) where
 import           Text.PrettyPrint.HughesPJClass
+import qualified Data.ByteString           as B
 import qualified Data.ByteString.Lazy           as L
 import Data.Word
 import           Text.Printf
 
-instance Pretty L.ByteString where pPrint = text . prettyLBS
+instance Pretty B.ByteString where pPrint = prettyBL . B.unpack
+instance Pretty L.ByteString where pPrint = prettyBL . L.unpack
 
-prettyLBS :: L.ByteString -> String
-prettyLBS = unwords . map prettyWord8 . L.unpack
+-- prettyLBS :: L.ByteString -> String
+-- prettyLBS = text . unwords . map prettyWord8 . L.unpack
+
+prettyBL = text . unwords . map prettyWord8
 
 instance Pretty Word8 where pPrint = text . show
 
