@@ -96,9 +96,7 @@ It is not yet on [hackage](https://hackage.haskell.org/) but you can still use i
 
 ````
 packages:
-- location:
-    git: https://github.com/tittoassini/flat
-    commit: 9403e01
+- location: {git:"https://github.com/tittoassini/flat",commit:"3ae580d"}
 ````
 
 ### Compatibility
