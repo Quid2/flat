@@ -60,13 +60,13 @@ For decoding, use `unflat`:
 
  ### Installation
 
-It is not yet on [hackage](https://hackage.haskell.org/) but you can still use it in your [stack](https://docs.haskellstack.org/en/stable/README/) projects by adding a reference to its github location under the 'packages' section:
+It is not yet on [hackage](https://hackage.haskell.org/) but you can use it in your [stack](https://docs.haskellstack.org/en/stable/README/) projects by adding in the `stack.yaml` file, under the `packages` section:
 
 ````
-packages:
 - location:
    git: https://github.com/tittoassini/flat
-   commit: 3ae580d
+   commit: 3771f5946dd506c6f199aa4047186d5b57bdce5f
+  extra-dep: true
 ````
 
  ### Compatibility
