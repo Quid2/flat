@@ -23,7 +23,7 @@ import qualified Data.Map             as M
 import           Data.Monoid
 import qualified Data.Text            as T
 import qualified Data.Text.Encoding   as T
-import           Data.Typeable
+-- import           Data.Typeable
 import           Data.Word
 import           Data.ZigZag
 
@@ -284,13 +284,14 @@ instance Flat Word8 where
   encode = eWord8
   decode = dWord8
 
+
 {- Word16 to Word64 are encoded as:
 -- data VarWord = VarWord (NonEmptyList Word7)
 -- data NonEmptyList a = Elem a | Cons a (NonEmptyList a)
 -- data Word7 = U0 .. U127
 -- VarWord is a sequence of Word7, where every byte except the last one has the most significant bit (msb) set.
 
-as in google protocol buffer VarInt 
+as in google protocol buffer VarInt
 
 Example:
 3450 :: Word16/32/64.. = 0000110101111010 = 11010(26) 1111010(122) coded as:
@@ -355,6 +356,15 @@ instance Flat Integer where
 -- instance Flat Word7 where
 --     encode = eBits 7 . fromIntegral . fromEnum
 --     decode = toEnum . fromIntegral <$> dBits 7
+
+-- data Real = Real {realBase::Integer,realExponent::}
+instance Flat Float where
+    encode = encode . decodeFloat
+    decode = encodeFloat <$> decode <*> decode
+
+instance Flat Double where
+    encode = encode . decodeFloat
+    decode = encodeFloat <$> decode <*> decode
 
 ----------------- Characters
 -- data ASCII = ASCII Word7 deriving (Eq,Show,Generic)

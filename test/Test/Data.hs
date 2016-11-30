@@ -14,7 +14,7 @@ import           Data.Word
 import           Data.Typeable
 import           Data.Data
 import           GHC.Generics
-
+import           Data.Data
 import qualified Test.Data2 as D2
 import Data.Foldable
 import GHC.Exts hiding (toList)
@@ -75,7 +75,7 @@ data Ints = Ints Int8 Int16 Int32 Int64
             deriving (Eq, Ord, Read, Show, Typeable, Data, Generic)
 
 -- non-recursive data type
-data Various = V1 (Maybe Char) (Maybe Word8) | V2 () (Either Word8 Int)
+data Various = V1 (Maybe Bool) | V2 Bool (Either Bool (Maybe Bool))
               deriving (Eq, Ord, Read, Show, Typeable, Data, Generic)
 
 -- Phantom type
@@ -110,10 +110,12 @@ data Perfect a = ZeroP a | SuccP (Perfect (Fork a)) deriving (Eq, Ord, Read, Sho
 data Fork a = Fork a a deriving (Eq, Ord, Read, Show, Typeable, Data, Generic)
 
 -- non regular with higher-order kind parameters
--- no Binary/HasModel instances 
+-- no Binary/Model instances
 data PerfectF f α = NilP | ConsP α (PerfectF f (f α)) deriving (Typeable,Generic) -- No Data
 
 data Pr f g a = Pr (f a (g a))
+
+data Higher f a = Higher (f a) deriving (Typeable,Generic,Data)
 
 -- data Pr2 (f :: * -> *) a = Pr2 (f )
 
@@ -122,7 +124,6 @@ data Free f a = Pure a | Roll (f (Free f a)) deriving (Typeable,Generic)
 -- mutual references
 data A = A B | AA Int deriving (Eq, Ord, Read, Show, Typeable, Data, Generic)
 data B = B A | BB Char deriving (Eq, Ord, Read, Show, Typeable, Data, Generic)
-
 
 -- recursive sets:
 -- Prob: ghc will just explode on this

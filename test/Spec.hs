@@ -4,7 +4,7 @@
 {-# LANGUAGE NegativeLiterals          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
-{-# LANGUAGE TemplateHaskell           #-}
+
 -- | Tests for the flat module
 module Main where
 
@@ -20,17 +20,24 @@ import qualified Data.ByteString       as B
 import qualified Data.ByteString.Lazy  as L
 import qualified Data.Text             as T
 
+import           Data.Either
 import           Data.Flat
 import           Data.List
 import           Data.Ord
+import           Data.Proxy
+import           System.Exit
 import           Test.Data
+import           Test.Data.Arbitrary
 import           Test.Data.Flat
-import Data.Either
-import Data.Proxy
 
-t = main
+main = mainTest
+-- main = mainShow
 
-main = defaultMain tests
+mainShow = do
+  mapM_ (\_ -> generate (arbitrary :: Gen Int) >>= print) [1..10]
+  exitFailure
+
+mainTest = defaultMain tests
 
 tests :: TestTree
 tests = testGroup "Tests" [properties
@@ -51,6 +58,8 @@ properties = testGroup "Properties"
     ,rt "Int64" (prop_Flat_Large_roundtrip:: RTL Int64)
     ,rt "Int" (prop_Flat_Large_roundtrip:: RTL Int)
     ,rt "Integer" (prop_Flat_roundtrip:: RT Integer)
+    ,rt "Float" (prop_Flat_roundtrip:: RT Float)
+    ,rt "Double" (prop_Flat_roundtrip:: RT Double)        
     ,rt "Char" (prop_Flat_roundtrip:: RT Char)
     --,rt "ASCII" (prop_Flat_roundtrip:: RT ASCII)
     ,rt "Unit" (prop_Flat_roundtrip:: RT Unit)
@@ -72,13 +81,10 @@ properties = testGroup "Properties"
   ]
    where rt n = QC.testProperty (unwords ["round trip",n])
 
-unitTests0 = testGroup "Serialisation Unit tests" $ concat [
-            ]
-
 unitTests = testGroup "Serialisation Unit tests" $ concat [
-            errDec (Proxy::Proxy Bool) []
-            ,errDec (Proxy::Proxy Bool) [128]
-            ,errDec (Proxy::Proxy Bool) [128+1,1,2,4,8]
+             errDec (Proxy::Proxy Bool) [] -- no data
+            ,errDec (Proxy::Proxy Bool) [128] -- no filler
+            ,errDec (Proxy::Proxy Bool) [128+1,1,2,4,8] -- additional bytes
             ,s () []
             ,s ((),()) []
             ,a () [1]
@@ -163,12 +169,17 @@ unitTests = testGroup "Serialisation Unit tests" $ concat [
       c3 = [3,99,99,99,0]
       s600 = concat [[255],csb 255,[255],csb 255,[90],csb 90,[0]]
       s600B = concat [[55],csb 55,[255],csb 255,[90],csb 90,[200],csb 200,[0]]
+
       tstI = map ti
+
       ti v | v >= 0    = testCase (unwords ["Int",show v]) $ teq v (2 * fromIntegral v ::Word64)
            | otherwise = testCase (unwords ["Int",show v]) $ teq v (2 * fromIntegral (-v) - 1 ::Word64)
+
       teq a b = ser a @?= ser b
+
       s v e = [testCase (unwords ["flat raw",show v]) $ serRaw v @?= e
               ,testCase (unwords ["unflat raw",show v]) $ Right v @?= desRaw e]
+
       -- Aligned values unflat to the original value, modulo the added filler.
       a v e = [testCase (unwords ["flat",show v]) $ ser v @?= e
               ,testCase (unwords ["unflat",show v]) $ let Right v' = des e in v @?= v']
@@ -216,10 +227,6 @@ prop_common_unsigned n _ = let n2 :: h = fromIntegral n
 -- el :: List Bool
 -- el = unflatIncremental . flat $ infList
 
--- xxx = generate (arbitrary :: Gen (Large (Int)))
-
--- yyy = generate (arbitrary :: Gen (Word7))
-
 -- deflat = unflat
 
 -- f = e (preAligned True)
@@ -234,29 +241,4 @@ prop_common_unsigned n _ = let n2 :: h = fromIntegral n
 -- -- b1 = BLOB (preAligned (UTF8 (List255 [97,98,99])))
 
 -- derive makeSerial ''Unit
-
-instance Arbitrary B.ByteString where arbitrary   = fmap B.pack arbitrary
-
-instance Arbitrary L.ByteString where arbitrary   = fmap L.pack arbitrary
-
-instance Arbitrary T.Text where arbitrary   = fmap T.pack arbitrary
-
--- instance Arbitrary a => Arbitrary (List a) where arbitrary = fmap l2L arbitrary
-
-derive makeArbitrary ''N
-
-derive makeArbitrary ''Tree
-
-derive makeArbitrary ''List
-
-derive makeArbitrary ''Unit
-
-derive makeArbitrary ''Un
-
-derive makeArbitrary ''A
-
-derive makeArbitrary ''B
-
--- instance Arbitrary Word7 where arbitrary  = toEnum <$> choose (0, 127)
--- derive makeArbitrary ''ASCII
 

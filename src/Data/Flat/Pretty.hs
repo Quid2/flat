@@ -1,11 +1,12 @@
-module Data.Flat.Pretty(Pretty(..),text,prettyShow,prettyWord8) where
-import           Text.PrettyPrint.HughesPJClass
-import qualified Data.ByteString           as B
+module Data.Flat.Pretty(Pretty(..),prettyShow,prettyWord8) where
+import qualified Data.ByteString                as B
 import qualified Data.ByteString.Lazy           as L
-import Data.Word
+import           Data.Word
+import           Text.PrettyPrint.HughesPJClass
 import           Text.Printf
 
 instance Pretty B.ByteString where pPrint = prettyBL . B.unpack
+
 instance Pretty L.ByteString where pPrint = prettyBL . L.unpack
 
 -- prettyLBS :: L.ByteString -> String

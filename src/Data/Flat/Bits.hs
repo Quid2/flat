@@ -5,13 +5,13 @@
 module Data.Flat.Bits(Bits(..),bits,bools) where
 
 import           Data.Bits                      hiding (Bits)
-import           Data.ByteString.Lazy           (ByteString, toStrict, unpack)
+-- import           Data.ByteString.Lazy           (ByteString, toStrict, unpack)
 import qualified Data.ByteString.Lazy           as L
 import           Data.Flat.Class
 import           Data.Flat.Filler
 import           Data.Flat.Run
 import qualified Data.Vector.Unboxed            as V
-import           Data.Word
+-- import           Data.Word
 import           Text.PrettyPrint.HughesPJClass
 
 --import           Data.Flat.Instances

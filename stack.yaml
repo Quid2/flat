@@ -1,14 +1,28 @@
-resolver: lts-6.22
-#resolver: lts-7.4
+# ghc 7.10.3
+resolver: lts-6.26
+
+# ghc 8.0.1
+#resolver: lts-7.10
 
 # Local packages, usually specified by relative directory name
 packages:
 - '.'
 
+- location:
+   git: https://github.com/well-typed/binary-serialise-cbor
+   commit: 1e11ea5cc7810d241b2fe1bca0ed435baa4d4371
+  extra-dep: true
+
 # extra-deps: [OddWord-1.0.1.0,binary-bits-0.5,sequence-0.9.8]
+extra-deps:
+- store-0.3
+- store-core-0.3
+- th-utilities-0.2.0.1
 
 # Override default flag values for local packages and extra-deps
-flags: {}
+flags:
+  binary-serialise-cbor:
+    newtime15: true
 
 # Extra package databases containing global packages
 extra-package-dbs: []

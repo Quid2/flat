@@ -11,14 +11,15 @@ module Data.Flat.Run(flat,unflat,flatRaw,unflatRaw
 
 import           Control.Exception
 import           Data.Binary.Bits.Get
-import qualified Data.Binary.Get                as Get (Decoder (..), Get (..),
+import qualified Data.Binary.Get                as Get (Decoder (..), Get,
                                                         runGetIncremental)
 import qualified Data.ByteString.Lazy           as L
 import           Data.Flat.Class
 import           Data.Flat.Encoder
 import           Data.Flat.Filler
+import           Data.Flat.Pretty
 import           Data.Word
-import Data.Flat.Pretty
+import           Text.PrettyPrint.HughesPJClass
 
 -- |Encode byte-padded value.
 flat :: Flat a => a -> L.ByteString

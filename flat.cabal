@@ -1,15 +1,18 @@
 name:                flat
-version:             0.1.2
-synopsis:            Principled and efficient binary serialization.
+version:             0.1.3
+synopsis:            Principled and efficient bit-oriented binary serialization.
+description:         See http\://github.com/tittoassini/flat for a tutorial
 homepage:            http://github.com/tittoassini/flat
-license:             MIT
-author:              Pasqualino Titto Assini
+license:             BSD3
+license-file:        LICENSE
+author:              Pasqualino `Titto` Assini
 maintainer:          tittoassini@gmail.com
-category:            System
+category:            Data,Parsing,Serialization
 build-type:          Simple
 cabal-version:       >=1.10
 
 library
+  hs-source-dirs:      src
   exposed-modules: Data.Binary.Bits.Get,Data.ByteString.Builder.Extra,Data.Flat.Bits,Data.Flat.Class,Data.Flat.Encoder,Data.Flat.Encoding,Data.Flat.Filler,Data.Flat.Instances,Data.Flat.Pretty,Data.Flat.Run,Data.Flat.Types,Data.Flat,Data.Seq,Data.Shift,Data.ZigZag
   build-depends:       base
                      , binary >= 0.7.5.0
@@ -17,27 +20,91 @@ library
                      , dlist
                      , pretty >= 1.1.2.0
                      , text
-                     , vector >= 0.11.0.0,containers
-  -- ,binary-bits,dlist,array,sequence,bits,bytestring >= 0.10.6,OddWord
-  hs-source-dirs:      src
+                     , vector >= 0.11.0.0
+                     , containers
   default-language:    Haskell2010
   cpp-options: -DENC_8 -DOP_ENC -DPKG_QUID2 -DLIST_BIT -DARRDEC_DIRECT
   ghc-options:  -O2 -funbox-strict-fields
-  -- ghc-options: -dumpdir /tmp/dump -ddump-to-file -ddump-asm -ddump-cmm -dsuppress-all
-  -- -fprof-auto        
   default-extensions: CPP
 
 test-suite flat-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
-  other-modules: Test.Data,Test.Data2,Test.Data.Flat,Test.Data2.Flat
-  build-depends:       base
+  other-modules: Test.Data,Test.Data2,Test.Data.Arbitrary,Test.Data.Flat,Test.Data2.Flat
+  build-depends:       base,tasty,tasty-hunit,tasty-quickcheck,ghc-prim,derive,text,bytestring,flat
+  -- ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
+
+-- executable flat-multi-bench
+--   main-is:             TestAlternatives.hs
+--   hs-source-dirs:      benchmarks,test,src
+--   -- other-modules:       Data.TypeHash
+--   other-extensions:    StandaloneDeriving, DeriveDataTypeable, DeriveGeneric, CPP
+--   default-language:    Haskell2010
+--   build-depends:       base
+--                      , regex-compat,text,filepath,containers,directory,process
+--                      , flat
+
+executable flat-profile
+  main-is:             Profile.hs
+  hs-source-dirs:      benchmarks
+  -- ghc-options: -dumpdir /tmp/dump -ddump-to-file -dsuppress-all -ddump-asm -eventlog
+               -- -fprof-auto        
+  build-depends: base,flat,bytestring
+  default-language:    Haskell2010
+
+benchmark flat-benchmark
+  type:                exitcode-stdio-1.0
+  main-is:             Main.hs
+  hs-source-dirs:      benchmarks,test,src
+  other-extensions:    StandaloneDeriving, DeriveDataTypeable, DeriveGeneric, CPP
+  default-language:    Haskell2010
+  build-depends:       QuickCheck
+                     , aeson
+                     , array
+                     , base
+                     , binary
+                     --, binary-bits
+                     , binary-serialise-cbor
+                     , store
+                     , bits >= 0.4
+                     , blaze-html >= 0.8.0.2
+                     -- , bytes enc>= 0.14.1.1
+                     , bytestring
+                     , cereal >= 0.4.1.0
+                     , containers >=0.4 && <0.6
+                     , criterion
+                     , deepseq
+                     , derive
+                     , dlist
+                     , filepath >=1.3
+                     , ghc-prim >=0.2
+                     , mime-types >= 0.1.0.6
+                     , pretty >=1.1 && <1.2
+                     , syb
+                     , tar
+                     -- >=0.4 && <0.5
+                     , text
+                     -- , time >= 1.4
+                     , zlib >=0.5 && <0.7,directory
+                     --, OddWord
+                     , vector,process
                      , flat
-                     , tasty,tasty-hunit,tasty-quickcheck,ghc-prim,derive,text,bytestring
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  other-modules:     PkgBinary,PkgStore,PkgCBOR,PkgCereal,PkgQuid2,Test.Data,Test.Data.Values,Test.Data2,Test.Data.Arbitrary,Test.Data.Flat,Test.Data2.Flat
+  default-extensions:CPP,NoMonomorphismRestriction
+  ghc-options:        -O2
+  --                      -fprof-auto -rtsopts -caf-all -dumpdir /Users/titto/cache/dump -ddump-simpl -ddump-to-file
+  -- not compatible with profiling
+  -- -eventlog
+  cpp-options: -DENC_8 -DOP_ENCDEC -DPKG_QUID2 -DLIST_BYTE
+  -- cpp-options: -DENC_8 -DOP_ENC -DPKG_QUID2 -DLIST_BIT
+  -- -dsuppress-all
+  -- -fprof-auto -rtsopts -ddump-deriv
+  -- -ddump-deriv -ddump-strsigs -dsuppress-all -ddump-asm -ddump-to-file
   default-language:    Haskell2010
 
 source-repository head
   type:     git
   location: https://github.com/tittoassini/flat
+
