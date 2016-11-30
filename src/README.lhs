@@ -65,7 +65,7 @@ It is not yet on [hackage](https://hackage.haskell.org/) but you can use it in y
 ````
 - location:
    git: https://github.com/tittoassini/flat
-   commit: 3771f5946dd506c6f199aa4047186d5b57bdce5f
+   commit: 9734f1b5702d531483b374b541d5fb8f235875cf
   extra-dep: true
 ````
 
