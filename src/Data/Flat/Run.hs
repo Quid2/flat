@@ -2,9 +2,11 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE TypeSynonymInstances      #-}
-module Data.Flat.Run(flat,unflat,flatRaw,unflatRaw
+module Data.Flat.Run(flat,unflat,unflatWith
+                    ,flatRaw,unflatRaw
                     ,DeserializeFailure
-                    ,runGet
+                    --,runGet
+                    ,getBool,Get -- for dynamic decoding
                     --,Encoded(..),encoded,decoded
                     ,Decoded
                     ) where
@@ -19,7 +21,6 @@ import           Data.Flat.Encoder
 import           Data.Flat.Filler
 import           Data.Flat.Pretty
 import           Data.Word
-import           Text.PrettyPrint.HughesPJClass
 
 -- |Encode byte-padded value.
 flat :: Flat a => a -> L.ByteString
@@ -27,9 +28,15 @@ flat = flatRaw . postAligned
 
 -- |Decode byte-padded value
 unflat :: Flat a => L.ByteString -> Decoded a
-unflat bs = (\(PostAligned v _) -> v) <$> unflatChk bs
+unflat bs = (\(PostAligned v _) -> v) <$> unflatChkWith decode bs
 
--- Encode value, if values does not end on byte boundary, 0s padding is added.
+unflatWith :: Get a -> L.ByteString -> Either String a
+unflatWith dec bs = unflatChkWith (do
+                                      v <- dec
+                                      _::Filler <- decode
+                                      return v) bs
+
+-- |Encode value, if values does not end on byte boundary, 0s padding is added.
 flatRaw :: Flat a => a -> L.ByteString
 flatRaw = bitEncoder . encode
 
@@ -48,18 +55,19 @@ unflatRaw = runGetOrFail decode
 --unflatRaw :: Flat a => L.ByteString -> Either String (a, L.ByteString, Int)
 --unflatRaw bs = runPartialGet decode bs 0
 
-unflatChk :: Flat a => L.ByteString -> Decoded a
-unflatChk bs = case unflatPart bs of
-                 Left e -> Left e
-                 Right (v,bs,n) | L.null bs -> Right v -- && n ==0
-                                | otherwise -> Left $ unwords $ if n == 0
-                                                                then ["Partial decoding, left over data:",prettyShow bs]
-                                                                else ["Partial decoding, left over data:",prettyShow bs,"minus",show n,"bits"]
+-- unflatChk :: Flat a => L.ByteString -> Decoded a
+unflatChkWith dec bs = case unflatPartWith dec bs of
+                         Left e -> Left e
+                         Right (v,bs,n) | L.null bs -> Right v -- && n ==0
+                                        | otherwise -> Left $ unwords $ if n == 0
+                                                                then ["Partial decoding, left over data:",prettyLBS bs]
+                                                                else ["Partial decoding, left over data:",prettyLBS bs,"minus",show n,"bits"]
 
 
-unflatPart :: Flat a => L.ByteString -> Either String (a, L.ByteString, Int)
-unflatPart bs = runPartialGet decode bs 0
+-- unflatPart :: Flat a => L.ByteString -> Either String (a, L.ByteString, Int)
+-- unflatPart bs = runPartialGet decode bs 0
 
+unflatPartWith dec bs = runPartialGet dec bs 0
 
 --unflatIncremental = Get.runGetIncremental
 -- runGet decode
@@ -76,8 +84,8 @@ unflatPart bs = runPartialGet decode bs 0
 
 -- instance Pretty (Encoded a) where pPrint = text . prettyLBS . bytes
 
-newtype Bits8 = Bits8 {bits8::Word8}
-instance Pretty Bits8 where pPrint = text . prettyWord8 . bits8
+-- newtype Bits8 = Bits8 {bits8::Word8}
+-- instance Pretty Bits8 where pPrint = text . prettyWord8 . bits8
 
 
 type Decoded a = Either DeserializeFailure a
@@ -85,3 +93,4 @@ type Decoded a = Either DeserializeFailure a
 type DeserializeFailure = String
 
 instance Exception DeserializeFailure
+

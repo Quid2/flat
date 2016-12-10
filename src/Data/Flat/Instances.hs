@@ -9,6 +9,7 @@ module Data.Flat.Instances (
   ,BLOB(..),blob,unblob,FlatEncoding(..),UTF8Encoding(..)
   ) where
 
+import           Control.DeepSeq
 import           Data.Binary.Bits.Get
 import qualified Data.ByteString      as B
 import qualified Data.ByteString.Lazy as L
@@ -23,7 +24,6 @@ import qualified Data.Map             as M
 import           Data.Monoid
 import qualified Data.Text            as T
 import qualified Data.Text.Encoding   as T
--- import           Data.Typeable
 import           Data.Word
 import           Data.ZigZag
 
@@ -63,18 +63,19 @@ ByteString == BLOB
  -- data UTF8 a = UTF8 a deriving (Show,Eq,Typeable,Generic)
  -- instance Flat a => Flat (UTF8 a)
 
-data UTF8Encoding = UTF8Encoding deriving (Show,Eq,Generic,Flat)
+data UTF8Encoding = UTF8Encoding
+  deriving (Eq, Ord, Show, NFData, Generic, Flat)
 
-data NoEncoding = NoEncoding deriving (Show,Eq,Generic)
+data NoEncoding = NoEncoding deriving (Eq, Ord, Show, NFData, Generic, Flat)
 
-data FlatEncoding = FlatEncoding deriving (Eq,Ord,Show,Generic,Flat)
--- data FlatEncoding deriving (Eq,Ord,Show,Generic,Flat)
+data FlatEncoding = FlatEncoding deriving (Eq, Ord, Show, NFData, Generic, Flat)
 
 -- b1 :: BLOB UTF8
 b1 = flat $ blob FlatEncoding (L.pack [97,98,99])
 
 -- The encoding is embedded as a value in order to support encodings that might have multiple values/variations.
-data BLOB encoding = BLOB encoding (PreAligned L.ByteString) deriving (Eq,Ord,Show,Generic,Flat)
+data BLOB encoding = BLOB encoding (PreAligned L.ByteString)
+  deriving (Eq, Ord, Show, NFData, Generic, Flat)
 
 -- data String e = Text (PreAligned (e (Array Word8)))
 -- data BLOB encoding = BLOB (PreAligned (encoding (Array Word8))) deriving (Typeable,Generic)
@@ -88,36 +89,6 @@ blob enc = BLOB enc . preAligned
 
 unblob :: BLOB encoding -> L.ByteString
 unblob (BLOB _ pa) = preValue pa
-
--- bytes :: Flat a => a -> Bytes
--- bytes = Bytes . preAligned . Array . L.unpack . flat
--- bytes :: L.ByteString -> Bytes
--- bytes = Bytes . preAligned
-
--- unbytes :: Bytes -> [Word8]
--- unbytes (Bytes (PreAligned _ (Array bs))) = bs
---unbytes :: Bytes -> L.ByteString
---unbytes (Bytes (PreAligned _ bs)) = bs
-
--- A pre-aligned sequence of bytes.
--- data Bytes = Bytes (PreAligned (Array Word8)) deriving (Eq,Ord, Show,Generic,Flat)
--- data Bytes = Bytes (PreAligned L.ByteString) deriving (Eq,Ord, Show,Generic,Flat)
-
--- type Bytes = BLOB NoEncoding
-
--- data Bytes = Bytes {unbytes::L.ByteString} deriving (Eq,Ord, Show,Generic,Flat)
-
--- maps to PreAligned (Array Word8), prealigned adds one extra byte if we are already on byte border.
--- or simply Array Word8
-
--- == PreAligned (Array Word8)
--- instance Flat B.ByteString where
---   encode bs = eFiller <> eBytes bs
---   decode = (decode :: Get Filler) >> dBytes
-
--- instance Flat L.ByteString where
---   encode bs = eFiller <> eLazyBytes bs
---   decode = (decode :: Get Filler) >> dLazyBytes
 
 instance (Flat a, Flat b,Ord a) => Flat (M.Map a b) where
   encode = encode . M.toList
@@ -133,7 +104,8 @@ instance Flat L.ByteString where
   decode = dLazyBytes
 
 -- data Array a = Array0 | Array1 a ...
-data Array a = Array [a] deriving (Eq, Ord, Show, Generic)
+data Array a = Array [a]
+  deriving (Eq, Ord, Show, NFData, Generic)
 
 instance {-# OVERLAPPABLE #-} Flat a => Flat (Array a) where
     encode (Array l) = encodeArray l

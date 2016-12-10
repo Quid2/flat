@@ -2,16 +2,14 @@
 {-# LANGUAGE RankNTypes           #-}
 {-# LANGUAGE ScopedTypeVariables  #-}
 {-# LANGUAGE TypeSynonymInstances #-}
-module Data.Flat.Bits(Bits(..),bits,bools) where
+module Data.Flat.Bits(Bits,bits,valueBits,bools) where
 
 import           Data.Bits                      hiding (Bits)
--- import           Data.ByteString.Lazy           (ByteString, toStrict, unpack)
 import qualified Data.ByteString.Lazy           as L
 import           Data.Flat.Class
 import           Data.Flat.Filler
 import           Data.Flat.Run
 import qualified Data.Vector.Unboxed            as V
--- import           Data.Word
 import           Text.PrettyPrint.HughesPJClass
 
 --import           Data.Flat.Instances
@@ -22,14 +20,24 @@ import           Text.PrettyPrint.HughesPJClass
 type Bits = V.Vector Bool
 
 bools :: Flat a => a -> [Bool]
-bools = V.toList . bits
+bools = V.toList . valueBits
 
-bits :: forall a. Flat a => a -> Bits
-bits v = let e = flat v
-             bs = e
-             Right (PostAligned _ f) = unflatRaw e :: Decoded (PostAligned a)
-             numBits = 8 * L.length bs - fillerLength f
-         in V.generate (fromIntegral numBits) (\n -> let (bb,b) = n `divMod` 8 in testBit (L.index bs (fromIntegral bb)) (7-b))
+bits :: L.ByteString -> V.Vector Bool
+bits lbs = takeBits (8 * L.length lbs) lbs
+
+valueBits :: forall a. Flat a => a -> Bits
+valueBits v = let lbs = flat v
+                  Right (PostAligned _ f) = unflatRaw lbs :: Decoded (PostAligned a)
+              in takeBits (8 * L.length lbs - fillerLength f) lbs
+
+-- bits v = let e = flat v
+--              lbs = e
+--              Right (PostAligned _ f) = unflatRaw e :: Decoded (PostAligned a)
+--              numBits = 8 * L.length lbs - fillerLength f
+--          in V.generate (fromIntegral numBits) (\n -> let (bb,b) = n `divMod` 8 in testBit (L.index bs (fromIntegral bb)) (7-b))
+
+takeBits :: Integral a => a -> L.ByteString -> V.Vector Bool
+takeBits numBits lbs  = V.generate (fromIntegral numBits) (\n -> let (bb,b) = n `divMod` 8 in testBit (L.index lbs (fromIntegral bb)) (7-b))
 
 bytes [] = []
 bytes l = let (w,r) = splitAt 8 l in w : bytes r

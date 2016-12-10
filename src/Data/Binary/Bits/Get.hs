@@ -106,6 +106,7 @@ import           Prelude                  as P
 import           GHC.Base
 import           GHC.Word
 #endif
+import Control.DeepSeq
 
 type Get = BitGet --BitG.Block --
 
@@ -437,6 +438,11 @@ instance Applicative BitGet where
 
   {-# INLINE (<*>) #-}
   fm <*> m = fm >>= \f -> m >>= \v -> return (f v)
+
+-- Is this ok?
+instance NFData (BitGet a) where rnf !_ = ()
+
+instance Show (BitGet a) where show _ = "BitGet"
 
 {-
 runBitGet m b = case G.runGetOrFail (BitG.runBitGet (BitG.block m)) b of

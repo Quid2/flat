@@ -17,11 +17,12 @@ library
   build-depends:       base
                      , binary >= 0.7.5.0
                      , bytestring
+                     , containers
+                     , deepseq >= 1.4.1.1
                      , dlist
                      , pretty >= 1.1.2.0
                      , text
                      , vector >= 0.11.0.0
-                     , containers
   default-language:    Haskell2010
   cpp-options: -DENC_8 -DOP_ENC -DPKG_QUID2 -DLIST_BIT -DARRDEC_DIRECT
   ghc-options:  -O2 -funbox-strict-fields
@@ -48,9 +49,10 @@ test-suite flat-test
 
 executable flat-profile
   main-is:             Profile.hs
-  hs-source-dirs:      benchmarks
+  hs-source-dirs:      benchmarks,test
   -- ghc-options: -dumpdir /tmp/dump -ddump-to-file -dsuppress-all -ddump-asm -eventlog
-               -- -fprof-auto        
+               -- -fprof-auto
+  other-modules:  Test.Data,Test.Data.Flat,Test.Data2,Test.Data2.Flat
   build-depends: base,flat,bytestring
   default-language:    Haskell2010
 

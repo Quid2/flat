@@ -28,7 +28,7 @@ Define a couple of custom data types, deriving `Generic` and `Flat`:
 
 Define a utility function: `bits` encodes the value as a sequence of bits, `prettyShow` displays it nicely:
 
-> p = prettyShow . bits
+> p = prettyShow . valueBits
 
 Some encodings:
 
@@ -44,7 +44,7 @@ These encodings shows a pecularity of Flat, it uses an optimal bit-encoding rath
 For the serialisation to work with byte-oriented devices or storage, we need to add some padding, this is done automatically by the function `flat`:
 
 > f :: Flat a => a -> String
-> f = prettyShow . flat
+> f = prettyShow . bits . flat
 
 > f1 = f West
 
@@ -72,6 +72,11 @@ It is not yet on [hackage](https://hackage.haskell.org/) but you can use it in y
  ### Compatibility
 
 Tested with [ghc](https://www.haskell.org/ghc/) 7.10.3 and 8.0.1.
+
+ ### Performance
+
+ See this [comparison of some haskell serialisation libraries](https://github.com/tittoassini/serialization-bench).
+
 
  ### Known Bugs and Infelicities
 

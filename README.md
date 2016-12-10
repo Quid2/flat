@@ -36,7 +36,7 @@ data List a = Nil | Cons a (List a) deriving (Show,Generic,Flat)
 Define a utility function: `bits` encodes the value as a sequence of bits, `prettyShow` displays it nicely:
 
 ```haskell
-p = prettyShow . bits
+p = prettyShow . valueBits
 ```
 
 Some encodings:
@@ -63,7 +63,7 @@ For the serialisation to work with byte-oriented devices or storage, we need to 
 
 ```haskell
 f :: Flat a => a -> String
-f = prettyShow . flat
+f = prettyShow . bits . flat
 ```
 
 ```haskell
@@ -104,6 +104,11 @@ It is not yet on [hackage](https://hackage.haskell.org/) but you can use it in y
 ### Compatibility
 
 Tested with [ghc](https://www.haskell.org/ghc/) 7.10.3 and 8.0.1.
+
+### Performance
+
+ See this [comparison of some haskell serialisation libraries](https://github.com/tittoassini/serialization-bench).
+
 
 ### Known Bugs and Infelicities
 
