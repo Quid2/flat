@@ -15,7 +15,6 @@ import Data.Binary.Bits.Get ( Get, getBool )
 import           Data.Bits (shiftL,(.|.))
 import Data.Flat.Prim
 import Data.Word
-import Prelude hiding (mempty)
 
 -- |Class of types that can be encoded/decoded
 class Flat a where

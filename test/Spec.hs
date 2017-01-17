@@ -1,3 +1,4 @@
+{-# LANGUAGE BinaryLiterals            #-}
 {-# LANGUAGE CPP                       #-}
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE MultiParamTypeClasses     #-}
@@ -8,27 +9,27 @@
 -- | Tests for the flat module
 module Main where
 
-import           Data.Char
-import           Data.DeriveTH
-import           Data.Int
-import           Data.Word
-import           Test.Tasty
-import           Test.Tasty.HUnit
-import           Test.Tasty.QuickCheck as QC
-
 import qualified Data.ByteString       as B
 import qualified Data.ByteString.Lazy  as L
-import qualified Data.Text             as T
-
+import qualified Data.ByteString.Short as SBS
+import           Data.Char
+import           Data.DeriveTH
 import           Data.Either
 import           Data.Flat
+import           Data.Int
 import           Data.List
 import           Data.Ord
 import           Data.Proxy
+import qualified Data.Text             as T
+import           Data.Word
 import           System.Exit
 import           Test.Data
 import           Test.Data.Arbitrary
 import           Test.Data.Flat
+import           Test.Data.Values
+import           Test.Tasty
+import           Test.Tasty.HUnit
+import           Test.Tasty.QuickCheck as QC
 
 main = mainTest
 -- main = mainShow
@@ -58,9 +59,13 @@ properties = testGroup "Properties"
     ,rt "Int64" (prop_Flat_Large_roundtrip:: RTL Int64)
     ,rt "Int" (prop_Flat_Large_roundtrip:: RTL Int)
     ,rt "Integer" (prop_Flat_roundtrip:: RT Integer)
+    ,rt "(Bool,Integer)" (prop_Flat_roundtrip:: RT (Bool,Integer))
     ,rt "Float" (prop_Flat_roundtrip:: RT Float)
-    ,rt "Double" (prop_Flat_roundtrip:: RT Double)        
+    ,rt "(Bool,Float)" (prop_Flat_roundtrip:: RT (Bool,Float))
+    ,rt "Double" (prop_Flat_roundtrip:: RT Double)
+    ,rt "(Bool,Double)" (prop_Flat_roundtrip:: RT (Bool,Double))
     ,rt "Char" (prop_Flat_roundtrip:: RT Char)
+    ,rt "(Bool,Char)" (prop_Flat_roundtrip:: RT (Bool,Char))
     --,rt "ASCII" (prop_Flat_roundtrip:: RT ASCII)
     ,rt "Unit" (prop_Flat_roundtrip:: RT Unit)
     ,rt "Un" (prop_Flat_roundtrip:: RT Un )
@@ -70,14 +75,16 @@ properties = testGroup "Properties"
     ,rt "Maybe N" (prop_Flat_roundtrip:: RT (Maybe N))
     ,rt "Either N Bool" (prop_Flat_roundtrip:: RT (Either N Bool))
     ,rt "Either Int Char" (prop_Flat_roundtrip:: RT (Either Int Char))
-    --,rt "Tree Bool" (prop_Flat_roundtrip:: RT (Tree Bool))
+    ,rt "Tree Bool" (prop_Flat_roundtrip:: RT (Tree Bool))
     -- ,rt "Tree N" (prop_Flat_roundtrip:: RT (Tree N))
     ,rt "List N" (prop_Flat_roundtrip:: RT (List N))
     ,rt "[Int16]" (prop_Flat_roundtrip:: RT [Int16])
     ,rt "String" (prop_Flat_roundtrip:: RT String)
-    --,rt "Text" (prop_Flat_roundtrip:: RT T.Text)
+    -- Generates incorrect ascii chars?
+    ,rt "Text" (prop_Flat_roundtrip:: RT T.Text)
     ,rt "ByteString" (prop_Flat_roundtrip:: RT B.ByteString)
     ,rt "Lazy ByteString" (prop_Flat_roundtrip:: RT L.ByteString)
+    ,rt "Short ByteString" (prop_Flat_roundtrip:: RT SBS.ShortByteString)    
   ]
    where rt n = QC.testProperty (unwords ["round trip",n])
 
@@ -130,6 +137,11 @@ unitTests = testGroup "Serialisation Unit tests" $ concat [
             ,tstI [0::Int,2,-2,127,-128]
             ,tstI [0::Integer,2,-2,127,-128,-256,-512]
             ,s (-1024::Integer) [255,15]
+            ,s (-0.15625::Float)  [0b10111110,0b00100000,0,0]
+            ,s (-0.15625::Double) [0b10111111,0b11000100,0,0,0,0,0,0]
+            ,s (-123.2325E-23::Double) [0b10111011,0b10010111,0b01000111,0b00101000,0b01110101,0b01111011,0b01000111,0b10111010]
+            ,map trip [0::Float,-0::Float,0/0::Float,1/0::Float]
+            ,map trip [0::Double,-0::Double,0/0::Double,1/0::Double]
             ,s '\0' [0]
             ,s '\1' [1]
             ,s '\127' [127]
@@ -160,16 +172,24 @@ unitTests = testGroup "Serialisation Unit tests" $ concat [
             ,s (B.pack $ csb 3) (bsl c3)
             ,s (B.pack $ csb 600) (bsl s600)
             ,s (L.pack $ csb 3) (bsl c3)
-            ,s (L.pack $ csb 600) (bsl s600)
+            -- Long LazyStrings can have internal sections shorter than 255
+            --,s (L.pack $ csb 600) (bsl s600)
+            ,[trip longBS,trip longLBS,trip longSBS,trip unicodeText]
             ]
     where
       --al = (1:) -- prealign
       bsl = id -- noalign
       s3 = [3,97,98,99,0]
-      c3 = [3,99,99,99,0]
-      s600 = concat [[255],csb 255,[255],csb 255,[90],csb 90,[0]]
+      c3a = [3,99,99,99,0] -- Array Word8
+      c3 = pre c3a
+      s600 = pre s600a
+      pre = (1:)
+      s600a = concat [[255],csb 255,[255],csb 255,[90],csb 90,[0]]
       s600B = concat [[55],csb 55,[255],csb 255,[90],csb 90,[200],csb 200,[0]]
-
+      longSBS = SBS.toShort longBS
+      longBS = B.pack lbs
+      longLBS = L.concat $ concat $ replicate 10 [L.pack lbs]
+      lbs = concat $ replicate 100 [234,123,255,0]
       tstI = map ti
 
       ti v | v >= 0    = testCase (unwords ["Int",show v]) $ teq v (2 * fromIntegral v ::Word64)
@@ -188,6 +208,9 @@ unitTests = testGroup "Serialisation Unit tests" $ concat [
       cs n = replicate n 'c' -- take n $ cycle ['a'..'z']
       csb = map (fromIntegral . ord) . cs
 
+      trip :: forall a .(Show a,Flat a) => a -> TestTree
+      trip v = testCase (unwords ["roundtrip",show v]) $ show (unflat (flat v)::Decoded a) @?= show (Right v::Decoded a) -- we use show to get Right NaN == Right NaN
+
 errDec :: forall a . (Flat a, Eq a, Show a) => Proxy a -> [Word8] -> [TestTree]
 --errDec _ bs = [testCase "bad decode" $ let ev = (des bs::Decoded a) in ev @?= Left ""]
 errDec _ bs = [testCase "bad decode" $ let ev = (des bs::Decoded a) in isRight ev @?= False]
@@ -201,7 +224,8 @@ des :: Flat a => [Word8] -> Decoded a
 des = unflat . L.pack
 
 serRaw :: Flat a => a -> [Word8]
-serRaw = L.unpack . flatRaw
+--serRaw = L.unpack . flatRaw
+serRaw = asBytes . valueBits
 
 desRaw :: Flat a => [Word8] -> Decoded a
 desRaw = unflatRaw . L.pack
@@ -210,10 +234,13 @@ type RT a = a -> Bool
 type RTL a = Large a -> Bool
 
 prop_Flat_roundtrip :: (Flat a, Eq a) => a -> Bool
-prop_Flat_roundtrip x = unflat (flat x) == Right x
+prop_Flat_roundtrip = rtrip2
 
 prop_Flat_Large_roundtrip :: (Eq b, Flat b) => Large b -> Bool
-prop_Flat_Large_roundtrip (Large x) = unflat (flat x) == Right x
+prop_Flat_Large_roundtrip (Large x) = rtrip2 x
+
+rtrip x = unflat (flat x) == Right x
+rtrip2 x = rtrip x && rtrip (True,x,False)
 
 {-
 prop_common_unsigned :: (Num l,Num h,Flat l,Flat h) => l -> h -> Bool

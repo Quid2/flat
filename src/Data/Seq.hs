@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase   #-}
 -- |Sequence data type
 -- Adapted from Data.Sequence.BSeq (sequence package)
 module Data.Seq where
@@ -8,6 +9,26 @@ data Seq a = Empty
            | Leaf a
            | Node (Seq a) (Seq a)
            deriving (Show,Eq)
+
+type SeqZip a = ([a],[Seq a])
+
+diffSeq :: Seq a -> ([a], [Seq a])
+diffSeq = zm ([],[])
+  where
+    zm (as,ss) (Node l r) = zm (as,r:ss) l
+    zm (as,ss) (Leaf a) = (a:as,ss)
+    zm z Empty = z
+
+-- from  bytestring-tree-builder
+{-# INLINE sfoldlM #-}
+sfoldlM step init =
+  \case
+    Empty ->
+      return init
+    Leaf value ->
+      step init value
+    Node tree1 tree2 ->
+      sfoldlM step init tree1 >>= \init2 -> sfoldlM step init2 tree2
 
 instance Functor Seq where
   fmap f = loop where
@@ -46,8 +67,8 @@ data ViewL a
 viewl Empty               = EmptyL
 viewl (Leaf x)            = x :< Empty
 viewl (Node (Node l r) z) = viewl (Node l (Node r z))
-viewl (Node Empty r)      = viewl r
 viewl (Node (Leaf x) r)   = x :< r
+viewl (Node Empty r)      = viewl r
 
 instance Monoid (Seq a) where
   {-# INLINE mempty #-}

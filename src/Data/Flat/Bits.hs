@@ -2,7 +2,7 @@
 {-# LANGUAGE RankNTypes           #-}
 {-# LANGUAGE ScopedTypeVariables  #-}
 {-# LANGUAGE TypeSynonymInstances #-}
-module Data.Flat.Bits(Bits,bits,valueBits,bools) where
+module Data.Flat.Bits(Bits,bits,valueBits,bools,asBytes) where
 
 import           Data.Bits                      hiding (Bits)
 import qualified Data.ByteString.Lazy           as L
@@ -11,6 +11,7 @@ import           Data.Flat.Filler
 import           Data.Flat.Run
 import qualified Data.Vector.Unboxed            as V
 import           Text.PrettyPrint.HughesPJClass
+import Data.Word
 
 --import           Data.Flat.Instances
 --x = pPrint $ bits ()
@@ -39,6 +40,13 @@ valueBits v = let lbs = flat v
 takeBits :: Integral a => a -> L.ByteString -> V.Vector Bool
 takeBits numBits lbs  = V.generate (fromIntegral numBits) (\n -> let (bb,b) = n `divMod` 8 in testBit (L.index lbs (fromIntegral bb)) (7-b))
 
+asBytes :: V.Vector Bool -> [Word8]
+asBytes = map byteVal . bytes .  V.toList
+
+byteVal :: [Bool] -> Word8
+byteVal = sum . map (\(e,b) -> if b then e else 0). zip [2 ^ n | n <- [7,6..0]]
+
+bytes :: [t] -> [[t]]
 bytes [] = []
 bytes l = let (w,r) = splitAt 8 l in w : bytes r
 

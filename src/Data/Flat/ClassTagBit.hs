@@ -15,7 +15,6 @@ import Data.Binary.Bits.Get ( Get, getBool )
 import           Data.Bits (shiftL,(.|.))
 import Data.Flat.Prim
 import Data.Word
-import Prelude hiding (mempty)
 
 -- |Class of types that can be encoded/decoded
 class Flat a where
@@ -73,9 +72,10 @@ instance Flat a => GFlat (K1 i a) where
   gget = K1 <$> decode
   {-# INLINE gget #-}
 
--- Build constructor representation as single tag
+-- Build representation bit by bit
 instance (GSum a, GSum b, GFlat a, GFlat b) => GFlat (a :+: b) where
-  gencode = encodeBit 0 0
+  gencode x = ensureByte <> encodeBit x
+  --gencode x = encodeBit x
   {-# INLINE gencode #-}
 
   gget = {-# SCC "gget" #-} do
@@ -84,17 +84,15 @@ instance (GSum a, GSum b, GFlat a, GFlat b) => GFlat (a :+: b) where
   {-# INLINE gget #-}
 
 class GSum f where
-    encodeBit :: Word8 -> Int -> f a -> Encoding
+    encodeBit :: f a -> Encoding
 
 instance (GSum a, GSum b, GFlat a, GFlat b) => GSum (a :+: b) where
-    -- The compiler seems to perform all this calculations at compile time
-    -- For every constructor, a Node (Leaf (Tag8 .. ..)) Empty :: Encoding is returned.
-    encodeBit !code !numBits s = case s of
-                             L1 x -> encodeBit ((code `shiftL` 1) .|. 0) (numBits+1) x
-                             R1 x -> encodeBit ((code `shiftL` 1) .|. 1) (numBits+1) x
+    encodeBit s = case s of
+                    L1 x -> eFalse <> encodeBit x
+                    R1 x -> eTrue  <> encodeBit x
     {-# INLINE  encodeBit #-}
 
 
 instance GFlat a => GSum (C1 c a) where
-    encodeBit !code !numBits x = eBits numBits code <> gencode x
+    encodeBit = gencode
     {-# INLINE  encodeBit #-}

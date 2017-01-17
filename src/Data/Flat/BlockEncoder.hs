@@ -1,7 +1,7 @@
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE MultiWayIf   #-}
 -- |Binary Encoder
-module Data.Flat.Encoder(bitEncoder) where
+module Data.Flat.BlockEncoder(bitEncoder) where
 
 import           Data.Bits
 import qualified Data.ByteString                  as B
@@ -11,44 +11,44 @@ import           Data.ByteString.Builder.Internal
 import qualified Data.ByteString.Lazy             as L
 import           Data.Flat.Types
 import           Foreign.Ptr
+import System.IO.ByteBuffer
 
+data Bits = Bits {buf::BBRef
+                 ,w::Word8  -- ^Byte being filled
+                 ,numUsedBits  -- ^Number of used bits (invariant 0<=numUsedBits<=7, if ==8 byte is saved to memory)}
+
+
+-- TODO: Test toLazyByteStringWith (safeStrategy 128 smallChunkSize) L.empty
 bitEncoder :: Encoding -> ByteString
--- bitEncoder = toLazyByteString . toBitBuilder
-bitEncoder = toLazyByteStringWith (untrimmedStrategy smallChunkSize defaultChunkSize) L.empty . toBitBuilder
+bitEncoder = toLazyByteString . toBitBuilder
 
--- Note: last byte is 0-padded (not an issue if encoded value is terminated with a Filler)
 toBitBuilder :: Encoding -> Builder
 toBitBuilder =
   \e -> builder (step e 0 0)
   where
     step e1 w o k (BufferRange op0 ope0) = {-# SCC "go" #-} go e1 w o op0
       where
-        go e w o op
-          | op `plusPtr` bound <= ope0 = -- This check might be avoided when we do not write additional bytes
-            goUnsafe e w o op
-          | otherwise = {-# SCC "OutTag8_bufferFull"#-} return $ bufferFull bytesToAdd op (step e w o k)
-        goUnsafe
-          e   -- Tags sequence
-          !w  -- Byte being filled
-          !o  -- Number of used bits (invariant 0<=o<=7, if o==8 byte is saved to memory)
-          !op -- Pointer to next available byte in buffer
-          =
+        go
+          e   -- ^Tags sequence
+          !w  -- ^Byte being filled
+          !o  -- ^Number of used bits (invariant 0<=o<=7, if o==8 byte is saved to memory)
+          !op -- ^Pointer to next available byte in buffer
+          | op `plusPtr` bound <= ope0 =
               case viewl e of
                 (n :< e') -> case n of
                    TagBool b -> {-# SCC "TagBool" #-}
                         let w' = if b then setBit w (7-o) else w
                         in if o == 7
                               then runB bword8 w' op >>= go e' 0 0
-                              else goUnsafe e' w' (o+1) op
+                              else go e' w' (o+1) op
 
                    -- Tag8 8 t | o == 0 -> runB bword8 t op >>= go e' w o
                    -- Tag8 n t | o == 0 -> go e' (t `shiftL` (8-n)) n op
                    Tag8 n t -> {-# SCC "OutTag8" #-}
                         let o' = o + n
-                            f = 8 - o'  -- remaining free bits
-                        in if | f > 0  -> {-# SCC "OutTag8_f>0" #-} goUnsafe e' (w .|. (t `shiftL` f)) o' op
-                              -- | f == 0 -> {-# SCC "OutTag8_f=0" #-} runB bword8 (w .|. (t `shiftL` f)) op >>= go e' 0 0
-                              | f == 0 -> {-# SCC "OutTag8_f=0" #-} runB bword8 (w .|. t) op >>= go e' 0 0
+                            f = 8 - o'
+                        in if | f > 0  -> {-# SCC "OutTag8_f>0" #-} go e' (w .|. (t `shiftL` f)) o' op
+                              | f == 0 -> {-# SCC "OutTag8_f=0" #-} runB bword8 (w .|. (t `shiftL` f)) op >>= go e' 0 0
                               | otherwise -> {-# SCC "OutTag8_f<0" #-}
                                        let o' = -f
                                            b' = w .|. (t `shiftR` o')
@@ -86,6 +86,7 @@ toBitBuilder =
                              else runB bword8 w op
                        k (BufferRange op' ope0)
 
+          | otherwise = {-# SCC "OutTag8_bufferFull"#-} return $ bufferFull bytesToAdd op (step e w o k)
 
         -- The maximum size in bytes of the fixed-size encodings
         bound :: Int
@@ -93,7 +94,7 @@ toBitBuilder =
 
         -- How many additional bytes to allocate when the buffer is empty
         bytesToAdd :: Int
-        bytesToAdd = bound
+        bytesToAdd = 32
 
 bsMP bs | B.length bs == 0 = word8 0
         | otherwise = let (h,t) = B.splitAt 255 bs
@@ -102,4 +103,3 @@ bsMP bs | B.length bs == 0 = word8 0
 bsLazyMP bs | L.length bs == 0 = word8 0
             | otherwise = let (h,t) = L.splitAt 255 bs
                           in word8 (fromIntegral $ L.length h) <> lazyByteString h <> bsLazyMP t
-

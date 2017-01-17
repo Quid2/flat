@@ -1,7 +1,9 @@
-module Data.Flat.Encoding(eFiller,eBits,eBool,eFalse,eTrue,eWord8,eBitList,eUnsigned,eBytes,eLazyBytes,showEncoding) where
+module Data.Flat.Encoding(eFiller,eBits,eBool,eFalse,eTrue,eWord8,eWord32,eWord64,eBitList,eUnsigned,eBytes,eLazyBytes,showEncoding) where
 
 import Data.Flat.Types
 import Data.Foldable(toList)
+import Data.Shift
+import Data.Word
 
 showEncoding :: Encoding -> String
 showEncoding = show . reverse . toList
@@ -19,6 +21,27 @@ eBits numBits code = Leaf (Tag8 numBits code)
 {-# INLINE eWord8 #-}
 eWord8 :: Word8 -> Encoding
 eWord8 = eBits 8
+
+{-# INLINE eWord32 #-}
+eWord32 :: Word32 -> Encoding
+eWord32 w = Tag8 8 (fromIntegral $ w `shiftr_w32` 24) <|
+            Tag8 8 (fromIntegral $ w `shiftr_w32` 16) <|
+            Tag8 8 (fromIntegral $ w `shiftr_w32`  8) <|
+            Tag8 8 (fromIntegral w) <|
+            Empty
+
+{-# INLINE eWord64 #-}
+eWord64 :: Word64 -> Encoding
+eWord64 w =
+  Tag8 8 (fromIntegral $ w `shiftr_w64` 56) <|
+  Tag8 8 (fromIntegral $ w `shiftr_w64` 48) <|
+  Tag8 8 (fromIntegral $ w `shiftr_w64` 40) <|
+  Tag8 8 (fromIntegral $ w `shiftr_w64` 32) <|
+  Tag8 8 (fromIntegral $ w `shiftr_w64` 24) <|
+  Tag8 8 (fromIntegral $ w `shiftr_w64` 16) <|
+  Tag8 8 (fromIntegral $ w `shiftr_w64` 8) <|
+  Tag8 8 (fromIntegral w) <|
+  Empty
 
 {-# INLINE eFalse #-}
 eFalse :: Encoding

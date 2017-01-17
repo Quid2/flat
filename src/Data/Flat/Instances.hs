@@ -1,3 +1,5 @@
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE BangPatterns              #-}
 {-# LANGUAGE CPP                       #-}
 {-# LANGUAGE DeriveAnyClass            #-}
@@ -16,25 +18,31 @@ import qualified Data.ByteString.Lazy as L
 import           Data.Char
 import qualified Data.DList           as DL
 import           Data.Flat.Class
-import           Data.Flat.Encoding
+import           Data.Flat.Prim
 import           Data.Flat.Filler
 import           Data.Flat.Run
 import           Data.Int
 import qualified Data.Map             as M
-import           Data.Monoid
 import qualified Data.Text            as T
 import qualified Data.Text.Encoding   as T
 import           Data.Word
 import           Data.ZigZag
+import           Data.Binary.FloatCast
+import qualified Data.Vector            as V
+import qualified Data.Vector.Unboxed            as VU
+import qualified Data.Vector.Storable as VS
+import           Prelude hiding (mempty)
+import qualified Data.ByteString.Short as SBS
+import           Data.MonoTraversable
+import qualified Data.Sequences as O
 
---import           Data.ByteString.Builder.Extra hiding (builder, tag8)
 --import           Data.Word.Odd                 (Word7)
 --import           Data.Flat.IEEE754
 #include "MachDeps.h"
 
 ---------- Flat Instances
 instance Flat () where
-  encode = mempty
+  encode _ = mempty
   decode = pure ()
 
 instance Flat Bool where
@@ -54,7 +62,9 @@ eList :: Flat a => [a] -> Encoding
 eList = foldr (\x r -> eTrue <> encode x <> r) eFalse
 
 -- Byte List, more efficient for longer lists 1 byte per 255 elems
-data List a = L0 | L1 a1 (List a) | L2 a1 a2 (List a) | L255 a1 .. a255 (List a)
+data     -- encode (Array l) = encode $ B.pack l
+    -- decode = Array . B.unpack <$> decode
+List a = L0 | L1 a1 (List a) | L2 a1 a2 (List a) | L255 a1 .. a255 (List a)
 
 ByteString == BLOB
 -}
@@ -66,6 +76,9 @@ ByteString == BLOB
 data UTF8Encoding = UTF8Encoding
   deriving (Eq, Ord, Show, NFData, Generic, Flat)
 
+data UTF16Encoding = UTF16Encoding
+  deriving (Eq, Ord, Show, NFData, Generic, Flat)
+
 data NoEncoding = NoEncoding deriving (Eq, Ord, Show, NFData, Generic, Flat)
 
 data FlatEncoding = FlatEncoding deriving (Eq, Ord, Show, NFData, Generic, Flat)
@@ -74,7 +87,8 @@ data FlatEncoding = FlatEncoding deriving (Eq, Ord, Show, NFData, Generic, Flat)
 b1 = flat $ blob FlatEncoding (L.pack [97,98,99])
 
 -- The encoding is embedded as a value in order to support encodings that might have multiple values/variations.
-data BLOB encoding = BLOB encoding (PreAligned L.ByteString)
+--data BLOB encoding = BLOB encoding (PreAligned (Array Word8))
+data BLOB encoding = BLOB encoding L.ByteString
   deriving (Eq, Ord, Show, NFData, Generic, Flat)
 
 -- data String e = Text (PreAligned (e (Array Word8)))
@@ -85,23 +99,31 @@ data BLOB encoding = BLOB encoding (PreAligned L.ByteString)
 -- data Encoded encoding = CLOB encoding BLOB
 
 blob :: encoding -> L.ByteString -> BLOB encoding
-blob enc = BLOB enc . preAligned
+--blob enc = BLOB enc . preAligned
+blob = BLOB
 
 unblob :: BLOB encoding -> L.ByteString
-unblob (BLOB _ pa) = preValue pa
+-- unblob (BLOB _ pa) = preValue pa
+unblob (BLOB _ pa) = pa
 
+-- data Map a b = Map [(a,b)]
 instance (Flat a, Flat b,Ord a) => Flat (M.Map a b) where
   encode = encode . M.toList
   decode = M.fromList <$> decode
 
 -- == Array Word8 (prob: encoder might fail if used on their own)
+-- or BLOB NoEncoding
 instance Flat B.ByteString where
-  encode = eBytes
-  decode = dBytes
+  encode bs = eFiller <> eBytes bs
+  decode = (decode::Get Filler) >> dBytes
 
 instance Flat L.ByteString where
-  encode = eLazyBytes
-  decode = dLazyBytes
+  encode bs = eFiller <> eLazyBytes bs
+  decode = (decode::Get Filler) >> dLazyBytes
+
+instance Flat SBS.ShortByteString where
+  encode bs = eFiller <> eShortBytes bs
+  decode = (decode::Get Filler) >> dShortBytes
 
 -- data Array a = Array0 | Array1 a ...
 data Array a = Array [a]
@@ -111,9 +133,9 @@ instance {-# OVERLAPPABLE #-} Flat a => Flat (Array a) where
     encode (Array l) = encodeArray l
     decode = Array <$> decodeArray
 
-instance {-# OVERLAPPING #-} Flat (Array Word8) where
-    encode (Array l) = encode $ B.pack l
-    decode = Array . B.unpack <$> decode
+-- instance {-# OVERLAPPING #-} Flat (Array Word8) where
+--     encode (Array l) = encode $ B.pack l
+--     decode = Array . B.unpack <$> decode
 
 dList = do
     tag <- dBool
@@ -195,23 +217,58 @@ getAsL_ = do
     gets 0 = return DL.empty
     gets n = DL.cons <$> decode <*> gets (n-1)
 
+
+--pokeSequence :: (IsSequence t, Flat (Element t)) => t -> Poke ()
+--sizeSequence =  ofoldl' (\acc x -> stepSize (encode x) 1 + acc + f x) (sizeOf (undefined :: Int)) t
+
+eSequence :: (MonoFoldable mono, Flat (Element mono)) => mono -> Encoding
+eSequence = ofoldr (\x r -> eTrue <> encode x <> r) eFalse
+--eSequence t = ofoldMap (\x -> eTrue <> encode x) t <> eFalse
+{-# INLINE eSequence #-}
+
+-- eSequenceF :: (MonoFoldable mono, Flat (Element mono))
+--            => mono -> Data.Flat.Prim.S -> IO Data.Flat.Prim.S
+-- eSequenceF t s = ofoldlM
+--                    (\s a ->
+--                       let Step _ p = encode a in eTrueF s >>= p)
+--                    s
+--                    t >>= eFalseF
+
+-- {-# INLINE eSequenceF #-}
+
+instance {-# OVERLAPPABLE #-} (MonoFoldable mono, O.IsSequence mono, Flat (Element mono)) => Flat mono where
+    encode = eSequence
+    decode = O.pack <$> dList -- try with O.replicateM
+
+-- instance Flat a => Flat [a]
+
 -- #define LIST_TAG
 
-instance Flat a => Flat [a] where
-#ifdef LIST_BIT
-    encode = foldr (\x r -> eTrue <> encode x <> r) eFalse
-#elif defined(LIST_TAG)
-    encode = eBitList . map encode
-#ifdef ARRDEC_DIRECT
-    decode = dList
-#elif defined(ARRDEC_REVERSE)
-    decode = dListReverse
-#endif
+-- instance {-# OVERLAPPABLE #-} Flat a => Flat [a] where
+-- #ifdef LIST_BIT
+--     -- encode = foldr (\x r -> eTrue <> encode x <> r) eFalse
+--     encode = eSequence
+-- #elif defined(LIST_TAG)
+--     encode = eBitList . map encode
+-- #ifdef ARRDEC_DIRECT
+--     decode = dList
+-- #elif defined(ARRDEC_REVERSE)
+--     decode = dListReverse
+-- #endif
 
-#elif defined(LIST_BYTE)
-    encode = encodeArray
-    decode = decodeArray
-#endif
+-- #elif defined(LIST_BYTE)
+--     encode = encodeArray
+--     decode = decodeArray
+-- #endif
+
+-- instance {-# OVERLAPPING #-} Flat [Char] where
+--     encode = encode . T.pack
+--     decode = T.unpack <$> decode
+
+-- instance {-# OVERLAPPING #-} Flat [Char] where
+--     -- encode s = eFiller <> eArrayChar s
+--   encode = eArrayChar
+--   decode = T.unpack <$> decode
 
 -- BLOB UTF8Encoding
 instance Flat T.Text where
@@ -220,15 +277,15 @@ instance Flat T.Text where
     -- -- 200 times slower
     -- encode = encode . T.unpack
     -- decode = T.pack <$> decodeArray
-   -- 4 times slower
-   encode = encode . blob UTF8Encoding . L.fromStrict . T.encodeUtf8
-   decode = T.decodeUtf8 . L.toStrict . (unblob :: BLOB UTF8Encoding -> L.ByteString) <$> decode
 
-b = T.chunksOf 255 (T.pack "")
+  -- 4 times slower
+   --encode = encode . blob UTF8Encoding . L.fromStrict . T.encodeUtf8
+   --decode = T.decodeUtf8 . L.toStrict . (unblob :: BLOB UTF8Encoding -> L.ByteString) <$> decode
 
+   encode t = eFiller <> eUTF16 t
+   -- encode = eText
+   decode = T.decodeUtf16LE . L.toStrict . (unblob :: BLOB UTF16Encoding -> L.ByteString) <$> decode
 
---------------- Numbers (TODO:Floats)
--- See https://hackage.haskell.org/package/arith-encode
 
 ---------- Words and Ints
 
@@ -271,20 +328,28 @@ Word16 (Cons V122 (Elem V26))
 so Least Significant Byte first.
 -}
 instance Flat Word16 where
-  encode = eUnsigned
+  encode = eUnsigned16
   decode = dUnsigned
 
 instance Flat Word32 where
-  encode = eUnsigned
+  encode = eUnsigned32
   decode = dUnsigned
 
 instance Flat Word64 where
-  encode = eUnsigned
+  encode = eUnsigned64
   decode = dUnsigned
 
 instance Flat Word where
-  encode = eUnsigned
+#if WORD_SIZE_IN_BITS == 64
+  encode = eUnsigned64 . (fromIntegral :: Word -> Word64)
   decode = dUnsigned
+
+#elif WORD_SIZE_IN_BITS == 32
+  encode = eUnsigned32 . (fromIntegral :: Word -> Word)
+  decode = dUnsigned
+#else
+#error expected WORD_SIZE_IN_BITS to be 32 or 64
+#endif
 
 -- Encoded as data Int8 = Z | N1 |P1| N2 |P2 | N3 .. |P127 | N128
 instance Flat Int8 where
@@ -329,14 +394,14 @@ instance Flat Integer where
 --     encode = eBits 7 . fromIntegral . fromEnum
 --     decode = toEnum . fromIntegral <$> dBits 7
 
--- data Real = Real {realBase::Integer,realExponent::}
+--------------- Floats
 instance Flat Float where
-    encode = encode . decodeFloat
-    decode = encodeFloat <$> decode <*> decode
+  encode = eWord32BE . floatToWord
+  decode = wordToFloat <$> dWord32
 
 instance Flat Double where
-    encode = encode . decodeFloat
-    decode = encodeFloat <$> decode <*> decode
+  encode = eWord64BE . doubleToWord
+  decode = wordToDouble <$> dWord64
 
 ----------------- Characters
 -- data ASCII = ASCII Word7 deriving (Eq,Show,Generic)
@@ -400,8 +465,8 @@ instance (Flat a, Flat b) => Flat (a,b) where
   decode                 = (,) <$> decode <*> decode
 
 instance (Flat a, Flat b, Flat c) => Flat (a,b,c) where
-    encode (a,b,c)         = encode a <> encode b <> encode c
-    decode                 =  (,,) <$> decode <*> decode <*> decode
+  encode (a,b,c)         = encode a <> encode b <> encode c
+  decode                 =  (,,) <$> decode <*> decode <*> decode
 
 instance (Flat a, Flat b, Flat c, Flat d) => Flat (a,b,c,d) where
     encode (a,b,c,d)       = encode a <> encode b <> encode c <> encode d

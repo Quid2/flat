@@ -67,6 +67,7 @@ instance Binary Consumption
 instance Binary CarModel
 instance Binary OptionalExtra
 instance Binary Engine
+instance Binary Various
 
 -- !! Apparently Generics based derivation is as fast as hand written one.
 

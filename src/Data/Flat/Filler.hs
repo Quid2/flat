@@ -4,7 +4,8 @@ module Data.Flat.Filler(Filler(..),fillerLength
                        ) where
 
 import           Data.Flat.Class
-import           Data.Flat.Encoding
+--import           Data.Flat.Encoding
+import           Data.Flat.Prim
 import           Control.DeepSeq
 import           Data.Typeable
 
@@ -30,11 +31,11 @@ fillerLength :: Num a => Filler -> a
 fillerLength FillerEnd = 1
 fillerLength (FillerBit f) = 1 + fillerLength f
 
--- |Pre align a value
+-- |Post align a value
 postAligned :: a -> PostAligned a
 postAligned a = PostAligned a FillerEnd
 
--- |Post align a value
+-- |Pre align a value
 preAligned :: a -> PreAligned a
 preAligned a = PreAligned FillerEnd a
 

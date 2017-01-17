@@ -13,27 +13,36 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules: Data.Binary.Bits.Get,Data.ByteString.Builder.Extra,Data.Flat.Bits,Data.Flat.Class,Data.Flat.Encoder,Data.Flat.Encoding,Data.Flat.Filler,Data.Flat.Instances,Data.Flat.Pretty,Data.Flat.Run,Data.Flat.Types,Data.Flat,Data.Seq,Data.Shift,Data.ZigZag
-  build-depends:       base
-                     , binary >= 0.7.5.0
+  exposed-modules: Data.Binary.Bits.Get,Data.Binary.FloatCast,Data.ByteString.Builder.Extra,Data.Flat.Bits,Data.Flat.Class,Data.Flat.Encoder,Data.Flat.Encoding,Data.Flat.Filler,Data.Flat.Instances,Data.Flat.Prim,Data.Flat.Pretty,Data.Flat.Run,Data.Flat.Types,Data.Flat,Data.Seq,Data.Shift,Data.ZigZag,Data.Flat.Pokes
+  build-depends:       array >= 0.5.1.0
+                     , base
+                     , binary
                      , bytestring
                      , containers
+                     , cpu
                      , deepseq >= 1.4.1.1
                      , dlist
+                     , ghc-prim >= 0.4.0.0
+                     , monad-coroutine
+                     , mono-traversable >= 1.0.1
                      , pretty >= 1.1.2.0
+                     , primitive >= 0.6.1.0
                      , text
+                     , transformers
                      , vector >= 0.11.0.0
   default-language:    Haskell2010
   cpp-options: -DENC_8 -DOP_ENC -DPKG_QUID2 -DLIST_BIT -DARRDEC_DIRECT
   ghc-options:  -O2 -funbox-strict-fields
   default-extensions: CPP
+  ghc-options: -fprof-auto
+  --ghc-options: -dumpdir /tmp/dump -ddump-to-file -dsuppress-all -ddump-asm -ddump-opt-cmm -eventlog
 
 test-suite flat-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
-  other-modules: Test.Data,Test.Data2,Test.Data.Arbitrary,Test.Data.Flat,Test.Data2.Flat
-  build-depends:       base,tasty,tasty-hunit,tasty-quickcheck,ghc-prim,derive,text,bytestring,flat
+  other-modules: Test.Data,Test.Data2,Test.Data.Arbitrary,Test.Data.Flat,Test.Data2.Flat,Test.Data.Values
+  build-depends:       base,tasty,tasty-hunit,tasty-quickcheck,ghc-prim,derive,text,bytestring,deepseq,flat
   -- ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
 
@@ -43,23 +52,23 @@ test-suite flat-test
 --   -- other-modules:       Data.TypeHash
 --   other-extensions:    StandaloneDeriving, DeriveDataTypeable, DeriveGeneric, CPP
 --   default-language:    Haskell2010
---   build-depends:       base
+--   build-depends:       base ;
 --                      , regex-compat,text,filepath,containers,directory,process
 --                      , flat
 
 executable flat-profile
   main-is:             Profile.hs
   hs-source-dirs:      benchmarks,test
-  -- ghc-options: -dumpdir /tmp/dump -ddump-to-file -dsuppress-all -ddump-asm -eventlog
-               -- -fprof-auto
-  other-modules:  Test.Data,Test.Data.Flat,Test.Data2,Test.Data2.Flat
-  build-depends: base,flat,bytestring
+  --ghc-options: -dumpdir /tmp/dump -ddump-to-file -dsuppress-all -ddump-asm -ddump-opt-cmm -eventlog
+  ghc-options: -fprof-auto
+  other-modules:  Data,Test.Data,Test.Data.Flat,Test.Data2,Test.Data2.Flat,Test.Data.Values
+  build-depends: base,flat,bytestring,text,deepseq
   default-language:    Haskell2010
 
 benchmark flat-benchmark
   type:                exitcode-stdio-1.0
   main-is:             Main.hs
-  hs-source-dirs:      benchmarks,test,src
+  hs-source-dirs:      benchmarks,test
   other-extensions:    StandaloneDeriving, DeriveDataTypeable, DeriveGeneric, CPP
   default-language:    Haskell2010
   build-depends:       QuickCheck
@@ -67,6 +76,7 @@ benchmark flat-benchmark
                      , array
                      , base
                      , binary
+                       -- >=0.10.8.1
                      --, binary-bits
                      , binary-serialise-cbor
                      , store
@@ -76,7 +86,8 @@ benchmark flat-benchmark
                      , bytestring
                      , cereal >= 0.4.1.0
                      , containers >=0.4 && <0.6
-                     , criterion
+                     , criterion,statistics >= 0.13
+-- >= 1.1.4.0
                      , deepseq
                      , derive
                      , dlist
@@ -93,9 +104,11 @@ benchmark flat-benchmark
                      --, OddWord
                      , vector,process
                      , flat
-  other-modules:     PkgBinary,PkgStore,PkgCBOR,PkgCereal,PkgQuid2,Test.Data,Test.Data.Values,Test.Data2,Test.Data.Arbitrary,Test.Data.Flat,Test.Data2.Flat
+  other-modules:     PkgBinary,PkgStore,PkgCBOR,PkgCereal,PkgQuid2,Test.Data,Test.Data.Values,Test.Data2,Test.Data.Arbitrary,Test.Data.Flat,Test.Data2.Flat,Data
   default-extensions:CPP,NoMonomorphismRestriction
-  ghc-options:        -O2
+  ghc-options:        -O
+  ghc-options: -dumpdir /tmp/dump -ddump-to-file -dsuppress-all -ddump-asm -ddump-opt-cmm
+               -- -eventlog
   --                      -fprof-auto -rtsopts -caf-all -dumpdir /Users/titto/cache/dump -ddump-simpl -ddump-to-file
   -- not compatible with profiling
   -- -eventlog

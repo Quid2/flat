@@ -17,7 +17,8 @@ import qualified Data.Binary.Get                as Get (Decoder (..), Get,
                                                         runGetIncremental)
 import qualified Data.ByteString.Lazy           as L
 import           Data.Flat.Class
-import           Data.Flat.Encoder
+--import           Data.Flat.Encoder
+import           Data.Flat.Prim
 import           Data.Flat.Filler
 import           Data.Flat.Pretty
 import           Data.Word

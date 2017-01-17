@@ -23,6 +23,7 @@ instance Store a => Serialize PkgStore a where
   pkg = PkgStore
   unpkg (PkgStore a) = a
 
+instance Store Various
 instance Store N
 instance Store a => Store (List a)
 instance Store a => Store (Tree a)

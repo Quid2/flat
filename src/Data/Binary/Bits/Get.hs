@@ -75,7 +75,7 @@ module Data.Binary.Bits.Get
 
             -- ** Read in Blocks
             ,dBool
-            ,dWord8,dBits,dUnsigned,dBytes,dLazyBytes
+            ,dWord8,dWord32,dWord64,dBits,dUnsigned,dBytes,dLazyBytes,dShortBytes
             ,dropBits
             , bool
             , word8
@@ -98,6 +98,7 @@ import           Control.Applicative
 import           Data.Bits
 import           Data.ByteString          as S
 import qualified Data.ByteString.Lazy     as L
+import qualified Data.ByteString.Short     as SBS
 import           Data.ByteString.Unsafe
 import           Data.Word
 import           Prelude                  as P
@@ -132,12 +133,17 @@ dBool = getBool
 dWord8 = getWord8 8
 dBits = getWord8
 
+dWord32 = getWord32be 32
+dWord64 = getWord64be 64
 
 dBytes :: BitGet ByteString
 dBytes = S.concat <$> dBytes_
 
 dLazyBytes :: BitGet L.ByteString
 dLazyBytes = L.fromChunks <$> dBytes_
+
+dShortBytes :: BitGet SBS.ShortByteString
+dShortBytes = SBS.toShort <$> dBytes
 
 dBytes_ =  do
   l <- getWord8 8
@@ -150,7 +156,6 @@ dBytes_ =  do
 
 {-# INLINE dUnsigned #-}
 {-# INLINE dUnsigned_ #-}
-
 dUnsigned :: (Num b, Bits b) => BitGet b
 dUnsigned = do
   (v,shl) <- dUnsigned_ 0 0
@@ -453,8 +458,8 @@ runPartialGet :: BitGet b
               -> L.ByteString
               -> Int -- num of msbs to skip
               -> Either String (b
-                               ,L.ByteString -- ^ left over bytes
-                               ,Int -- ^ decoded bits in first byte
+                               ,L.ByteString -- left over bytes
+                               ,Int -- decoded bits in first byte
                                )
 runPartialGet bg bs n = case B.runGetOrFail (runPartialBitGet n bg) bs of
                Left (_,_,s) -> Left s

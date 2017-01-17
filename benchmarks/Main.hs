@@ -1,4 +1,4 @@
-{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TupleSections ,ViewPatterns ,NoMonomorphismRestriction ,BangPatterns #-}
 module Main
 where
 {- Test performance of encoding against other packages -}
@@ -111,26 +111,34 @@ Bit3 (BitPut 64)   | 15-18 | 242
 
 -- ghc -O2 --make Bench;./Bench
 import Criterion.Main
+import Criterion.IO
 import Criterion.Types
 import Types
 import Test.Data
-import Test.Data.Values
+import           Test.Data.Values
 import PkgBinary
 import PkgCereal
 import PkgCBOR
 import PkgFlat
 import PkgStore
 import qualified Data.Binary.Serialise.CBOR as CBOR
-import Data.ByteString.Lazy as B
-import Data.ByteString as BS
+import qualified Data.ByteString.Lazy as B
+import qualified Data.ByteString as BS
 import qualified Data.Text as T
 import Control.Exception
 import Control.Monad
 import Control.Applicative
-import System.Directory
+--import System.Directory
 import Debug.Trace (traceEventIO)
+import           Criterion.IO
+import           Criterion.Types
+-- import           Statistics.Resampling.Bootstrap
+import qualified Data.Map as M
+import qualified Data.Flat as F
+import qualified Data.Flat.Prim as F
+import System.Directory
+import Report
 
-event :: String -> IO a -> IO a
 event label =
   bracket_ (traceEventIO $ "START " ++ label)
            (traceEventIO $ "STOP "  ++ label)
@@ -149,7 +157,7 @@ t = mainBench
 --       --,tstLen PkgFlat lN
 --       ]
 
-l = [tstSize tupleT,tstSize tupleBools,tstSize tupleWords,tstSize arr0, tstSize arr1, tstSize asciiStrT,tstSize unicodeStrT,tstSize unicodeTextT , tstSize lN3T, tstSize tree3T]
+l = [tstSize tupleT,tstSize tupleBools,tstSize tupleWords,tstSize arr0, tstSize arr1, tstSize asciiStrT,tstSize unicodeStrT,tstSize unicodeTextT , tstSize lN3T, tstSize treeNLargeT]
 -- [("tuple",(8.0,3.0,3.0)),("tupleBools",(7.0,4.5,4.5)),("tupleWord",(1.5555555555555556,3.5555555555555554,3.5555555555555554)),("[Bool]",(3.999992000032,4.000015999936,4.000015999936)),("[Word]",(1.3416352722052283,4.691580498057688,4.691580498057688)),("asciiStr",(0.8888925432066282,0.8888952098709245,3.555559506169328)),("unicodeStr",(0.9322290145814176,0.932230773922345,2.345792594816747)),("unicodeText",(0.9960948808600285,0.9960967607312449,1.2532524905160498)),("lN3",(9.41174726647702,4.70587363323851,4.70587363323851)),("tree3",(10.909087272727273,5.454543636363637,5.454543636363637))]
 -- tstSize :: (CBOR.Serialise a, Flat a) => (String, a) -> (String,Double)
 tstSize nv@(n,v) = (n,) $ (tstLen PkgCBOR v,tstLen PkgBinary v,tstLen PkgStore v)
@@ -165,9 +173,31 @@ lser k = fromIntegral . Prelude.length . ser . k
 -- main = mainEvents
 main = do
   forceCafs
+  print $ B.unpack (F.flat v1)
+  print $ B.unpack (F.flat v2)
+  print $ B.unpack (F.flat t33)
+  print $ [33] == B.unpack (F.flat v1)
+  print $ [89] == B.unpack (F.flat v2)
+  print $ [220,221,25] == B.unpack (F.flat t33)
+  print $ 1175000 == B.length (F.flat treeNNNLarge)
+
+  print $ 1 == B.length (F.flat v2)
+  print $ 3 == B.length (F.flat t33)
+
+  --print F.eee
+
+  pp (Node (Leaf One) (Leaf Two))
+  pp ((One,Two,Three),(One,Two,Three),(One,Two,Three))
+  pp t33
+  pp (asN33 4)
+  pp v1
+  pp v2
+  --nprint (F.encode (undefined::Various))
+
   mainBench
   -- mainProfile
   -- mainAlternatives
+    where pp v = print (v,F.encode v)
 
 mainEvents = mainAlternatives
 
@@ -176,7 +206,7 @@ mainEvents = mainAlternatives
 mainProfile = mapM_ (\_ -> enc arr1) [1..1000] -- mapM_ (\_ -> enc (0x34::Word) >> enc tree1 >> enc tree2) [1..10]
   where enc = evaluate . B.length . serialize . PkgFlat -- PkgBit2
 
-mainAlternatives = dec_ tupleT >> dec_ tupleBools >> dec_ arr0 >> dec_ arr1 >> dec_ asciiStrT >> dec_ unicodeStrT >> dec_ lN3T >> dec_ tree3T -- dec_ sbs >> dec_ lbs >>
+mainAlternatives = dec_ tupleT >> dec_ tupleBools >> dec_ arr0 >> dec_ arr1 >> dec_ asciiStrT >> dec_ unicodeStrT >> dec_ lN3T >> dec_ treeNLargeT -- dec_ sbs >> dec_ lbs >>
   where
     -- dec1 = evaluate . and . Prelude.map (\_ -> des) $ [1..1]
     -- des = let (Right (PkgFlat a)) = deserialize PkgFlat.serlN2 in (a == lN2)
@@ -200,11 +230,23 @@ mainAlternatives = dec_ tupleT >> dec_ tupleBools >> dec_ arr0 >> dec_ arr1 >> d
     testName = "encDec"
     op = encDecM
 #endif
+
+mainBench = do
+  let jsonReportFile = "/tmp/testReport.json"
+  reports <- readReports jsonReportFile
+  mainBench_ jsonReportFile
+  reports' <- readReports jsonReportFile
+
+  printDiffReports reports reports'
+  printReports reports'
+
 --mainBench = defaultMainWith (defaultConfigFilePath {
-mainBench = defaultMainWith (defaultConfig {
-                                csvFile=Just "/tmp/testReport.csv"
-                                ,reportFile=Just "/tmp/testReport.html"
-                                ,junitFile=Just "/tmp/testReport.xml"}) [
+mainBench_ jsonReportFile = defaultMainWith (defaultConfig {
+                               -- csvFile=Just "/tmp/testReport.csv"
+                               -- ,reportFile=Just "/tmp/testReport.html"
+                               -- ,junitFile=Just "/tmp/testReport.xml"
+                               jsonFile= Just jsonReportFile}) [
+                               --jsonFile= Nothing}) [
 
 {-
    tstEnc (0x34::Word)
@@ -248,7 +290,7 @@ mainBench = defaultMainWith (defaultConfig {
 -}
   --
 
-  -- tstEnc treeNT,tstEnc tree3T,tstEnc lN2T,tstEnc lN3T
+  -- tstEnc treeNT,tstEnc treeNLargeT,tstEnc lN2T,tstEnc lN3T
 
   -- ,tstEnc oneT
 
@@ -259,22 +301,44 @@ mainBench = defaultMainWith (defaultConfig {
   --
   -- ,tstDecM lN2T
   -- tstEncDecM lN2T,tstEncDecM lN3T
-  -- tstEncDecM treeNT,tstEncDecM tree3T,tstEncDecM lN2T,tstEncDecM lN3T,
-  -- tstDecM treeNT,tstDecM lN2T,tstDecM lN3T,tstDecM tree3T
+  -- tstEncDecM treeNT,tstEncDecM treeNLargeT,tstEncDecM lN2T,tstEncDecM lN3T,
+  -- tstDecM treeNT,tstDecM lN2T,tstDecM lN3T,tstDecM treeNLargeT
 
   -- tstEncDecM tuple0T,tstEncDecM tupleT,
   -- tstEncDecM word8T,tstEncDecM int8T
   --tstEncDecM word64T,tstEncDecM int64T,tstEncDecM integerT,
 
-  --tstEnc tupleT,tstEnc tupleBools,tstEnc tupleWords,tstEnc arr0, tstEnc arr1, tstEnc asciiStrT,tstEnc unicodeStrT,tstEnc unicodeTextT , tstEnc lN3T, tstEnc tree3T
-  tstEncDec floatT,tstEncDec doubleT,tstEncDec tupleT,tstEncDec tupleBools,tstEncDec tupleWords,tstEncDec arr0, tstEncDec arr1, tstEncDec asciiStrT,tstEncDec unicodeStrT,tstEncDec unicodeTextT , tstEncDec lN3T, tstEncDec tree3T
-  
-  -- tstEncDecM tupleT,tstEncDecM tupleBools,tstEncDecM tupleWords,tstEncDecM arr0, tstEncDecM arr1, tstEncDecM asciiStrT,tstEncDecM unicodeStrT,tstEncDecM unicodeTextT , tstEncDecM lN3T, tstEncDecM tree3T
-  --tstEncDecM treeNT,tstEncDecM tree3T,tstEncDecM lN2T,tstEncDecM lN3T
-  -- ,tstDecM treeNT,tstDecM tree3T,tstDecM lN2T,tstDecM lN3T
-  -- ,tstDecM tree3T
+  tstEnc carT
+  -- tstEnc floatT,tstEnc doubleT,tstEnc floatsT,tstEnc vfT
 
-  --tstED lN3T,tstED tree3T
+  -- tstEnc sbs,tstEnc lbs
+  --,tstEnc shortbs
+  --tstEnc wordsT,tstEnc vwT
+  --,tstEnc intsT,tstEnc viT,tstEnc viiT
+  --tstEnc charT,tstEnc unicharT
+
+  --,tstEnc nativeListT
+  --,tstEnc asciiStrT
+  --,tstEnc unicodeStrT,tstEnc unicodeTextT
+  -- ,tstEnc lN3T
+
+
+  -- ,tstEnc treeN33LargeT,tstEnc treeNLargeT,tstEnc lN3T
+
+    -- tstEnc v2T,
+ -- tstEnc t33T,
+ -- tstEnc treeVariousT
+ -- ,tstEnc treeNT
+
+
+  --tstEnc carT,tstEnc floatsT,tstEnc tupleT,tstEnc tupleBools,tstEnc tupleWords,tstEnc arr0, tstEnc arr1, tstEnc asciiStrT,tstEnc unicodeStrT,tstEnc unicodeTextT , tstEnc lN3T,
+  --tstEncDec floatT,tstEncDec doubleT,tstEncDec tupleT,tstEncDec tupleBools,tstEncDec tupleWords,tstEncDec arr0, tstEncDec arr1, tstEncDec asciiStrT,tstEncDec unicodeStrT,tstEncDec unicodeTextT , tstEncDec lN3T, tstEncDec treeNLargeT
+  -- tstEncDecM tupleT,tstEncDecM tupleBools,tstEncDecM tupleWords,tstEncDecM arr0, tstEncDecM arr1, tstEncDecM asciiStrT,tstEncDecM unicodeStrT,tstEncDecM unicodeTextT , tstEncDecM lN3T, tstEncDecM treeNLargeT
+  --tstEncDecM treeNT,tstEncDecM treeNLargeT,tstEncDecM lN2T,tstEncDecM lN3T
+  -- ,tstDecM treeNT,tstDecM treeNLargeT,tstDecM lN2T,tstDecM lN3T
+  -- ,tstDecM treeNLargeT
+
+  --tstED lN3T,tstED treeNLargeT
 
   --,tstEncDecM treeNT
 {-
@@ -394,12 +458,13 @@ encodeInverseOfDecode k v = let x = k v
                             in x == r
 
 tstEnc (vn,v) =
-  let nm s = Prelude.concat [s,"-",vn] -- unwords [s,Prelude.take 400 $ show v]
+  --let nm s = Prelude.concat [s,"-",vn] -- unwords [s,Prelude.take 400 $ show v]
+  let nm s = Prelude.concat [vn,"-",s] -- unwords [s,Prelude.take 400 $ show v]
   in bgroup ("tstEnc") [
-    bench (nm "flat")  $ nf (encodeOnly PkgFlat) v
-    ,bench (nm "cbor")     $ nf (encodeOnly PkgCBOR) v
+     bench (nm "store")     $ nf (encodeOnly PkgStore) v
     ,bench (nm "binary")     $ nf (encodeOnly PkgBinary) v
-    ,bench (nm "store")     $ nf (encodeOnly PkgStore) v
+    ,bench (nm "cbor")     $ nf (encodeOnly PkgCBOR) v
+    ,bench (nm "flat")  $ nf (encodeOnly PkgFlat) v
     ]
   where encodeOnly k = B.length . serialize . k
 

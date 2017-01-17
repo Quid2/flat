@@ -7,6 +7,7 @@ import           Control.Exception
 import           Data.ByteString.Lazy   as L
 import           Data.Flat
 import           Test.Data
+import           Test.Data.Flat
 import           Test.Data.Values
 import Types
 
@@ -20,9 +21,9 @@ instance Flat a => Serialize PkgFlat a where
   pkg = PkgFlat
   unpkg (PkgFlat a) = a
 
-instance Flat N
-instance Flat a => Flat (List a)
-instance Flat a => Flat (Tree a)
+--instance Flat N
+--instance Flat a => Flat (List a)
+--instance Flat a => Flat (Tree a)
 instance Flat Car
 instance Flat Acceleration
 instance Flat Consumption

@@ -1,8 +1,11 @@
+{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
 import Control.Exception
 import qualified Data.ByteString.Lazy as L
 import Data.Flat
 import Debug.Trace (traceEventIO)
-import Test.Data(Direction(..))
+import Test.Data(Direction(..),Tree(..))
+import Data
+import Test.Data.Values
 import Test.Data.Flat
 {-
 Profiling:
@@ -14,17 +17,30 @@ cd /Users/titto/workspace/flat;stack install --file-watch --exec "flat-profile +
 
 -}
 
-main = testDirectionList
+--main = print $ encode Four -- (Node (Leaf Four) (Leaf Three))
 
-testDirectionList = do
-  let es = take 10000 . concat . repeat $ [North,South,East,West,Center]
-  print $ unflat (flat es) == Right es
+main = do
+  forceCafs
+  --print $ L.length (flat treeN33Large)
+  --print $ L.length (flat treeNNNLarge)
+  -- p 500000 treeVarious
+  -- p 5 treeN33Large
+  p 5000000 vw
+  -- p 10000 unicodeStr
 
-testIntList = do
-  let es = map flat [-100000..100001::Int]
-  -- mapM_ (\_ -> dec e :: IO (Decoded Int)) [1..1000000]
-  let r = sum . map (\e -> let Right v = unflat e in (v::Int)) $ es
-  print $ r == 100001
+  where p n = print . sum . map (L.length . flat) . take n . repeat
+
+--main = testDirectionList
+
+-- testDirectionList = do
+--   let es = take 10000 . concat . repeat $ [North,South,East,West,Center]
+--   print $ unflat (flat es) == Right es
+
+-- testIntList = do
+--   let es = map flat [-100000..100001::Int]
+--   -- mapM_ (\_ -> dec e :: IO (Decoded Int)) [1..1000000]
+--   let r = sum . map (\e -> let Right v = unflat e in (v::Int)) $ es
+--   print $ r == 100001
 
 
 --enc = evaluate . L.length . flat

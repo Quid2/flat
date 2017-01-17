@@ -144,3 +144,11 @@ decodeSingleCtr3 v f = decodeListLenOf 4 *> decodeWordOf v *> pure f <*> decode 
 decodeSingleCtr4 v f = decodeListLenOf 5 *> decodeWordOf v *> pure f <*> decode <*> decode <*> decode <*> decode
 decodeSingleCtr6 v f = decodeListLenOf 7 *> decodeWordOf v *> pure f <*> decode <*> decode <*> decode <*> decode <*> decode <*> decode
 decodeSingleCtr7 v f = decodeListLenOf 8 *> decodeWordOf v *> pure f <*> decode <*> decode <*> decode <*> decode <*> decode <*> decode <*> decode
+
+instance Serialise Car
+instance Serialise Acceleration
+instance Serialise Consumption
+instance Serialise CarModel
+instance Serialise OptionalExtra
+instance Serialise Engine
+instance Serialise Various

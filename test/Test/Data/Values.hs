@@ -1,4 +1,5 @@
 {-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 module Test.Data.Values where
 
 import           Control.DeepSeq
@@ -11,14 +12,23 @@ import           Data.List
 import qualified Data.Text            as T
 import           Data.Word
 import           Test.Data
-import qualified Test.Data2            as D2
+import qualified Test.Data2           as D2
+import qualified Data.ByteString.Short.Internal as SBS
+import Data.Foldable
 
+instance NFData Various
 instance NFData a => NFData (List a)
 instance NFData a => NFData (D2.List a)
 instance NFData N
 instance NFData a => NFData (ListS a)
 instance NFData a => NFData (Stream a)
 instance NFData a => NFData (Tree a)
+instance NFData Car
+instance NFData Engine
+instance NFData OptionalExtra
+instance NFData CarModel
+instance NFData Consumption
+instance NFData Acceleration
 
 floatT = ("float",-234.123123::Float)
 doubleT = ("double",-1.91237::Double)
@@ -52,7 +62,7 @@ b1 = B.pack [99,173,186,44,187,124,87,186,104,99,138,202,53,137,22,5,44,244,234,
 b2 = B.pack . concat . replicate 100 $ [235,7,135,117,255,69,100,113,113,82,128,181,200,146,155,228,144,65,83,162,130,236,235,7,135,117,255,69,100,113,113,82,128,181,200,146,155,228,144,65,83,162,130,236,235,7,135,117,255,69,100,113,113,82,128,181,200,146,155,228,144,65,83,162,130,236]
 
 lb1 = L.pack . B.unpack $ b1
-lb2 = L.pack . B.unpack $ b2
+lb2 = L.fromChunks $ replicate 100 $ B.replicate 400 33
 
 s1 = "a"
 s2 = "中文版本"
@@ -64,8 +74,6 @@ t2 = T.pack s2
 t3 = T.pack s3
 t4 = T.pack s4
 
--- v1 = V1 (Just 'g') Nothing
--- v2 = V2 () (Left 45)
 
 p1 :: Phantom Char
 p1 = Phantom
@@ -73,7 +81,7 @@ p1 = Phantom
 --toList N = []
 --toList (C h t) = h : (toList t)
 
-l2L [] = N
+l2L []     = N
 l2L (x:xs) = C x (l2L xs)
 
 l1 = l2L $ take 11 [11::Word8,22..33]
@@ -95,7 +103,7 @@ largeSize = 1000000
 lN2 :: List N
 lN2 = lnx 1000
 
-lN3 = lnx largeSize
+lN3 = lnx (largeSize*5)
 
 lnx = l2L . ns
 
@@ -110,12 +118,36 @@ toN 3 = Three
 toN 4 = Four
 toN _ = Five
 
-tree3 = mkTree largeSize
+asN3 = toN3 . (`mod` 5)
+toN3 :: Integer -> (N,N,N)
+toN3 1 = (One,Two,Three)
+toN3 2 = (Two,Three,Four)
+toN3 3 = (Three,Four,Five)
+toN3 4 = (Four,Five,One)
+toN3 _ = (Four,Five,Two)
 
-mkTree = mkTree_ 1
-mkTree_ p 1 = Leaf $ asN p
-mkTree_ p n = let (d,m) = n `divMod` 2
-              in  Node (mkTree_ p d) (mkTree_ (p+d) (d+m))
+t33T =("Tuple of Tuple",t33)
+t33 = asN33 4
+
+asN33 :: Integer -> ((N, N, N), (N, N, N), (N, N, N))
+asN33 n = (asN3 n,asN3 (n+1),asN3 (n+2))
+
+treeNLarge :: Tree N
+treeNLarge = mkTree asN largeSize
+
+treeNNNLarge :: Tree (N,N,N)
+treeNNNLarge = mkTree asN3 largeSize
+
+treeN33Large :: Tree ((N,N,N),(N,N,N),(N,N,N))
+treeN33Large = mkTree asN33 largeSize
+
+treeVarious = mkTree (const v2) 100
+
+mkTree mk = mkTree_ 1
+  where
+    mkTree_ p 1 = Leaf $ mk p
+    mkTree_ p n = let (d,m) = n `divMod` 2
+                  in  Node (mkTree_ p d) (mkTree_ (p+d) (d+m))
 
 tree1 :: Tree String
 tree1 = Node (Leaf "a leaf") (Node (Leaf "and") (Leaf "more"))
@@ -127,35 +159,41 @@ tree2 = Node (Leaf 17) (Node (Leaf 23) (Leaf 45))
 
 -- stream1 = Stream True stream1
 
-
 car1 = Car 2343 1965 True ModelB [18,234] "1234" [SunRoof,CruiseControl] (Engine 1200 3 9000 "Fiat" "Petrol") [Consumption 40 18,Consumption 60 23,Consumption 80 25] [(90,[Acceleration 40 12]),(110,[Acceleration 50 11])] "Fiat" "500"
 
-
-
-treeN = Node (Leaf One) (Node (Leaf Three) (Node (Leaf Two) (Node (Node (Node (Leaf Three) (Leaf One)) (Leaf Five)) (Node (Node (Leaf Five) (Node (Node (Node (Node (Node (Leaf Two) (Leaf Four)) (Node (Leaf Three) (Node (Node (Leaf One) (Node (Leaf Four) (Node (Leaf Three) (Leaf One)))) (Node (Leaf One) (Node (Node (Leaf One) (Leaf Four)) (Leaf Two)))))) (Leaf Four)) (Node (Leaf Three) (Node (Node (Leaf Four) (Leaf Three)) (Node (Node (Leaf Five) (Node (Node (Leaf Three) (Node (Leaf Three) (Node (Node (Leaf Three) (Node (Node (Node (Node (Node (Node (Leaf Five) (Leaf Four)) (Node (Node (Node (Leaf One) (Node (Node (Leaf Four) (Node (Node (Node (Node (Node (Leaf Four) (Leaf One)) (Leaf One)) (Leaf Four)) (Leaf Five)) (Leaf Four))) (Node (Leaf Two) (Leaf Two)))) (Leaf One)) (Leaf Four))) (Leaf Two)) (Node (Leaf Five) (Node (Leaf Five) (Leaf Four)))) (Node (Leaf Three) (Leaf One))) (Node (Node (Node (Leaf Two) (Node (Node (Node (Node (Node (Leaf Five) (Leaf Three)) (Leaf Five)) (Leaf Three)) (Node (Node (Node (Leaf Two) (Node (Node (Leaf Four) (Node (Leaf One) (Node (Leaf Five) (Leaf Five)))) (Leaf Three))) (Leaf Three)) (Node (Leaf Five) (Node (Node (Node (Leaf Five) (Node (Leaf One) (Node (Node (Node (Node (Node (Node (Node (Node (Leaf Two) (Leaf Four)) (Node (Node (Node (Leaf Four) (Leaf Two)) (Node (Leaf Two) (Leaf Five))) (Leaf Two))) (Node (Node (Node (Node (Leaf Two) (Node (Node (Leaf One) (Node (Leaf Four) (Node (Node (Node (Leaf Two) (Leaf Three)) (Node (Leaf Three) (Leaf Two))) (Leaf Four)))) (Node (Node (Node (Node (Node (Node (Node (Node (Leaf Three) (Leaf Four)) (Node (Node (Leaf One) (Leaf Two)) (Leaf Four))) (Node (Node (Leaf Five) (Node (Node (Node (Leaf Two) (Leaf Five)) (Leaf Three)) (Node (Node (Node (Leaf Three) (Node (Leaf Three) (Leaf Two))) (Leaf Three)) (Leaf Three)))) (Leaf Two))) (Leaf Five)) (Node (Node (Node (Leaf One) (Node (Leaf One) (Leaf Three))) (Leaf Two)) (Leaf One))) (Node (Leaf Four) (Node (Node (Leaf Three) (Node (Leaf Five) (Leaf Five))) (Leaf Four)))) (Node (Node (Node (Leaf Five) (Leaf Four)) (Node (Leaf Five) (Node (Node (Node (Leaf One) (Leaf One)) (Leaf Four)) (Node (Node (Node (Node (Leaf Three) (Leaf Four)) (Node (Node (Leaf One) (Node (Node (Leaf Five) (Node (Node (Leaf Five) (Leaf Four)) (Leaf Three))) (Node (Node (Node (Leaf Two) (Node (Leaf Five) (Leaf Four))) (Leaf Three)) (Leaf Two)))) (Leaf Four))) (Leaf Four)) (Leaf Two))))) (Node (Leaf Two) (Node (Node (Node (Node (Node (Leaf Five) (Leaf Five)) (Leaf Four)) (Leaf Two)) (Node (Leaf One) (Node (Leaf One) (Leaf One)))) (Leaf Three))))) (Leaf Three)))) (Leaf Three)) (Node (Leaf Two) (Leaf One))) (Leaf Three))) (Node (Leaf Four) (Node (Node (Leaf Five) (Node (Leaf Two) (Leaf One))) (Node (Leaf Two) (Leaf Two))))) (Leaf Two)) (Leaf Five)) (Node (Node (Leaf One) (Leaf Five)) (Node (Leaf Four) (Leaf One)))) (Node (Leaf One) (Leaf Three))))) (Node (Node (Node (Node (Leaf One) (Leaf Two)) (Node (Node (Leaf Three) (Node (Leaf One) (Node (Node (Leaf Three) (Leaf Four)) (Leaf Three)))) (Leaf Three))) (Node (Node (Leaf Four) (Leaf One)) (Leaf Two))) (Node (Node (Node (Node (Node (Node (Node (Leaf One) (Leaf Four)) (Node (Node (Node (Leaf Four) (Leaf Four)) (Node (Node (Node (Leaf Three) (Leaf Three)) (Node (Leaf Two) (Leaf Five))) (Node (Leaf One) (Leaf Four)))) (Leaf Two))) (Leaf One)) (Leaf Four)) (Leaf Five)) (Node (Node (Node (Leaf Three) (Leaf Two)) (Node (Leaf One) (Node (Leaf Three) (Node (Leaf One) (Leaf Five))))) (Node (Node (Leaf Three) (Node (Leaf Three) (Node (Node (Leaf Five) (Leaf Three)) (Node (Node (Leaf One) (Node (Node (Leaf Three) (Node (Leaf One) (Node (Node (Leaf Two) (Leaf Two)) (Node (Leaf Three) (Node (Node (Leaf Five) (Node (Node (Leaf Four) (Node (Leaf Two) (Leaf Three))) (Node (Leaf Three) (Leaf Three)))) (Leaf Three)))))) (Leaf Four))) (Node (Leaf Three) (Leaf Five)))))) (Node (Leaf Five) (Node (Leaf Three) (Leaf One)))))) (Leaf One)))) (Leaf Four))))) (Node (Leaf One) (Leaf Two)))) (Leaf Three)) (Node (Node (Node (Leaf Five) (Leaf One)) (Node (Leaf Four) (Leaf One))) (Node (Node (Node (Leaf Three) (Node (Leaf Five) (Node (Leaf Five) (Node (Node (Leaf Four) (Leaf Four)) (Node (Node (Leaf Two) (Leaf One)) (Leaf One)))))) (Node (Node (Leaf One) (Leaf Two)) (Node (Node (Leaf Five) (Leaf Five)) (Node (Node (Node (Node (Leaf Three) (Leaf Three)) (Leaf Five)) (Node (Leaf Two) (Leaf Three))) (Leaf One))))) (Leaf One)))))) (Node (Leaf Four) (Node (Node (Leaf Two) (Node (Node (Leaf One) (Leaf Five)) (Leaf Two))) (Leaf Five)))))) (Leaf Three))) (Leaf Five))))) (Node (Leaf Four) (Leaf Four)))) (Leaf Two)))))
+treeN = mkTree asN3 1
 
 asciiStrT = ("asciiStr", longS $ "To hike, or not to hike? US Federal Reserve chair Janet Yellen faces a tricky decision at today's FOMC meeting. Photograph: Action Press/Rex. Theme park operator Merlin Entertainments suffered a significant drop in visitor numbers to its Alton Towers attraction after a serious rollercoaster accident in June.")
 
-unicodeTextT = ("unicodeText",T.pack uniS)
+unicodeTextT = ("unicodeText",unicodeText)
+unicodeText = T.pack unicodeStr
 
-unicodeStrT = ("unicodeStr",uniS)
+unicodeStrT = ("unicodeStr",unicodeStr)
 
-uniS = longS "I promessi sposi è un celebre romanzo storico di Alessandro Manzoni, ritenuto il più famoso e il più letto tra quelli scritti in lingua italiana[1].维护和平正义 开创美好未来——习近平主席在纪念中国人民抗日战争暨世界反法西斯战争胜利70周年大会上重要讲话在国际社会引起热烈反响"
+unicodeStr = longS uniSS
+
+uniSS = "\x1F600\&\x1F600\&\x1F600\&I promessi sposi è un celebre romanzo storico di Alessandro Manzoni, ritenuto il più famoso e il più letto tra quelli scritti in lingua italiana[1].维护和平正义 开创美好未来——习近平主席在纪念中国人民抗日战争暨世界反法西斯战争胜利70周年大会上重要讲话在国际社会引起热烈反响"
 
 longS =  take 1000000 . concat . repeat
 
-arr0 = ("[Bool]",map (odd . ord) $ uniS :: [Bool])
+arr0 = ("[Bool]",map (odd . ord) $ unicodeStr :: [Bool])
 
-arr1 = ("[Word]",map (fromIntegral . ord) $ uniS :: [Word])
+arr1 = ("[Word]",map (fromIntegral . ord) $ unicodeStr :: [Word])
 
-arr2 = ("ByteString from String",B.pack . map (fromIntegral . ord) $ uniS)
+arr2 = ("ByteString from String",B.pack . map (fromIntegral . ord) $ unicodeStr)
 sbs = ("StrictByteString",b2)
 lbs = ("LazyByteString",lb2)
+shortbs = ("ShortByteString",SBS.toShort b2)
+ 
+lN2T = ("List N",lN2)
+lN3T = ("Large List N",lN3)
+nativeListT = ("Large [N]",toList lN3)
 
-lN2T = ("lN2",lN2)
-lN3T = ("lN3",lN3)
 treeNT = ("treeN",treeN)
-tree3T = ("tree3",tree3)
+treeNLargeT = ("treeNLarge",treeNLarge)
+treeNNNLargeT = ("treeNNNLarge",treeNNNLarge)
+treeN33LargeT = ("treeN33Large",treeN33Large)
+treeVariousT = ("Tree Various",treeVarious)
 tuple0T = ("block-tuple",(False,(),(3::Word64,33::Word,(True,(),False))))
 tupleT = ("tuple",(Two,One,(Five,Three,(Three,(),Two))))
 tupleBools = ("tupleBools",(False,(True,False),((True,False,True),(True,False,True))))
@@ -163,10 +201,25 @@ oneT   = ("One",One)
 tupleWords = ("tupleWord",(18::Word,623723::Word,(8888::Word,823::Word)))
 word8T   = ("Word8",34::Word8)
 word64T   = ("Word64",34723823923::Word64)
-
+carT = ("car",car1)
+wordsT = ("words",(18::Word,33::Word8,1230::Word16,9990::Word32,1231232::Word64))
+intsT = ("ints",(444::Int,123::Int8,-8999::Int16,-123823::Int32,-34723823923::Int64))
+floatsT = ("floats",(3.43::Float,44.23E+23::Double,0.1::Double))
 int8T   = ("Int8",-34::Int8)
 int64T   = ("Int64",-34723823923::Int64)
 integerT   = ("Integer",-3472382392399239230123123::Integer)
+charT = ("Char",'a')
+unicharT = ("Unicode char", '世')
+v1T = ("V1",v1)
+v1 = V1 (Just False)
+v2T = ("V2",v2)
+--v2 = V2 True (Right Nothing) (One,Two,Three)
+v2 = V2 True (Right Nothing)
+vfT = ("v floats",VF 3.43 44.23E+23 0.1)
+vwT = ("v words",vw)
+vw = VW 18 33 1230 9990 1231232
+viT = ("v ints",VI 444 123 (-8999) (-123823) (-34723823923))
+viiT = ("v integers",VII 444 8888 (-34723823923))
 
 -- Copied from binary-typed-0.3/benchmark/Criterion.hs
 -- | Data with a normal form.
@@ -182,19 +235,39 @@ forceCafs = mapM_ (evaluate . force') cafs
 -- | List of all data that should be fully evaluated before the benchmark is
 --   run.
 cafs :: [NF]
-cafs = [NF unicodeTextT
-       , NF treeN
+cafs = [
+         NF carT
+       , NF charT
+       , NF unicharT
+       , NF wordsT
+       , NF intsT
+       , NF floatT
+       , NF doubleT
+       , NF floatsT
        , NF tupleT
        , NF tuple0T
-       , NF tree3T
+       , NF treeNLargeT
+       , NF treeNNNLargeT
+       , NF treeN33LargeT
        , NF treeNT
        , NF lN2T
        , NF lN3T
+       , NF nativeListT
        , NF arr1
        , NF arr0
        , NF longS
-       , NF uniS
+       , NF unicodeStr
+       , NF asciiStrT
        , NF unicodeStrT
        , NF unicodeTextT
-       , NF asciiStrT
+       , NF v1T
+       , NF v2T
+       , NF vfT
+       , NF vwT
+       , NF viT
+       , NF viiT
+       , NF treeVariousT
+       , NF sbs
+       , NF lbs
+       , NF shortbs
       ]
