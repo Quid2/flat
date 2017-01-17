@@ -84,7 +84,7 @@ properties = testGroup "Properties"
     ,rt "Text" (prop_Flat_roundtrip:: RT T.Text)
     ,rt "ByteString" (prop_Flat_roundtrip:: RT B.ByteString)
     ,rt "Lazy ByteString" (prop_Flat_roundtrip:: RT L.ByteString)
-    ,rt "Short ByteString" (prop_Flat_roundtrip:: RT SBS.ShortByteString)    
+    ,rt "Short ByteString" (prop_Flat_roundtrip:: RT SBS.ShortByteString)
   ]
    where rt n = QC.testProperty (unwords ["round trip",n])
 
