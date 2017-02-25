@@ -7,21 +7,18 @@ module Data.Flat.Run(flat,unflat,unflatWith
                     ,DeserializeFailure
                     --,runGet
                     ,getBool,Get -- for dynamic decoding
-                    --,Encoded(..),encoded,decoded
                     ,Decoded
                     ) where
 
 import           Control.Exception
 import           Data.Binary.Bits.Get
-import qualified Data.Binary.Get                as Get (Decoder (..), Get,
-                                                        runGetIncremental)
-import qualified Data.ByteString.Lazy           as L
+-- -- -- import qualified Data.Binary.Get                as Get (Decoder (..), Get,
+                                                        -- runGetIncremental)
+import qualified Data.ByteString.Lazy as L
 import           Data.Flat.Class
---import           Data.Flat.Encoder
-import           Data.Flat.Prim
+import           qualified Data.Flat.Encoder as E   -- (lazyEncoder)
 import           Data.Flat.Filler
 import           Data.Flat.Pretty
-import           Data.Word
 
 -- |Encode byte-padded value.
 flat :: Flat a => a -> L.ByteString
@@ -39,7 +36,9 @@ unflatWith dec bs = unflatChkWith (do
 
 -- |Encode value, if values does not end on byte boundary, 0s padding is added.
 flatRaw :: Flat a => a -> L.ByteString
-flatRaw = bitEncoder . encode
+flatRaw a = E.encoderLazy (encode a)
+-- flatRaw a = encoderStrict (maxSize $ postAligned a) (encode a)
+-- flatRaw a = bitEncoder (2000) (encode a)
 
 unflatRaw :: Flat a => L.ByteString -> Decoded a
 unflatRaw = runGetOrFail decode

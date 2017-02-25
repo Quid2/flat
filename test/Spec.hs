@@ -88,95 +88,143 @@ properties = testGroup "Properties"
   ]
    where rt n = QC.testProperty (unwords ["round trip",n])
 
-unitTests = testGroup "Serialisation Unit tests" $ concat [
-             errDec (Proxy::Proxy Bool) [] -- no data
-            ,errDec (Proxy::Proxy Bool) [128] -- no filler
-            ,errDec (Proxy::Proxy Bool) [128+1,1,2,4,8] -- additional bytes
-            ,s () []
-            ,s ((),()) []
-            ,a () [1]
-            ,a True [128+1]
-            ,a (True,True) [128+64+1]
-            ,a (True,False,True) [128+32+1]
-            ,a (True,False,True,True) [128+32+16+1]
-            ,a (True,False,True,True,True) [128+32+16+8+1]
-            ,a (True,False,True,True,True,True) [128+32+16+8+4+1]
-            ,a (True,False,True,True,True,True,True) [128+32+16+8+4+2+1]
-            ,a (True,False,True,True,True,True,True,True) [128+32+16+8+4+2+1,1]
-            ,s (True,False,True,True) [128+32+16]
-            ,s ((True,True,False,True,False),(False,False,True,False,True,True)) [128+64+16+1,64+32]
-            ,s ('\0','\1','\127') [0,1,127]
-            ,s (33::Word32,44::Word32) [33,44]
-            --,s (Elem True) [64]
-            --,s (NECons True (NECons False (Elem True))) [128+64+32+4]
-            ,s (0::Word8) [0]
-            ,s (1::Word8) [1]
-            ,s (255::Word8) [255]
-            ,s (0::Word16) [0]
-            ,s (1::Word16) [1]
-            ,s (255::Word16) [255,1]
-            ,s (256::Word16) [128,2]
-            ,s (65535::Word16) [255,255,3]
-            ,s (255::Word32) [255,1]
-            ,s (65535::Word32) [255,255,3]
-            ,s (4294967295::Word32) [255,255,255,255,15]
-            ,s (255::Word64) [255,1]
-            ,s (65535::Word64) [255,255,3]
-            ,s (4294967295::Word64) [255,255,255,255,15]
-            ,s (18446744073709551615::Word64) [255,255,255,255,255,255,255,255,255,1]
-            ,s (255::Word) [255,1]
-            ,s (65535::Word) [255,255,3]
-            ,s (4294967295::Word) [255,255,255,255,15]
-            ,tstI [0::Int8,2,-2]
-            ,s (127::Int8) [254]
-            ,s (-128::Int8) [255]
-            ,tstI [0::Int16,2,-2,127,-128]
-            ,tstI [0::Int32,2,-2,127,-128]
-            ,tstI [0::Int64,2,-2,127,-128]
-            ,s (-1024::Int64) [255,15]
-            ,tstI [0::Int,2,-2,127,-128]
-            ,tstI [0::Integer,2,-2,127,-128,-256,-512]
-            ,s (-1024::Integer) [255,15]
-            ,s (-0.15625::Float)  [0b10111110,0b00100000,0,0]
-            ,s (-0.15625::Double) [0b10111111,0b11000100,0,0,0,0,0,0]
-            ,s (-123.2325E-23::Double) [0b10111011,0b10010111,0b01000111,0b00101000,0b01110101,0b01111011,0b01000111,0b10111010]
-            ,map trip [0::Float,-0::Float,0/0::Float,1/0::Float]
-            ,map trip [0::Double,-0::Double,0/0::Double,1/0::Double]
-            ,s '\0' [0]
-            ,s '\1' [1]
-            ,s '\127' [127]
-            ,s 'a' [97]
-            ,s 'à' [224,1]
-            ,s '经' [207,253,1]
-            ,s Unit []
-            ,s (Un False) [0]
-            ,s (One,Two,Three) [16+8]
-            ,s (Five,Five,Five) [255,128]
-            --,s (NECons True (Elem True)) [128+64+16]
-            ,s "" [0]
-#ifdef LIST_BIT
-            ,s "abc" [176,216,172,96]
-            ,s [False,True,False,True] [128
-                                        +32+16
-                                        +8
-                                        +2+1,0]
-#elif defined(LIST_BYTE)
-            ,s "abc" s3
-            ,s (cs 600) s600
-#endif
-            -- Aligned structures
-            --,s (T.pack "") [1,0]
-            --,s (Just $ T.pack "abc") [128+1,3,97,98,99,0]
-            --,s (T.pack "abc") (al s3)
-            --,s (T.pack $ cs 600) (al s600)
-            ,s (B.pack $ csb 3) (bsl c3)
-            ,s (B.pack $ csb 600) (bsl s600)
-            ,s (L.pack $ csb 3) (bsl c3)
-            -- Long LazyStrings can have internal sections shorter than 255
-            --,s (L.pack $ csb 600) (bsl s600)
-            ,[trip longBS,trip longLBS,trip longSBS,trip unicodeText]
-            ]
+unitTests = testGroup "De/Serialisation Unit tests" $ concat [
+  sz () 0
+  ,sz True 1
+  ,sz One 2
+  ,sz Two 2
+  ,sz Three 2
+  ,sz Four 3
+  ,sz Five 3
+  ,sz 'a' 8
+  ,sz 'à' 16
+  ,sz '经' 24
+  ,sz (0::Word8) 8
+  ,sz (1::Word8) 8
+  ,concat $ map (uncurry sz) $ ns
+  ,concat $ map (uncurry sz) $ nsI
+  ,concat $ map (uncurry sz) $ nsII
+  ,sz (1.1::Float) 32
+  ,sz (1.1::Double) 64
+  ,sz "" 1
+  ,sz "abc" (4+3*8)
+  ,sz ((),(),Unit) 0
+  ,sz (True,False,One,Five) 7
+  ,sz bs (4+3*8)
+  ,sz stBS bsSize
+  ,sz lzBS bsSize
+  ,sz shBS bsSize
+  ,sz tx utf16Size
+  ,errDec (Proxy::Proxy Bool) [] -- no data
+  ,errDec (Proxy::Proxy Bool) [128] -- no filler
+  ,errDec (Proxy::Proxy Bool) [128+1,1,2,4,8] -- additional bytes
+  ,s () []
+  ,s ((),(),Unit) []
+  ,s (Unit,'a',Unit,'a',Unit,'a',Unit) [97,97,97]
+  ,a () [1]
+  ,a True [128+1]
+  ,a (True,True) [128+64+1]
+  ,a (True,False,True) [128+32+1]
+  ,a (True,False,True,True) [128+32+16+1]
+  ,a (True,False,True,True,True) [128+32+16+8+1]
+  ,a (True,False,True,True,True,True) [128+32+16+8+4+1]
+  ,a (True,False,True,True,True,True,True) [128+32+16+8+4+2+1]
+  ,a (True,False,True,True,(True,True,True,True)) [128+32+16+8+4+2+1,1]
+  ,s (True,False,True,True) [128+32+16]
+  ,s ((True,True,False,True,False),(False,False,True,False,True,True)) [128+64+16+1,64+32]
+  ,s ('\0','\1','\127') [0,1,127]
+  ,s (33::Word32,44::Word32) [33,44]
+    --,s (Elem True) [64]
+    --,s (NECons True (NECons False (Elem True))) [128+64+32+4]
+  ,s (0::Word8) [0]
+  ,s (1::Word8) [1]
+  ,s (255::Word8) [255]
+  ,s (0::Word16) [0]
+  ,s (1::Word16) [1]
+  ,s (255::Word16) [255,1]
+  ,s (256::Word16) [128,2]
+  ,s (65535::Word16) [255,255,3]
+  ,s (127::Word32) [127]
+  ,s (128::Word32) [128,1]
+  ,s (129::Word32) [129,1]
+  ,s (255::Word32) [255,1]
+  ,s (16383::Word32) [255,127]
+  ,s (16384::Word32) [128,128,1]
+  ,s (16385::Word32) [129,128,1]
+  ,s (32767::Word32) [255,255,1]
+  ,s (32768::Word32) [128,128,2]
+  ,s (32769::Word32) [129,128,2]
+  ,s (65535::Word32) [255,255,3]
+  ,s (2097151::Word32) [255,255,127]
+  ,s (2097152::Word32) [128,128,128,1]
+  ,s (2097153::Word32) [129,128,128,1]
+  ,s (4294967295::Word32) [255,255,255,255,15]
+  ,s (255::Word64) [255,1]
+  ,s (65535::Word64) [255,255,3]
+  ,s (4294967295::Word64) [255,255,255,255,15]
+  ,s (18446744073709551615::Word64) [255,255,255,255,255,255,255,255,255,1]
+  ,s (255::Word) [255,1]
+  ,s (65535::Word) [255,255,3]
+  ,s (4294967295::Word) [255,255,255,255,15]
+  ,tstI [0::Int8,2,-2]
+  ,s (127::Int8) [254]
+  ,s (-128::Int8) [255]
+  ,tstI [0::Int16,2,-2,127,-128]
+  ,tstI [0::Int32,2,-2,127,-128]
+  ,tstI [0::Int64,2,-2,127,-128]
+  ,s (-1024::Int64) [255,15]
+  ,tstI [0::Int,2,-2,127,-128]
+  ,tstI [0::Integer,2,-2,127,-128,-256,-512]
+  ,s (-1024::Integer) [255,15]
+  ,s (-0.15625::Float)  [0b10111110,0b00100000,0,0]
+  ,s (-0.15625::Double) [0b10111111,0b11000100,0,0,0,0,0,0]
+  ,s (-123.2325E-23::Double) [0b10111011,0b10010111,0b01000111,0b00101000,0b01110101,0b01111011,0b01000111,0b10111010]
+  ,map trip [0::Float,-0::Float,0/0::Float,1/0::Float]
+  ,map trip [0::Double,-0::Double,0/0::Double,1/0::Double]
+  ,s '\0' [0]
+  ,s '\1' [1]
+  ,s '\127' [127]
+  ,s 'a' [97]
+  ,s 'à' [224,1]
+  ,s '经' [207,253,1]
+  ,s Unit []
+  ,s (Un False) [0]
+  ,s (One,Two,Three) [16+8]
+  ,s (Five,Five,Five) [255,128]
+    --,s (NECons True (Elem True)) [128+64+16]
+  ,s "" [0]
+   #ifdef LIST_BIT
+  ,s "abc" [176,216,172,96]
+  ,s [False,True,False,True] [128
+                               +32+16
+                               +8
+                               +2+1,0]
+   #elif defined(LIST_BYTE)
+  ,s "abc" s3
+  ,s (cs 600) s600
+   #endif
+    -- Aligned structures
+    --,s (T.pack "") [1,0]
+    --,s (Just $ T.pack "abc") [128+1,3,97,98,99,0]
+    --,s (T.pack "abc") (al s3)
+    --,s (T.pack $ cs 600) (al s600)
+  ,s (B.pack $ csb 3) (bsl c3)
+  ,s (B.pack $ csb 600) (bsl s600)
+  ,s (L.pack $ csb 3) (bsl c3)
+    -- Long LazyStrings can have internal sections shorter than 255
+    --,s (L.pack $ csb 600) (bsl s600)
+  ,[trip longBS,trip longLBS,trip longSBS,trip unicodeText]
+  ]
     where
+      ns :: [(Word64, Int)]
+      ns =  [( (-) (2 ^(i*7)) 1,fromIntegral (8*i)) | i <- [1 .. 10]]
+
+      nsI :: [(Int64, Int)]
+      nsI = nsI_
+      nsII :: [(Integer, Int)]
+      nsII = nsI_
+      nsI_ =  [( (-) (2 ^(((-) i 1)*7)) 1,fromIntegral (8*i)) | i <- [1 .. 10]]
+
       --al = (1:) -- prealign
       bsl = id -- noalign
       s3 = [3,97,98,99,0]
@@ -184,6 +232,13 @@ unitTests = testGroup "Serialisation Unit tests" $ concat [
       c3 = pre c3a
       s600 = pre s600a
       pre = (1:)
+      tx = T.pack "txt"
+      utf16Size = 8+8+3*16+8
+      shBS = SBS.toShort stBS
+      lzBS = L.pack bs
+      stBS = B.pack bs
+      bs = [32,32,32::Word8]
+      bsSize = 8+8+3*8+8
       s600a = concat [[255],csb 255,[255],csb 255,[90],csb 90,[0]]
       s600B = concat [[55],csb 55,[255],csb 255,[90],csb 90,[200],csb 200,[0]]
       longSBS = SBS.toShort longBS
@@ -196,6 +251,8 @@ unitTests = testGroup "Serialisation Unit tests" $ concat [
            | otherwise = testCase (unwords ["Int",show v]) $ teq v (2 * fromIntegral (-v) - 1 ::Word64)
 
       teq a b = ser a @?= ser b
+
+      sz v e = [testCase (unwords ["size of",show v]) $ maxSize v @?= e]
 
       s v e = [testCase (unwords ["flat raw",show v]) $ serRaw v @?= e
               ,testCase (unwords ["unflat raw",show v]) $ Right v @?= desRaw e]
@@ -256,16 +313,7 @@ prop_common_unsigned n _ = let n2 :: h = fromIntegral n
 
 -- deflat = unflat
 
--- f = e (preAligned True)
--- y = e (23232::Integer)
--- e = showEncoding . encode
-
--- x :: Get (Bool,Bool,(),Bool)
--- x = decode
-
 -- b1 :: BLOB UTF8
 -- b1 = BLOB UTF8 (preAligned (List255 [97,98,99]))
 -- -- b1 = BLOB (preAligned (UTF8 (List255 [97,98,99])))
-
--- derive makeSerial ''Unit
 

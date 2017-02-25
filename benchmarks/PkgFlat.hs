@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE PackageImports        #-}
-module PkgFlat(PkgFlat(..),Flat,serlN2) where
+module PkgFlat(PkgFlat(..),Flat,maxSize,sd,serializeF,deserializeF,serlN2) where
 
 import           Control.Exception
 import           Data.ByteString.Lazy   as L
@@ -16,10 +16,15 @@ data PkgFlat a = PkgFlat a deriving (Eq,Show)
 instance Arbitrary a => Arbitrary (PkgFlat a) where arbitrary = fmap PkgFlat arbitrary
 
 instance Flat a => Serialize PkgFlat a where
-  serialize (PkgFlat a) = flat a
-  deserialize = either (Left . error) (Right . PkgFlat) . unflat
+  serialize (PkgFlat a) = serializeF a
+  deserialize = (PkgFlat <$>) . deserializeF
   pkg = PkgFlat
   unpkg (PkgFlat a) = a
+
+sd = ("LazyEach",serializeF,deserializeF)
+
+serializeF = flat
+deserializeF =  either (Left . error) Right . unflat
 
 --instance Flat N
 --instance Flat a => Flat (List a)
@@ -30,6 +35,12 @@ instance Flat Consumption
 instance Flat CarModel
 instance Flat OptionalExtra
 instance Flat Engine
+
+-- Car components -10%
+-- instance {-# OVERLAPPING #-} Flat [Int32]
+-- instance {-# OVERLAPPING #-} Flat [OptionalExtra]
+-- instance {-# OVERLAPPING #-} Flat [Consumption]
+-- instance {-# OVERLAPPING #-} Flat [(OctaneRating,[Acceleration])]
 
 s = L.unpack $ flat $ lN2
 

@@ -86,7 +86,7 @@ module Data.Binary.Bits.Get
             , Data.Binary.Bits.Get.getByteString
             , Data.Binary.Bits.Get.getLazyByteString
             , Data.Binary.Bits.Get.isEmpty
-            ,funny,funny2
+            --,funny,funny2
             ) where
 
 import qualified Data.Binary.Get          as B (Get, getByteString,

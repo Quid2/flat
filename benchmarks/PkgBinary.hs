@@ -2,7 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE PackageImports            #-}
-module PkgBinary(PkgBinary(..),serlN2) where
+module PkgBinary(PkgBinary(..),Binary,sd,serlN2) where
 
 import           Test.Data
 import           Types
@@ -22,12 +22,16 @@ instance Binary.Binary a => Serialize (PkgBinary a) where
   deserialize = either (Left . error . show) (\(_,_,v) -> Right $ PkgBinary v) . Binary.decodeOrFail
 -}
 
+sd = ("binary",serializeF,deserializeF)
+
 instance Binary a => Serialize PkgBinary a where
-  serialize (PkgBinary a) = Binary.encode a
-  deserialize = either (Left . error . show)  (\(_,_,v) -> Right $ PkgBinary v) . Binary.decodeOrFail
+  serialize (PkgBinary a) = serializeF a
+  deserialize = (PkgBinary <$>) . deserializeF
   pkg = PkgBinary
   unpkg (PkgBinary a) = a
 
+serializeF = Binary.encode
+deserializeF = either (Left . error . show)  (\(_,_,v) -> Right v) . Binary.decodeOrFail
 
 -- Tests
 tt = ser $ PkgBinary tree1
@@ -58,9 +62,6 @@ instance Binary a => Binary (List a) where
 
 instance Binary N
 instance Binary a => Binary (List a)
-
-
-instance Binary a => Binary (Tree a)
 instance Binary Car
 instance Binary Acceleration
 instance Binary Consumption
@@ -68,9 +69,17 @@ instance Binary CarModel
 instance Binary OptionalExtra
 instance Binary Engine
 instance Binary Various
+instance {-# OVERLAPPABLE #-} Binary a => Binary (Tree a)
+
+-- Specialised instances
+-- instance {-# OVERLAPPING #-} Binary (Tree N)
+-- -- Slower
+-- instance {-# OVERLAPPING #-} Binary (Tree (N,N,N))
+-- instance {-# OVERLAPPING #-} Binary [N]
+instance {-# OVERLAPPING #-} Binary (N,N,N)
+
 
 -- !! Apparently Generics based derivation is as fast as hand written one.
-
 
 {-
 

@@ -3,77 +3,74 @@
 -- Adapted from Data.Sequence.BSeq (sequence package)
 module Data.Seq where
 
-infixr 5 <|, :< ,|>
-
 data Seq a = Empty
-           | Leaf a
+           | Leaf !a
+           -- | a :<< Seq a
+           -- | Nodes [Seq a]
            | Node (Seq a) (Seq a)
            deriving (Show,Eq)
 
-type SeqZip a = ([a],[Seq a])
 
-diffSeq :: Seq a -> ([a], [Seq a])
-diffSeq = zm ([],[])
-  where
-    zm (as,ss) (Node l r) = zm (as,r:ss) l
-    zm (as,ss) (Leaf a) = (a:as,ss)
-    zm z Empty = z
+-- data View a
+--   = EmptyV        -- ^ empty sequence
+--   -- | [a] ::< Seq a    -- ^ leftmost element and the rest of the sequence
+--   | NodeV (View a) (View a)
+--   | ListV !a (View a)    -- ^ leftmost element and the rest of the sequence
+--   deriving Show
 
--- from  bytestring-tree-builder
-{-# INLINE sfoldlM #-}
-sfoldlM step init =
-  \case
-    Empty ->
-      return init
-    Leaf value ->
-      step init value
-    Node tree1 tree2 ->
-      sfoldlM step init tree1 >>= \init2 -> sfoldlM step init2 tree2
-
-instance Functor Seq where
-  fmap f = loop where
-    loop Empty = Empty
-    loop (Leaf x) = Leaf (f x)
-    loop (Node l r) = Node (loop l) (loop r)
-
-instance Foldable Seq where
-  foldl f = loop where
-    loop i s = case viewl s of
-          EmptyL -> i
-          h :< t -> loop (f i h) t
-  foldr f i s = foldr f i (reverse $ toRevList s)
-    where toRevList s = case viewl s of
-           EmptyL -> []
-           h :< t -> h : toRevList t
-
-instance Traversable Seq where
-  traverse f = loop where
-    loop Empty = pure Empty
-    loop (Leaf x) = Leaf <$> f x
-    loop (Node l r) = Node <$> loop l <*> loop r
-
--- | /O(1)/. Add an element to the left end of a sequence.
--- Mnemonic: a triangle with the single element at the pointy end.
-(<|) :: a -> Seq a -> Seq a
-x <| s  =  Node (Leaf x) s
-
-(|>) :: Seq a -> a -> Seq a
-s |> x = Node s (Leaf x)
+-- {-# INLINE view #-}
+-- view :: View a -> Maybe (a,View a)
+-- -- view (a :<< s) = a :< s
+-- -- view (Node (a :<< l) r)   = a :< Node l r
+-- -- view (Nodes (s:ss))   = let a :< n = view s in a :< Nodes (n ++ ss
+-- view (Node (Leaf x) r)   = x :< r
+-- view (Node (Node l r) z) = view (Node l (Node r z))
+-- view (Leaf x)            = x :< Empty
+-- view (ListV a l) = (a,l)
+-- view Empty     = EmptyV
 
 data ViewL a
   = EmptyL        -- ^ empty sequence
-  | a :< Seq a    -- ^ leftmost element and the rest of the sequence
+  -- | [a] ::< Seq a    -- ^ leftmost element and the rest of the sequence
+  | !a :< Seq a    -- ^ leftmost element and the rest of the sequence
+  deriving Show
 
-viewl Empty               = EmptyL
-viewl (Leaf x)            = x :< Empty
-viewl (Node (Node l r) z) = viewl (Node l (Node r z))
+{-# INLINE viewl #-}
+viewl :: Seq a -> ViewL a
+-- viewl (a :<< s) = a :< s
+-- viewl (Node (a :<< l) r)   = a :< Node l r
+-- viewl (Nodes (s:ss))   = let a :< n = viewl s in a :< Nodes (n ++ ss
 viewl (Node (Leaf x) r)   = x :< r
+viewl (Node (Node l r) z) = viewl (Node l (Node r z))
+viewl (Leaf x)            = x :< Empty
+viewl Empty               = EmptyL
 viewl (Node Empty r)      = viewl r
+
+infixr 5 <|
+
+{-# INLINE (<|) #-}
+a <| Empty = Leaf a
+a <| s = Node (Leaf a) s
+
+-- {-# INLINE viewList #-}
+-- viewList :: Seq a -> [a]
+-- viewList (a :<< s) = a : viewList s
+-- viewList (Node (Node l r) z) = viewList (Node l (Node r z))
+-- viewList (Node (Leaf x) r)   = x : viewList r
+-- viewList (Node (a :<< l) r)   = a : viewList (Node l r)
+-- viewList (Leaf x)            = [x]
+-- viewList Empty               = []
+-- viewList (Node Empty r)      = viewList r
 
 instance Monoid (Seq a) where
   {-# INLINE mempty #-}
   mempty = Empty
-  {-# INLINE mappend #-}
+
+  {-# INLINE [1] mappend #-}
+  -- mappend (Leaf step1) seq2 = step1 :<< seq2
+  -- mappend (Node (step1 :<< s1) seq) = step1 Leaf step1) seq2 = step1 :<< seq2
+  --mappend l1 l2 = Node l1 l2
   mappend = Node
+
   -- {-# INLINE mconcat #-}
   mconcat = foldr mappend mempty

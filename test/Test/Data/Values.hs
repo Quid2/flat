@@ -187,8 +187,8 @@ shortbs = ("ShortByteString",SBS.toShort b2)
  
 lN2T = ("List N",lN2)
 lN3T = ("Large List N",lN3)
-nativeListT = ("Large [N]",toList lN3)
-
+nativeListT = ("Large [N]",nativeList)
+nativeList = toList lN3
 treeNT = ("treeN",treeN)
 treeNLargeT = ("treeNLarge",treeNLarge)
 treeNNNLargeT = ("treeNNNLarge",treeNNNLarge)
@@ -202,9 +202,14 @@ tupleWords = ("tupleWord",(18::Word,623723::Word,(8888::Word,823::Word)))
 word8T   = ("Word8",34::Word8)
 word64T   = ("Word64",34723823923::Word64)
 carT = ("car",car1)
-wordsT = ("words",(18::Word,33::Word8,1230::Word16,9990::Word32,1231232::Word64))
+wordsT = ("words",wordsV)
+wordsV = (18::Word,33::Word8,1230::Word16,9990::Word32,1231232::Word64)
+words0T = ("words0",words0V)
+words0V = (0::Word,0::Word8,0::Word16,0::Word32,0::Word64)
 intsT = ("ints",(444::Int,123::Int8,-8999::Int16,-123823::Int32,-34723823923::Int64))
-floatsT = ("floats",(3.43::Float,44.23E+23::Double,0.1::Double))
+floatsT = ("floats",floats)
+floatsUnaT = ("floats unaligned",(Three,floats))
+floats = (3.43::Float,44.23E+23::Double,0.1::Double)
 int8T   = ("Int8",-34::Int8)
 int64T   = ("Int64",-34723823923::Int64)
 integerT   = ("Integer",-3472382392399239230123123::Integer)
@@ -218,6 +223,7 @@ v2 = V2 True (Right Nothing)
 vfT = ("v floats",VF 3.43 44.23E+23 0.1)
 vwT = ("v words",vw)
 vw = VW 18 33 1230 9990 1231232
+-- vw = VW 0 0 0 0 0
 viT = ("v ints",VI 444 123 (-8999) (-123823) (-34723823923))
 viiT = ("v integers",VII 444 8888 (-34723823923))
 
@@ -240,10 +246,12 @@ cafs = [
        , NF charT
        , NF unicharT
        , NF wordsT
+       , NF words0T
        , NF intsT
        , NF floatT
        , NF doubleT
        , NF floatsT
+       , NF floatsUnaT
        , NF tupleT
        , NF tuple0T
        , NF treeNLargeT

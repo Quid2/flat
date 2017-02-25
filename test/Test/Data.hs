@@ -167,7 +167,7 @@ data Stream a = Stream a (Stream a)
             deriving (Eq, Ord, Read, Show, Typeable, Data, Generic,Functor,Foldable,Traversable)
 
 data Tree a = Node (Tree a) (Tree a) | Leaf a
-            deriving (Eq, Ord, Read, Show, Typeable, Data, Generic)
+            deriving (Eq, Ord, Read, Show, Typeable, Data, Generic, Foldable)
 
 -- Example schema from: http://mechanical-sympathy.blogspot.co.uk/2014/05/simple-binary-encoding.html
 data Car = Car {

@@ -1,13 +1,13 @@
 module Data.Flat.Types(Encoding
                       ,Op(..)
                       ,Word8
-                      ,module Data.Seq
+                      ,module Data.SeqStd
                       ,(<>)) where
 
 import qualified Data.ByteString      as B
 import qualified Data.ByteString.Lazy as L
 import           Data.Monoid
-import           Data.Seq
+import           Data.SeqStd
 import           Data.Word
 
 -- |An encoding is a sequence of encoding Ops

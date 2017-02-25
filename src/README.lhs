@@ -77,6 +77,35 @@ Tested with [ghc](https://www.haskell.org/ghc/) 7.10.3 and 8.0.1.
 
  See this [comparison of some haskell serialisation libraries](https://github.com/tittoassini/serialization-bench).
 
+ Brief summary: flat produces significantly more compact binary representation.
+
+ ? flat is usually faster than ?
+
+ Tips in :
+
+ a)
+ Define instances of parametric data types as OVERLAPPABLE
+ instance {-# OVERLAPPABLE #-} Flat a => Flat (Tree a)
+
+ -- Almost 2x faster
+ instance {-# OVERLAPPING #-} Flat (Tree N)
+
+ b) Writing instances by hand (really? why?):
+
+  Difficult to do:
+  encode = \case
+    One -> eBits 2 0
+    Two ->  eBits 2 1
+    Three -> eBits 2 2
+    Four -> eBits 3 6
+    Five -> eBits 3 7
+
+ define: eHeader num totNum
+
+ instance {-# OVERLAPPING #-} Flat (Tree N) where
+    encode (Node t1 t2) = eFalse <> encode t1 <> encode t2
+    encode (Leaf a) = eTrue <> encode a
+
 
  ### Known Bugs and Infelicities
 

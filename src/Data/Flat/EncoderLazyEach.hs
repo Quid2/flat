@@ -60,7 +60,8 @@ import           Control.Monad
 import qualified Data.ByteString      as B
 import qualified Data.ByteString.Lazy as L
 import           Data.Flat.Pokes
-import           Data.Foldable
+-- import           Data.Foldable
+-- import Data.Monoid
 -- import           Debug.Trace
 import           Prelude              hiding (mempty)
 traceShow _ v = v
@@ -87,7 +88,7 @@ type WriterF = Todo -> E -> IO E
 instance Show Writer where show (Writer _) = "Writer"
 
 encoderLazy :: Encoding -> L.ByteString
-encoderLazy = bitEncoderLazy 64 encoder
+encoderLazy = bitEncoderLazy 8 encoder
 
 encoder :: E -> Encoding -> IO (Signal Encoding)
 encoder e w = catch (runWriter w [] e >>= (\(E _ s') -> done s')) (\(NotEnoughSpaceException s neededBits ws) -> notEnoughSpace s neededBits (encodersS (traceShow (unwords ["neededBits",show neededBits,"encoder",show ws]) ws)))
@@ -95,27 +96,42 @@ encoder e w = catch (runWriter w [] e >>= (\(E _ s') -> done s')) (\(NotEnoughSp
 data NotEnoughSpaceException = NotEnoughSpaceException S Int Todo deriving Show
 instance Exception NotEnoughSpaceException
 
-{-
-  Cons !            a
-       (Cons !   b)
-              Nil c
+-- instance Monoid Writer where
+--   {-# INLINE mempty #-}
+--   mempty = Writer $ \_ e -> return e
 
-Nil -> [[c],[b],[a]] -> [[Nil,c],[b],[a]]
--}
+--   {-# INLINE mappend #-}
+--   mappend (Writer f) (Writer g) = Writer $ \ks e -> f ks e >>= g ks
+
+--   {-# INLINE mconcat #-}
+--   mconcat = foldl' mappend mempty
+
+{-# INLINE mempty #-}
+mempty :: Writer
+mempty = Writer $ \_ e -> return e
+
+{- # RULES
+-- "encodersSN" forall h t. encodersS (h:t) = h `mappend` encodersS t
+"encodersSN" forall ws. encodersS ws = Writer $ \ks -> encoders ks ws
+
+ # -}
 
 {-# RULES
--- "encodersSN" forall h t. encodersS (h:t) = Writer $ \k-> runWriter h (t++k) >=> encodersS t
-"encodersS4" forall a1 a2 a3 a4. encodersS [a4,a3,a2,a1] = Writer $ \ks -> checkSize 320 (a4:a3:a2:a1:ks) >=> runWriter a4 (a3:a2:a1:ks) >=> runWriter a3 (a2:a1:ks) >=> runWriter a2 (a1:ks) >=> runWriter a1 ks
-"encodersS3" forall a1 a2 a3. encodersS [a1,a2,a3] = Writer $ \ks -> checkSize 240 (a1:a2:a3:ks) >=> runWriter a1 (a2:a3:ks) >=> runWriter a2 (a3:ks) >=> runWriter a3 ks
-"encodersS2" forall a1 a2. encodersS [a1,a2] = Writer $ \ks -> checkSize 160 (a1:a2:ks) >=> runWriter a1 (a2:ks) >=> runWriter a2 ks
-"encodersS1" forall a1. encodersS [a1] = Writer $ \ks -> checkSize 80 (a1:ks) >=> runWriter a1 ks
+"encodersS4" forall a1 a2 a3 a4. encodersS [a4,a3,a2,a1] = Writer $ \ks -> runWriter a4 (a3:a2:a1:ks) >=> runWriter a3 (a2:a1:ks) >=> runWriter a2 (a1:ks) >=> runWriter a1 ks
+"encodersS3" forall a1 a2 a3. encodersS [a1,a2,a3] = Writer $ \ks -> runWriter a1 (a2:a3:ks) >=> runWriter a2 (a3:ks) >=> runWriter a3 ks
+"encodersS2" forall a1 a2. encodersS [a1,a2] = Writer $ \ks -> runWriter a1 (a2:ks) >=> runWriter a2 ks
+"encodersS1" forall a1. encodersS [a1] = a1
 "encodersS0" encodersS [] = mempty
  #-}
 
 {-# NOINLINE encodersS #-}
 encodersS :: [Writer] -> Writer
 -- without the explicit parameter the rules won't fire
-encodersS ws = Writer $ \ks -> checkSize (minLen ws) (ws++ks) >=> encoders ks ws
+-- encodersS ws =  foldl' mappend mempty ws
+encodersS [] = mempty
+encodersS [a] = a
+encodersS ws = Writer $ \ks -> encoders ks ws
+-- encodersS ws = Writer $ \ks -> checkSize (minLen ws) (ws++ks) >=> encoders ks ws
 -- encodersS ws = error $ unwords ["encodersS CALLED",show ws]
 
 {-# INLINE encoders #-}
@@ -124,34 +140,34 @@ encoders _ [] = return
 encoders ks [w]   = runWriter w ks
 encoders ks (h:t) = runWriter h (t++ks) >=> encoders ks t
 
-{-# INLINE mempty #-}
-mempty :: Writer
-mempty = Writer $ \_ e -> return e
-
-{-# INLINE writerF #-}
--- Fixed size writer
-writerF :: (S -> IO S) -> Writer
-writerF f = Writer $ \_ (E p s) -> f s >>= return . E p
-
 {-# INLINE writerV #-}
 -- Variable size writer
 writerV :: Step -> Writer
-writerV (Step n f) = me
+writerV (Step neededBits f) = me
   where
     me = Writer prim
     prim ks e@(E p s) | neededBits <= availBits e = f s >>= return . E p
                       | otherwise = throw (NotEnoughSpaceException s neededBits (me:ks))
-      where neededBits = n + minLen ks
 
-{-# INLINE checkSize #-}
-checkSize :: Int -> WriterF
-checkSize n ks e@(E _ s) | n <= availBits e = return e
-                         | otherwise = throw (NotEnoughSpaceException s n ks)
+{-# INLINE writerF #-}
+writerF :: Prim -> Writer
+writerF = writerV . Step 80
 
-{-# INLINE minLen #-}
-minLen :: Todo -> Int
-minLen ws = length ws * 80
+-- Variable size
+eBytes :: B.ByteString -> Writer
+eBytes = writerV . eBytesS
+eLazyBytes :: L.ByteString -> Writer
+eLazyBytes = writerV . eLazyBytesS
+eShortBytes :: ShortByteString -> Writer
+eShortBytes = writerV . eShortBytesS
+eNatural :: Natural -> Writer
+eNatural = writerV . eNaturalS
+eInteger :: Integer -> Writer
+eInteger = writerV . eIntegerS
+eUTF16 :: Text -> Writer
+eUTF16 = writerV . eUTF16S
 
+-- Fixes < 80 size
 eChar :: Char -> Writer
 eChar = writerF . eCharF
 eFloat :: Float -> Writer
@@ -188,17 +204,3 @@ eTrue :: Writer
 eTrue = writerF eTrueF
 eFalse :: Writer
 eFalse = writerF eFalseF
-
--- Variable size
-eBytes :: B.ByteString -> Writer
-eBytes = writerV . eBytesS
-eLazyBytes :: L.ByteString -> Writer
-eLazyBytes = writerV . eLazyBytesS
-eShortBytes :: ShortByteString -> Writer
-eShortBytes = writerV . eShortBytesS
-eNatural :: Natural -> Writer
-eNatural = writerV . eNaturalS
-eInteger :: Integer -> Writer
-eInteger = writerV . eIntegerS
-eUTF16 :: Text -> Writer
-eUTF16 = writerV . eUTF16S

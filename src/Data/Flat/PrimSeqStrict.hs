@@ -1,24 +1,7 @@
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE LambdaCase   #-}
 {-# LANGUAGE MultiWayIf   #-}
-
-module Data.Flat.Prim (
-    Encoding,
-    (<>),
-    mempty,
-    bitEncoder,
-    eBits,
-    eFiller,
-    eBool,
-    eTrue,
-    eFalse,
-    eWord8,
-    eWord32,
-    eWord64,
-    eUnsigned,
-    eLazyBytes,
-    eBytes,
-    ) where
+module Data.Flat.Prim(Encoding,(<>),(<+>),mempty,bitEncoder,module Data.Flat.Pokes,eUnsigned,eUnsigned16,eUnsigned32,eUnsigned64,eWord32BE,eWord64BE,eWord8,eBits,eFiller,eBool,eTrue,eFalse,eBytes,eLazyBytes,eShortBytes,eUTF16) where
 
 import qualified Data.ByteString      as B
 import qualified Data.ByteString.Lazy as L
@@ -26,6 +9,9 @@ import           Data.Flat.Encoding
 import qualified Data.Flat.Pokes      as P
 import           Data.Flat.Types
 import           Data.Foldable
+
+{-# INLINE (<+>) #-}
+(<+>) = (<>)
 
 -- Slower than Lazy Seq
 bitEncoder :: Encoding -> L.ByteString

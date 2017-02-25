@@ -1,4 +1,4 @@
-{-# LANGUAGE TupleSections ,ViewPatterns ,NoMonomorphismRestriction ,BangPatterns #-}
+{-# LANGUAGE TupleSections ,ViewPatterns ,NoMonomorphismRestriction ,BangPatterns ,ScopedTypeVariables #-}
 module Main
 where
 {- Test performance of encoding against other packages -}
@@ -17,15 +17,21 @@ cd /Users/titto/workspace/quid2;cabal install;time /Users/titto/workspace/quid2/
 cd /Users/titto/workspace/quid2;cabal install;time /Users/titto/workspace/quid2/.cabal-sandbox/bin/benchsmall +RTS -sstderr -h;hp2ps -c benchsmall
 
 Profiling
-cd /Users/titto/workspace/quid2;cabal install --enable-executable-profiling -p;/Users/titto/workspace/quid2/.cabal-sandbox/bin/benchsmall +RTS -ph -sstderr;cat benchsmall.prof;hp2ps -c benchsmall;profiteur benchsmall.prof;open file:///Users/titto/workspace/quid2/benchsmall.prof.html 
+cd /Users/titto/workspace/quid2;cabal install --enable-executbitEncoder :: Int -> Encoding -> L.ByteString
+bitEncoder numBits (Writer op) = L.fromStrict $ bitEncoderStrict numBits op
+able-profiling -p;/Users/titto/workspace/quid2/.cabal-sandbox/bin/benchsmall +RTS -ph -sstderr;cat benchsmall.prof;hp2ps -c benchsmall;profiteur benchsmall.prof;open file:///Users/titto/workspace/quid2/benchsmall.prof.eUnsigned64 :: Word64 -> Encodinghtml 
 
 Benchmarking
-cd /Users/titto/workspace/quid2;cabal install;/Users/titto/workspace/quid2/.cabal-sandbox/bin/benchsmall
+cd /Users/titto/workspace/quid[133eBits ,197,164,33]2;cabal install;/Users/titto/workspace/quid2/.cabal-sandbox/bin/benchsmall
 
 Benchmarking using cbor test suite, see LEGGIMI
 
-Profiling using eventlog:
-cd /Users/titto/workspace/quid2;cabal install;time /Users/titto/workspace/quid2/.cabal-sandbox/bin/benchsmall +RTS -l;ghc-events-analyze benchsmall.eventlog;cat benchsmall.totals.txt
+Profi(Leaf (Step n2 s2))ling using eventlog:
+cd /Users/titto/workspace/quid2;cabal install;time /Users/titto/workspace/quid2/.cabal-sandbox/bin/benchsmall +RTS -l;ghc-event-- let v = [1::Word64 .. 4000000]
+  -- evaluate $ force' (NF v)
+  -- putStrLn . commas . length $ v
+
+  s-analyze benchsmall.eventlog;cat benchsmall.totals.txt
 
 -}
 
@@ -41,8 +47,10 @@ DecM
 | binary 0.7.2.2     | 48               |  83    | 150         | 177
 | cereal 0.4.1.1     | 58               |        |
 | quid2 "binary-bits"| 87               |        |  271          | 426
-| .. getBoolFast     | 78               |        |
-| .. Custom          |                  |        |
+| .. getBoolFast     | 78         wordsT = ("words",wordsV)
+wordsV = (18::Word,33::Word8,1230::Word16,9990::Word32,1231232::Word64)
+      |        |
+| .. Custom        -ddump-opt-cmm  |       -ddump-opt-cmm           |        |
 | .. DECODER_BITS    | 50               |        | 256:156-306   | 282:248-312
 | .. "binary-strict" | 370              |        | 1052          | 1275
 | .. Cstm BitDecoder
@@ -110,6 +118,7 @@ Bit3 (BitPut 64)   | 15-18 | 242
 -}
 
 -- ghc -O2 --make Bench;./Bench
+import           Control.DeepSeq
 import Criterion.Main
 import Criterion.IO
 import Criterion.Types
@@ -117,27 +126,33 @@ import Types
 import Test.Data
 import           Test.Data.Values
 import PkgBinary
+import qualified PkgBinary as B
 import PkgCereal
 import PkgCBOR
+import qualified PkgCBOR as C
 import PkgFlat
+import qualified PkgFlat as F
 import PkgStore
+import qualified PkgStore as S
 import qualified Data.Binary.Serialise.CBOR as CBOR
 import qualified Data.ByteString.Lazy as B
+import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString as BS
 import qualified Data.Text as T
 import Control.Exception
 import Control.Monad
 import Control.Applicative
 --import System.Directory
-import Debug.Trace (traceEventIO)
+import Debug.Trace -- (traceEventIO)
 import           Criterion.IO
 import           Criterion.Types
 -- import           Statistics.Resampling.Bootstrap
 import qualified Data.Map as M
 import qualified Data.Flat as F
-import qualified Data.Flat.Prim as F
+import qualified Data.Flat.Encoder as F
 import System.Directory
 import Report
+import Weigh
 
 event label =
   bracket_ (traceEventIO $ "START " ++ label)
@@ -170,21 +185,62 @@ tstLen k v = let l0 = lser PkgFlat v
 -- lser :: (Serialize c1 a1) => (a -> c1 a1) -> a -> Double
 lser k = fromIntegral . Prelude.length . ser . k
 
+-- main = mainWeight
+main = mainB
+
+{-# RULES "cl1" forall a. cl [a] = 1 ; #-}
+{-# RULES "cl2" forall a b. cl [a,b] = 2 ; #-}
+
+{-# INLINE [0] cl #-}
+-- {-# NOINLINE cl #-}
+cl :: [a] -> Int
+cl l = error "BAD" -- length l
+
+yv = cl [2,4]
+xv = yv + cl [2]
+
 -- main = mainEvents
-main = do
+mainB = do
   forceCafs
-  print $ B.unpack (F.flat v1)
-  print $ B.unpack (F.flat v2)
-  print $ B.unpack (F.flat t33)
-  print $ [33] == B.unpack (F.flat v1)
-  print $ [89] == B.unpack (F.flat v2)
-  print $ [220,221,25] == B.unpack (F.flat t33)
+
+  prints
+  mainBench
+
+  -- mainProfile
+  -- mainAlternatives
+
+
+prints = do
+  -- plf treeNLargeT
+  -- -- plf treeNLargeT >> plf treeNNNLargeT >>
+  -- plf nativeListT
+
+  -- print (yv,xv)
+
+  -- print $ pt carT
+
+  print $ F.maxSize Three
+  print $ F.maxSize (Leaf Three)
+  print $ F.maxSize (treeNLarge) 
+  print $ F.maxSize (treeNNNLarge)
+  print $ F.maxSize (nativeList)
+
+  -- print $ B.unpack (F.flat v1)
+  -- print $ B.unpack (F.flat v2)
+  -- print $ B.unpack (F.flat t33)
+  -- print $ [33] == B.unpack (F.flat v1)
+  -- print $ [89] == B.unpack (F.flat v2)
+  -- print $ [220,221,25] == B.unpack (F.flat t33)
+
   print $ 1175000 == B.length (F.flat treeNNNLarge)
-
-  print $ 1 == B.length (F.flat v2)
-  print $ 3 == B.length (F.flat t33)
-
-  --print F.eee
+  print $ 550000 == B.length (F.flat treeNLarge)  
+  print $ 2125001== B.length (F.flat nativeList)
+  -- print $ 1 == B.length (F.flat v2)
+  -- print $ 3 == B.length (F.flat t33)
+  -- print $ 10 == B.length (F.flat wordsV)
+  -- print $ 67 == B.length (F.flat car1)
+  -- --print F.eee
+  print $ ("flat",encodeOnly PkgFlat car1,"store",encodeOnly PkgStore car1,"cbor",encodeOnly PkgCBOR car1)
 
   pp (Node (Leaf One) (Leaf Two))
   pp ((One,Two,Three),(One,Two,Three),(One,Two,Three))
@@ -192,12 +248,42 @@ main = do
   pp (asN33 4)
   pp v1
   pp v2
+  pp [Five,Five,Five]
+  pp "aaa"
+  pp vw
+  pp wordsV
   --nprint (F.encode (undefined::Various))
+    where pp v = print (v,F.encode v) --  F.<> F.eFiller)
 
-  mainBench
-  -- mainProfile
-  -- mainAlternatives
-    where pp v = print (v,F.encode v)
+mainWeight = do
+  forceCafs
+  mainWith $ do
+    --ww nativeListT
+    ww treeNLargeT
+    --ww wordsT
+
+  pp nativeListT
+  pp treeNLargeT
+  pp wordsT
+  
+  where
+    ww o = do
+      weightT "store" PkgStore o
+      weightT "binary" PkgBinary o
+      -- weightT "cbor" PkgCBOR o
+      weightT "flat" PkgFlat o
+
+    pp o = do
+      pl "store" PkgStore o
+      pl "binary" PkgBinary o
+      pl "flat" PkgFlat o
+
+plf = pl "flat" PkgFlat
+
+pl kname k (n,v) = putStrLn (unwords ["Len serialise",kname,n,commas $ encodeOnly k v])
+weightT kname k (n,v) = func (unwords ["serialise",kname,n]) (encodeOnly k) v
+
+encodeOnly k = B.length . serialize . k
 
 mainEvents = mainAlternatives
 
@@ -232,21 +318,46 @@ mainAlternatives = dec_ tupleT >> dec_ tupleBools >> dec_ arr0 >> dec_ arr1 >> d
 #endif
 
 mainBench = do
-  let jsonReportFile = "/tmp/testReport.json"
-  reports <- readReports jsonReportFile
-  mainBench_ jsonReportFile
-  reports' <- readReports jsonReportFile
+  let wdir = "/Users/titto/workspace/flat"
+  mainBench_ (reportsFile wdir)
+  ms <- updateMeasures wdir
 
-  printDiffReports reports reports'
-  printReports reports'
+  printMeasuresDiff ms
+  -- printMeasuresAll ms
+  printMeasuresCurrent ms
 
 --mainBench = defaultMainWith (defaultConfigFilePath {
-mainBench_ jsonReportFile = defaultMainWith (defaultConfig {
-                               -- csvFile=Just "/tmp/testReport.csv"
-                               -- ,reportFile=Just "/tmp/testReport.html"
-                               -- ,junitFile=Just "/tmp/testReport.xml"
-                               jsonFile= Just jsonReportFile}) [
-                               --jsonFile= Nothing}) [
+mainBench_ jsonReportFile = defaultMainWith (defaultConfig {jsonFile= Just jsonReportFile}) (
+  [
+   tstEnc carT
+   ,tstEnc nativeListT
+   ,tstEnc treeNLargeT
+   ,tstEnc treeNNNLargeT
+   ,tstEnc wordsT,tstEnc words0T
+   ,tstEnc vwT,tstEnc vfT,tstEnc viT
+   ,tstEnc v2T
+   ,tstEnc charT,tstEnc unicharT
+   ,tstEnc lN3T
+   ,tstEnc asciiStrT,tstEnc unicodeStrT
+   ,tstEnc unicodeTextT
+
+   -- -- ,tstEnc viiT,,tstEnc intsT
+   -- tstMaxSize treeNLargeT
+   -- ,tstMaxSize treeNNNLargeT,tstMaxSize nativeListT
+   -- ,tstMaxSize wordsT,tstMaxSize words0T
+   -- ,tstMaxSize vwT,tstMaxSize vfT,tstMaxSize viT,
+   -- ,tstMaxSize carT
+
+  -- ,tstEnc sbs,tstEnc lbs --,tstEnc shortbs
+
+  --,tstEnc treeN33LargeT
+  --,tstEnc floatT,tstEnc doubleT
+  --   ++ join [tstDec carT
+  --           --,tstDec wordsT,tstDec vwT
+  --           --,tstDec lN3T,tstDec treeNLargeT,tstDec lN2T
+  --
+  ]
+  )
 
 {-
    tstEnc (0x34::Word)
@@ -308,28 +419,28 @@ mainBench_ jsonReportFile = defaultMainWith (defaultConfig {
   -- tstEncDecM word8T,tstEncDecM int8T
   --tstEncDecM word64T,tstEncDecM int64T,tstEncDecM integerT,
 
-  tstEnc carT
-  -- tstEnc floatT,tstEnc doubleT,tstEnc floatsT,tstEnc vfT
+  --tstEnc carT
+  -- ,tstEnc floatT,tstEnc doubleT,tstEnc floatsT,tstEnc floatsUnaT,tstEnc vfT
 
   -- tstEnc sbs,tstEnc lbs
   --,tstEnc shortbs
-  --tstEnc wordsT,tstEnc vwT
+  --,tstEnc wordsT,tstEnc vwT
   --,tstEnc intsT,tstEnc viT,tstEnc viiT
   --tstEnc charT,tstEnc unicharT
-
-  --,tstEnc nativeListT
+  -- ,tstEnc nativeListT,tstEnc unicodeStrT,tstEnc treeNLargeT
+   -- ,tstEnc lN3T
   --,tstEnc asciiStrT
-  --,tstEnc unicodeStrT,tstEnc unicodeTextT
-  -- ,tstEnc lN3T
+
+  -- ,tstEnc unicodeTextT
 
 
-  -- ,tstEnc treeN33LargeT,tstEnc treeNLargeT,tstEnc lN3T
+  -- ,tstEnc treeN33LargeT
+  --,tstEnc lN3T
 
     -- tstEnc v2T,
  -- tstEnc t33T,
  -- tstEnc treeVariousT
  -- ,tstEnc treeNT
-
 
   --tstEnc carT,tstEnc floatsT,tstEnc tupleT,tstEnc tupleBools,tstEnc tupleWords,tstEnc arr0, tstEnc arr1, tstEnc asciiStrT,tstEnc unicodeStrT,tstEnc unicodeTextT , tstEnc lN3T,
   --tstEncDec floatT,tstEncDec doubleT,tstEncDec tupleT,tstEncDec tupleBools,tstEncDec tupleWords,tstEncDec arr0, tstEncDec arr1, tstEncDec asciiStrT,tstEncDec unicodeStrT,tstEncDec unicodeTextT , tstEncDec lN3T, tstEncDec treeNLargeT
@@ -363,8 +474,7 @@ mainBench_ jsonReportFile = defaultMainWith (defaultConfig {
   ,tstEncodeDeep "PkgBinary" PkgBinary PkgBinary
   ,tstEq
 -}
-  ]
-
+                                                               --(join [
 tstED t = bgroup ("tstEncDecsM") [tstEnc t
                                  --,tstEncM t
                                  ,tstDecM t
@@ -434,7 +544,6 @@ tstDecM d@(vn,v) =
              ]
       where
         tst n c = bench (unwords[n,vn]) $ nfIO (decM n c d)
-
 {-
         rw n c = do
           let f =
@@ -457,16 +566,48 @@ encodeInverseOfDecode k v = let x = k v
                                 Right r = (deserialize . serialize) x
                             in x == r
 
-tstEnc (vn,v) =
-  --let nm s = Prelude.concat [s,"-",vn] -- unwords [s,Prelude.take 400 $ show v]
+tstEncE (vn,v) =
   let nm s = Prelude.concat [vn,"-",s] -- unwords [s,Prelude.take 400 $ show v]
   in bgroup ("tstEnc") [
-     bench (nm "store")     $ nf (encodeOnly PkgStore) v
-    ,bench (nm "binary")     $ nf (encodeOnly PkgBinary) v
-    ,bench (nm "cbor")     $ nf (encodeOnly PkgCBOR) v
-    ,bench (nm "flat")  $ nf (encodeOnly PkgFlat) v
+    --bench (nm "store")     $ nf (encodeOnly PkgStore) v
+    --,bench (nm "binary")     $ nf (encodeOnly PkgBinary) v
+    --,bench (nm "cbor")     $ nf (encodeOnly PkgCBOR) v
+    bench (nm "flat")  $ nf (encodeOnly PkgFlat) v
     ]
   where encodeOnly k = B.length . serialize . k
+
+-- tstDec :: forall b. (S.Store b, F.Flat b,Eq b) => (String, b) -> Benchmark
+
+tstMaxSize (vn,v) =
+  let nm s = Prelude.concat [vn,"-",s] -- unwords [s,Prelude.take 400 $ show v]
+  in bgroup ("tstMaxSize") [
+    bench (nm "store")  $ nf (S.getSize) v
+    ,bench (nm "flat")  $ nf (F.maxSize) v
+    ]
+  where encodeOnly k = B.length . serialize . k
+
+tstEnc (vname,obj) =
+  let nm s = Prelude.concat [vname,"-",s]
+  in bgroup ("tstEnc") $ map (\(pkg,s,d) -> bench (nm pkg) $ nf (L.length . s) obj) pkgs
+
+tstDec (vname,obj) =
+  let nm s = Prelude.concat [vname,"-",s] -- unwords [s,Prelude.take 400 $ show v]
+  --in bgroup ("tstDec") $ map (\(pkg,s,d) -> env (return $ s obj) $ (\bs -> bench (nm pkg) $ nf (\obj -> Right obj == d bs) obj)) pkgs
+  -- in bgroup ("tstDec") $ map (\(pkg,s,d) -> env (return $ s obj) $ (\bs -> bench (nm pkg) $ nf (\obj -> True) obj)) pkgs
+  in [bgroup ("tstEncDec") $ map (\(pkg,s,d) -> bench (nm pkg) $ nf (\obj -> d (s obj) == Right obj) obj) pkgs
+     --,bgroup ("tstDec") $ map (\(pkg,s,d) -> env (return $ s obj) $ (\bs -> bench (nm pkg) $ nf (\obj -> Right obj == d bs) obj)) pkgs
+     --,bgroup ("tstDec") $ map (\(pkg,s,d) -> env (return $ s obj) $ (\bs -> bench (nm pkg) $ nfIO ((Right obj ==) <$> return (d bs)))) pkgs
+     -- ,bgroup ("tstDec") $ map (\(pkg,s,d) -> env (s obj) $ (\bs -> bench pkg $ whnfIO ((obj ==) <$>  (return . force . d $ bs)))) pkgs
+     ,bgroup ("tstEnc") $ map (\(pkg,s,d) -> bench (nm pkg) $ nf (B.length . s) obj) pkgs
+     ,bench ("tstEq/"++nm "any") $ nf (\o -> o == o) obj]
+
+
+pt (n,v) = map (\(pkg,s,d) -> Right v == d (s v)) pkgs
+
+pkgs :: (C.Serialise a,S.Store a,B.Binary a,F.Flat a) => [(String,a -> L.ByteString,L.ByteString -> Either String a)]
+-- pkgs = [S.sd,B.sd,C.sd,F.sd]
+-- pkgs = [S.sd,F.sd]
+pkgs = [F.sd]
 
 tstEncodeDeep name k1 k2 = bgroup ("serialize " ++ name) [
    bench "tree1"  $ nf (encodeOnly k1) tree1
@@ -474,9 +615,9 @@ tstEncodeDeep name k1 k2 = bgroup ("serialize " ++ name) [
   ]
   where encodeOnly k = B.length . serialize . k
 
-tstDec = bgroup ("tstDec") [
-  bench "Binary lN2" $ nf (\v -> let Right (PkgBinary a) = deserialize PkgBinary.serlN2 in a == v) lN2
-  ,bench "Quid2 lN2" $ nf (\v -> let Right (PkgFlat a) = deserialize PkgFlat.serlN2 in a == v) lN2
+tstDec2 = bgroup ("tstDec2") [
+  bench "lN2-binary" $ nf (\v -> let Right (PkgBinary a) = deserialize PkgBinary.serlN2 in a == v) lN2
+  ,bench "lN2-flat" $ nf (\v -> let Right (PkgFlat a) = deserialize PkgFlat.serlN2 in a == v) lN2
   ]
 
 tstEncodeDecode name k1 = bgroup ("serialize+deserialise " ++ name) [
