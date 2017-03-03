@@ -20,6 +20,7 @@ import           Data.Int
 import           Data.List
 import           Data.Ord
 import           Data.Proxy
+import qualified Data.Sequence         as Seq
 import qualified Data.Text             as T
 import           Data.Word
 import           System.Exit
@@ -213,7 +214,7 @@ unitTests = testGroup "De/Serialisation Unit tests" $ concat [
   ,s (L.pack $ csb 3) (bsl c3)
     -- Long LazyStrings can have internal sections shorter than 255
     --,s (L.pack $ csb 600) (bsl s600)
-  ,[trip longBS,trip longLBS,trip longSBS,trip unicodeText]
+  ,[trip longSeq,trip longBS,trip longLBS,trip longSBS,trip unicodeText]
   ]
     where
       ns :: [(Word64, Int)]
@@ -241,6 +242,8 @@ unitTests = testGroup "De/Serialisation Unit tests" $ concat [
       bsSize = 8+8+3*8+8
       s600a = concat [[255],csb 255,[255],csb 255,[90],csb 90,[0]]
       s600B = concat [[55],csb 55,[255],csb 255,[90],csb 90,[200],csb 200,[0]]
+      longSeq :: Seq.Seq Word8
+      longSeq = Seq.fromList lbs
       longSBS = SBS.toShort longBS
       longBS = B.pack lbs
       longLBS = L.concat $ concat $ replicate 10 [L.pack lbs]
@@ -252,7 +255,7 @@ unitTests = testGroup "De/Serialisation Unit tests" $ concat [
 
       teq a b = ser a @?= ser b
 
-      sz v e = [testCase (unwords ["size of",show v]) $ maxSize v @?= e]
+      sz v e = [testCase (unwords ["size of",show v]) $ getSize v @?= e]
 
       s v e = [testCase (unwords ["flat raw",show v]) $ serRaw v @?= e
               ,testCase (unwords ["unflat raw",show v]) $ Right v @?= desRaw e]

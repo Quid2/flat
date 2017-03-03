@@ -3,7 +3,7 @@
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE LambdaCase    ,ScopedTypeVariables    #-}
 module Test where
 import           Data.Binary.FloatCast
 import qualified Data.ByteString                as B
@@ -26,7 +26,11 @@ e = getSystemEndianness
 
 data LLL a = NIL | CONS a (LLL a) deriving (Generic,Show)
 
-data NN = N1 | N2 | N3 | N4 | N5 | N6 | N7 | N8 | N9 | N10 | N11 deriving (Generic,Show,Flat)
+data NN = N1 | N2 | N3 | N4 | N5 | N6 | N7 | N8 | N9 | N10 | N11
+  deriving (Generic,Show,Flat)
+
+data ZZZ = ZZ1 | ZZ2 | ZZ3 | ZZ4 | ZZ5
+  deriving (Generic,Show,Flat)
 
 instance {-# OVERLAPPABLE #-} Flat a => Flat (LLL a)
 
@@ -40,7 +44,7 @@ data C = C Bool
 
 kkk = [[127,1],[128,1,1],[129,1,1],[255,127,1],[128,128,1,1],[129,128,1,1],[255,255,1,1],[128,128,2,1],[129,128,2,1],[255,255,127,1],[128,128,128,1,1],[129,128,128,1,1]] == map (L.unpack . flat) [127::Word32,128,129,16383,16384,16385,32767,32768,32769,2097151,2097152,2097153]
 
-qqq = size N4 0 + size N5 0
+-- qqq = size N4 0 + size N5 0
 
 --k :: Decoded String
 k = --let v = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
@@ -63,14 +67,22 @@ data FF = FF Float Double deriving (Generic,Show,Flat)
 
 data WWW = WWW Word8 Word16 Word32 Word64 Bool deriving (Generic,Show,Flat)
 
-data XYZ = W2 Word8 Word8 | W3 Bool Bool deriving (Generic,Show,Flat)
+data XYZ = W2 Word8 Word8
+         | W3 Bool Bool deriving (Generic,Show,Flat)
 
 data T2 a b = T2 a b deriving (Generic,Show)
 
 data Tree a = Leaf a | Node (Tree a) (Tree a) deriving (Generic,Show) --,Flat)
 
-data ABC = AA | BB | CC | DD Bool Bool | ZZ ABC | WW Word8 Word16 Word32 Word64 Bool | FFF Float Double Float Double | GGG deriving (Generic,Show,Flat)
-
+data ABC = AA
+         | BB
+         | CC
+         | DD Bool Bool
+         -- | ZZ ABC
+         | WW Word8 Word16 Word32 Word64 Bool
+         | FFF Float Double Float Double
+         | GGG
+  deriving (Generic, Show, Flat)
 
 -- instance Flat a => Flat (Tree a)
 instance {-# OVERLAPPABLE #-} (Flat a,Flat b) => Flat (T2 a b)
@@ -109,27 +121,37 @@ uu =  pp (11::Word32,22::Word64,33::Word64)
 --encodings a = gencoders (from a) []
 
 t = do
+  pp $ S.fromList "aaa"
+  pp ""
+  pp "aaa"
   pp (Uno,'a',Uno,'a',Uno,'a')
   pp (T.pack $ take 200 $ repeat 't')
   pp (take 200 $ repeat 's')
   pp (T.pack $ "aaa")
   pp Uno
   pp (-22::Int)
+  pp (18446744073709551615::Word)
+  pp (18446744073709551615::Word64)
   pp (2*34723823940::Word64)
   pp (-34723823923::Int64)
   pp (22::Int8)
   pp (22::Int16)
+  pp (N1,N1,N1)
   pp N1
   pp N2
   pp N3
   pp N4
   pp N5
   pp AA
+  pp ZZ2
   pp $ W2 4 4
+  pp $ W3 False True
   pp $ DD True False
   pp $ (True,True,False,True) -- 11010001
-  pp $ ZZ AA
+  --pp $ ZZ AA
   pp $ WW 0 0 0 0 False
+  pp $ WWW 0 0 0 0 False
+  pp $ FF 0.0 1.2
   pp 'a'
   pp (11::Word64)
   pp False
@@ -142,8 +164,10 @@ t = do
   pf (Node (Node (Leaf True) (Leaf False)) (Node (Leaf True) (Leaf False)))
 
 --pp v = print (v,F.encode v F.<> F.eFiller)
-pp :: (Flat a, Show a) => a -> IO ()
-pp v = putStrLn (unwords [show v,"->",show $ maxSize (postAligned v),show $ encode v,"->",show $ L.unpack $ flat v])
+pp :: forall a . (Flat a, Show a) => a -> IO ()
+-- pp v = putStrLn (unwords [show v,"->",show (size :: Size a),show $ getSize (postAligned v),show $ encode v,"->",show $ L.unpack $ flat v])
+-- pp v = putStrLn (unwords [show v,"->",show (size :: Size a),show $ getSize v,show $ encode v,"->",show $ L.unpack $ flat v])
+pp v = putStrLn (unwords [show v,"->",show $ getSize v,show $ encode v,"->",show $ L.unpack $ flat v])
 
 -- gg :: Flat a => a -> Vector Bool
 gg = valueBits . flat $ "abc"
@@ -175,7 +199,7 @@ e1 = encode (True,False) -- (AA,BB)
 e2 = encode [AA,BB]
 e3 = encode [True,False]
 e4 = encode $ DD True True
-e5 = encode $ ZZ (ZZ (ZZ (DD True True)))
+-- e5 = encode $ ZZ (ZZ (ZZ (DD True True)))
 
 {-# NOINLINE tup2 #-}
 tup2 a b = flat (a,b)

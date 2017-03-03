@@ -1,3 +1,4 @@
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE BangPatterns              #-}
@@ -5,7 +6,7 @@
 {-# LANGUAGE DeriveAnyClass            #-}
 {-# LANGUAGE DeriveGeneric             #-}
 {-# LANGUAGE FlexibleInstances         #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE NoMonomorphismRestriction ,ScopedTypeVariables #-}
 module Data.Flat.Instances (
   Array(..)
   ,BLOB(..),blob,unblob,FlatEncoding(..),UTF8Encoding(..)
@@ -20,24 +21,22 @@ import qualified Data.DList           as DL
 import           Data.Flat.Class
 import           Data.Flat.Encoder
 import           Data.Flat.Filler
-import           Data.Flat.Run
 import           Data.Int
 import qualified Data.Map             as M
 import qualified Data.Text            as T
 import qualified Data.Text.Encoding   as T
 import           Data.Word
 import           Data.ZigZag
--- -- -- -- import qualified Data.Vector            as V
--- -- -- -- import qualified Data.Vector.Unboxed            as VU
--- -- -- -- import qualified Data.Vector.Storable as VS
+-- import qualified Data.Vector            as V
+-- import qualified Data.Vector.Unboxed            as VU
+-- import qualified Data.Vector.Storable as VS
 import           Prelude hiding (mempty)
 import qualified Data.ByteString.Short as SBS
 import           Data.MonoTraversable
 import qualified Data.Sequences as O
--- -- -- -- import           Control.Monad
--- -- -- -- import Data.Foldable
 import Numeric.Natural
 import           Data.Binary.FloatCast
+-- -- import qualified Data.Vector as V
 
 --import           Data.Word.Odd                 (Word7)
 --import           Data.Flat.IEEE754
@@ -50,6 +49,7 @@ instance Flat () where
 
 instance Flat Bool where
   encode = eBool
+  size = sBool
   decode = dBool
 
 instance Flat a => Flat (Maybe a)
@@ -86,9 +86,6 @@ data NoEncoding = NoEncoding deriving (Eq, Ord, Show, NFData, Generic, Flat)
 
 data FlatEncoding = FlatEncoding deriving (Eq, Ord, Show, NFData, Generic, Flat)
 
--- b1 :: BLOB UTF8
-b1 = flat $ blob FlatEncoding (L.pack [97,98,99])
-
 -- The encoding is embedded as a value in order to support encodings that might have multiple values/variations.
 --data BLOB encoding = BLOB encoding (PreAligned (Array Word8))
 data BLOB encoding = BLOB encoding L.ByteString
@@ -112,6 +109,7 @@ unblob (BLOB _ pa) = pa
 -- data Map a b = Map [(a,b)]
 instance (Flat a, Flat b,Ord a) => Flat (M.Map a b) where
   encode = encode . M.toList
+  -- size = cmapSize M.toList
   size = size . M.toList
   decode = M.fromList <$> decode
 
@@ -119,17 +117,17 @@ instance (Flat a, Flat b,Ord a) => Flat (M.Map a b) where
 -- or BLOB NoEncoding
 instance Flat B.ByteString where
   encode = eBytes
-  size = csize sBytes
+  size = sBytes
   decode = (decode::Get Filler) >> dBytes
 
 instance Flat L.ByteString where
   encode = eLazyBytes
-  size = csize sLazyBytes
+  size = sLazyBytes
   decode = (decode::Get Filler) >> dLazyBytes
 
 instance Flat SBS.ShortByteString where
   encode = eShortBytes
-  size = csize sShortBytes
+  size = sShortBytes
   decode = (decode::Get Filler) >> dShortBytes
 
 -- data Array a = Array0 | Array1 a ...
@@ -140,8 +138,8 @@ data Array a = Array [a]
 --     encode (Array l) = encodeArray l
 --     size = error "unimplemented"
 --     -- size = arraySize
---     -- size = csize arraySize
---     decode = Array <$> decodeArray
+--     -- size = arraySize
+--     decode = Array <$> dArray
 
 -- arraySize (Array vs) = 8*(numBlks 255 (length vs) + 1) + sum (map size vs)
 -- INEFFICIENT
@@ -151,6 +149,8 @@ data Array a = Array [a]
 --     encode (Array l) = encode $ B.pack l
 --     decode = Array . B.unpack <$> decode
 
+{-# INLINE dList #-}
+dList :: Flat a => Get [a]
 dList = do
     tag <- dBool
     if tag
@@ -158,6 +158,8 @@ dList = do
       else return []
 
 -- 1 2 3 -> 3 : 2 : 1
+{-# INLINE dListReverse #-}
+dListReverse :: Flat a => Get [a]
 dListReverse = go []
     where go !acc = do
             tag <- dBool
@@ -166,8 +168,6 @@ dListReverse = go []
                 x <- decode
                 go (x:acc)
               else return $! reverse acc
-
-ee = encode "abc" -- [True,True,True]
 
 -- #define LIST_BYTE
 #define ENCLIST_DIV
@@ -209,9 +209,11 @@ ee = encode "abc" -- [True,True,True]
 --              (mempty,length l,0) l
 -- #endif
 
-decodeArray = DL.toList <$> getAsL_
+dArray :: Flat a => Get [a]
+dArray = DL.toList <$> getAsL_
 
 -- TODO: test if it would it be faster with DList.unfoldr :: (b -> Maybe (a, b)) -> b -> Data.DList.DList a
+getAsL_ :: Flat a => Get (DL.DList a)
 getAsL_ = do
     tag <- dWord8
 {-
@@ -230,7 +232,6 @@ getAsL_ = do
   where
     gets 0 = return DL.empty
     gets n = DL.cons <$> decode <*> gets (n-1)
-
 
 --pokeSequence :: (IsSequence t, Flat (Element t)) => t -> Poke ()
 --sizeSequence =  ofoldl' (\acc x -> stepSize (encode x) 1 + acc + f x) (sizeOf (undefined :: Int)) t
@@ -257,12 +258,26 @@ getAsL_ = do
 -- eSequence t = ofoldMap (\x -> eTrue <> encode x) t <> eFalse
 -- {-# INLINE eSequence #-}
 
+
+{-# INLINE sSequence #-}
+
+-- sSequence :: forall s. (O.IsSequence s, Flat (Element s)) => Size s
+-- sSequence = VarSize $ \s ->
+--   let l = olength s
+--   in case size :: Size (Element s) of
+--        ConstSize n -> arrayBits l + n * l
+--        VarSize f -> arrayBits l + ofoldl' (\acc x -> acc + f x) 0 s
+
+sSequence
+  :: (MonoFoldable mono, Flat (Element mono)) =>
+     mono -> NumBits -> NumBits
+sSequence s acc = ofoldl' (flip size) acc s + arrayBits (olength s)
+
 instance {-# OVERLAPPABLE #-} (MonoFoldable mono, O.IsSequence mono, Flat (Element mono)) => Flat mono where
-  -- size o sz = ofoldl' (\s n -> s + 1 + size n) 1 o
-  size = error "unimplemented"
-  encode = error "unimplemented"
+  size = sSequence
+  encode = eArray encode . otoList
   -- encode = eSequence
-  decode = O.pack <$> dList -- try with O.replicateM
+  decode = O.pack <$> dArray -- dList -- try with O.replicateM
 
 instance {-# OVERLAPPABLE #-} Flat a => Flat [a] where
     decode = dList
@@ -280,10 +295,9 @@ instance {-# OVERLAPPABLE #-} Flat a => Flat [a] where
 -- #elif defined(ARRDEC_REVERSE)
 --     decode = dListReverse
 -- #endif
-
 -- #elif defined(LIST_BYTE)
 --     encode = encodeArray
---     decode = decodeArray
+--     decode = dArray
 -- #endif
 
 -- instance {-# OVERLAPPING #-} Flat [Char] where
@@ -295,7 +309,9 @@ instance {-# OVERLAPPABLE #-} Flat a => Flat [a] where
 --   encode = eArrayChar
 --   decode = T.unpack <$> decode
 
-instance {-# OVERLAPPING #-} Flat [Char]
+instance {-# OVERLAPPING #-} Flat [Char] -- where
+  -- encode = eString
+  -- size = sString
 
 -- BLOB UTF8Encoding
 instance Flat T.Text where
@@ -303,17 +319,16 @@ instance Flat T.Text where
   -- encode l = (mconcat . map (\t -> T.foldl' (\r x -> r <> encode x) (eWord8 . fromIntegral . T.length$ t) t) . T.chunksOf 255 $ l) <> eWord8 0
     -- -- 200 times slower
     -- encode = encode . T.unpack
-    -- decode = T.pack <$> decodeArray
+    -- decode = T.pack <$> dArray
 
   -- 4 times slower
    --encode = encode . blob UTF8Encoding . L.fromStrict . T.encodeUtf8
    --decode = T.decodeUtf8 . L.toStrict . (unblob :: BLOB UTF8Encoding -> L.ByteString) <$> decode
 
-   size = csize sUTF16
+   size = sUTF16
    encode = eUTF16
    -- encode = eText
    decode = T.decodeUtf16LE . L.toStrict . (unblob :: BLOB UTF16Encoding -> L.ByteString) <$> decode
-
 
 ---------- Words and Ints
 
@@ -340,7 +355,7 @@ data Word16 = Word16 VarWord
 instance Flat Word8 where
   encode = eWord8
   decode = dWord8
-  size = csize sWord8
+  size = sWord8
 
 {- Word16 to Word64 are encoded as:
 -- data VarWord = VarWord (NonEmptyList Word7)
@@ -358,20 +373,20 @@ so Least Significant Byte first.
 instance Flat Word16 where
   encode = eWord16
   decode = dUnsigned
-  size = csize sWord16
+  size = sWord16
 
 instance Flat Word32 where
   encode = eWord32
   decode = dUnsigned
-  size = csize sWord32
+  size = sWord32
 
 instance Flat Word64 where
   encode = eWord64
   decode = dUnsigned
-  size = csize sWord64
+  size = sWord64
 
 instance Flat Word where
-  size = csize sWord
+  size = sWord
   encode = eWord
 
 #if WORD_SIZE_IN_BITS == 64
@@ -387,29 +402,29 @@ instance Flat Word where
 instance Flat Int8 where
   encode = encode . zzEncode8
   decode = zzDecode8 <$> decode
-  size = csize sInt8
+  size = sInt8
 
 -- Ints and Integer are encoded as
 -- Encoded as ZigZag Word16
 -- ZigZag indicates ZigZag encoding
 -- where data ZigZag a = ZigZag a
 instance Flat Int16 where
-  size = csize sInt16
+  size = sInt16
   encode = eInt16
   decode = zzDecode16 <$> decode
 
 instance Flat Int32 where
-  size = csize sInt32
+  size = sInt32
   encode = eInt32
   decode = zzDecode32 <$> decode
 
 instance Flat Int64 where
-  size = csize sInt64
+  size = sInt64
   encode = eInt64
   decode = zzDecode64 <$> decode
 
 instance Flat Int where
-  size = csize sInt
+  size = sInt
   encode = eInt
 
 #if WORD_SIZE_IN_BITS == 64
@@ -421,12 +436,12 @@ instance Flat Int where
 #endif
 
 instance Flat Integer where
-  size = csize sInteger
+  size = sInteger
   encode = eInteger
   decode = zzDecodeInteger <$> dUnsigned
 
 instance Flat Natural where
-  size = csize sNatural
+  size = sNatural
   encode = eNatural
   decode = fromInteger <$> dUnsigned
 
@@ -436,12 +451,12 @@ instance Flat Natural where
 
 --------------- Floats
 instance Flat Float where
-  size = csize sFloat
+  size = sFloat
   encode = eFloat
   decode = wordToFloat <$> dWord32
 
 instance Flat Double where
-  size = csize sDouble
+  size = sDouble
   encode = eDouble
   decode = wordToDouble <$> dWord64
 
@@ -476,7 +491,7 @@ toUnicode c | ord c <=127 = C0
 -- data Char = Char Word32
 -- PROB: Step 40 rather than 24
 instance Flat Char where
-  size = csize sChar
+  size = sChar
   encode = eChar
   decode = chr . fromIntegral <$> (decode :: Get Word32)
 

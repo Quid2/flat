@@ -17,7 +17,7 @@ data Filler = FillerBit Filler
 -- |Use a special encoding for the filler
 instance Flat Filler where
   encode _ = eFiller
-  size _ = ccsize 8
+  size = sFiller
 
 -- |A Post aligned value, a value followed by a filler
 data PostAligned a = PostAligned { postValue :: a, postFiller :: Filler }

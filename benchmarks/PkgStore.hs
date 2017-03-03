@@ -37,7 +37,7 @@ instance Store a => Serialize PkgStore a where
   pkg = PkgStore
   unpkg (PkgStore a) = a
 
-sd = ("store3",serializeF,deserializeF)
+sd = ("store3","store3",serializeF,deserializeF)
 serializeF = L.fromStrict . encode
 deserializeF =  either (Left . error . show) Right . decode . L.toStrict
 

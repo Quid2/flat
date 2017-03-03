@@ -35,8 +35,7 @@ library
   ghc-options:  -O2 -funbox-strict-fields  -Wall -fno-warn-orphans -fno-warn-name-shadowing -fno-warn-unused-binds
   --  -ddump-rule-rewrites
   default-extensions: CPP
-  ghc-options: -dumpdir /tmp/dump -ddump-to-file -dsuppress-all -ddump-simpl -ddump-simpl-stats
-               -- -ddump-asm -ddump-opt-cmm
+  ghc-options: -dumpdir /tmp/dump -ddump-to-file -dsuppress-all -ddump-simpl -ddump-simpl-stats -ddump-asm -ddump-opt-cmm
                -- -ddump-opt-cmm -ddump-ds
   -- ghc-options: -fprof-auto
   -- ghc-options: -dumpdir /tmp/dump -ddump-to-file -dsuppress-all -ddump-asm -ddump-opt-cmm -ddump-deriv
@@ -47,7 +46,7 @@ test-suite flat-test
   hs-source-dirs:      test
   main-is:             Spec.hs
   other-modules: Test.Data,Test.Data2,Test.Data.Arbitrary,Test.Data.Flat,Test.Data2.Flat,Test.Data.Values
-  build-depends:       base,tasty,tasty-hunit,tasty-quickcheck,ghc-prim,derive,text,bytestring,deepseq,flat
+  build-depends:       base,tasty,tasty-hunit,tasty-quickcheck,ghc-prim,derive,text,bytestring,deepseq,containers,flat
   -- ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
 

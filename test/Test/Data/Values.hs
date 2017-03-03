@@ -15,6 +15,7 @@ import           Test.Data
 import qualified Test.Data2           as D2
 import qualified Data.ByteString.Short.Internal as SBS
 import Data.Foldable
+import qualified Data.Sequence as Seq
 
 instance NFData Various
 instance NFData a => NFData (List a)
@@ -189,6 +190,7 @@ lN2T = ("List N",lN2)
 lN3T = ("Large List N",lN3)
 nativeListT = ("Large [N]",nativeList)
 nativeList = toList lN3
+seqNT = ("Seq N",Seq.fromList . toList $ lN2) -- nativeList)
 treeNT = ("treeN",treeN)
 treeNLargeT = ("treeNLarge",treeNLarge)
 treeNNNLargeT = ("treeNNNLarge",treeNNNLarge)
@@ -261,6 +263,7 @@ cafs = [
        , NF lN2T
        , NF lN3T
        , NF nativeListT
+       , NF seqNT
        , NF arr1
        , NF arr0
        , NF longS

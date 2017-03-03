@@ -10,7 +10,7 @@ module Data.Flat.Pokes (
     Step(..),
     S(..),Prim,
     NumBits,
-    availBits,
+    availBits,arrayBits,
     bitsToBytes,
     done,
     notEnoughSpace,
@@ -64,6 +64,7 @@ module Data.Flat.Pokes (
     varWordF,
     sizeWord,
     numBlks,
+    sFiller,sBool,
     sWord,
     sWord8,
     sWord16,
@@ -79,8 +80,8 @@ module Data.Flat.Pokes (
     sFloat,
     sDouble,
     sChar,
-    --csize,
-    module Data.Word,module Data.Int,Natural,SBS.ShortByteString,T.Text
+    sCharV,sInt64V,sInt32V,sInt16V,sIntV,sWord64V,sWord32V,sWord16V,sWordV
+    ,module Data.Word,module Data.Int,Natural,SBS.ShortByteString,T.Text
     ) where
 
 import           Control.Monad
@@ -106,6 +107,7 @@ import           Data.ZigZag
 import           Data.Char
 import           Numeric.Natural
 import           Data.Binary.FloatCast
+
 -- import Debug.Trace
 #include "MachDeps.h"
 
@@ -238,6 +240,7 @@ availBits = (8*) . availBytes
 bitsToBytes :: Int -> Int
 bitsToBytes = numBlks 8
 
+
 {-# INLINE numBlks #-}
 numBlks :: Integral t => t -> t -> t
 numBlks blkSize bits = let (d,m) = bits `divMod` blkSize
@@ -263,21 +266,33 @@ type NumBits = Int
 
 instance Show Step where show (Step n _) = unwords ["Step",show n]
 
-sFloat :: Float -> NumBits
-sFloat _ = 32
+sFiller,sBool,sWord,sWord8,sWord16,sWord32,sWord64::NumBits
+sInt,sInt8,sInt16,sInt32,sInt64::NumBits
+sChar,sFloat,sDouble::NumBits
 
+sFiller = 8
+
+sBool = 1
+
+sFloat = 32
+
+{-# INLINE eFloatF #-}
 eFloatF :: Float -> Prim
 eFloatF = eWord32BEF . floatToWord
 
-sDouble :: Double -> NumBits
-sDouble _ = 64
+sDouble = 64
 
+{-# INLINE eDoubleF #-}
 eDoubleF :: Double -> Prim
 eDoubleF = eWord64BEF . doubleToWord
 
-sChar :: Char -> NumBits
-sChar  = sWord32  . fromIntegral . ord
+sChar = 24
 
+{-# INLINE sCharV #-}
+sCharV :: Char -> NumBits
+sCharV  = sWord32V  . fromIntegral . ord
+
+{-# INLINE eCharF #-}
 eCharF :: Char -> Prim
 eCharF = eWord32F . fromIntegral . ord
 
@@ -288,12 +303,25 @@ eCharF = eWord32F . fromIntegral . ord
 
 eWordF :: Word -> Prim
 eWordF = eWord64F . (fromIntegral :: Word -> Word64)
+
 eIntF :: Int -> Prim
 eIntF = eInt64F . (fromIntegral :: Int -> Int64)
-sWord :: Word -> NumBits
-sWord = sWord64 . (fromIntegral :: Word -> Word64)
-sInt :: Int -> NumBits
-sInt = sInt64 . (fromIntegral :: Int -> Int64)
+
+sWord = sWord64
+sInt = sInt64
+
+{-# INLINE sWordV #-}
+sWordV :: Word -> NumBits
+sWordV = sWord64V . fromIntegral
+
+{-# INLINE sIntV #-}
+sIntV :: Int -> NumBits
+sIntV = sInt64V . fromIntegral
+
+-- sWord :: Word -> NumBits
+-- sWord = sWord64 . (fromIntegral :: Word -> Word64)
+-- sInt :: Int -> NumBits
+-- sInt = sInt64 . (fromIntegral :: Int -> Int64)
 
 #elif WORD_SIZE_IN_BITS == 32
 
@@ -301,10 +329,10 @@ eWordF :: Word -> Prim
 eWordF = eWord32F . (fromIntegral :: Word -> Word32)
 eIntF :: Int -> Prim
 eIntF = eInt32F . (fromIntegral :: Int -> Int32)
-sWord :: Word -> NumBits
-sWord = sWord32 . (fromIntegral :: Word -> Word32)
-sInt :: Int -> NumBits
-sInt = sInt32 . (fromIntegral :: Int -> Int32)
+sWord = sWord32
+sInt = sInt32
+sWordV = sWord32V
+sIntV = sInt32V
 
 #else
 #error expected WORD_SIZE_IN_BITS to be 32 or 64
@@ -349,14 +377,36 @@ eWord32BES t = Step 32 (eWord32BEF t)
 eWord32BEF :: Word32 -> Prim
 eWord32BEF = eWord32E toBE32
 
-sInt16 :: Int16 -> NumBits
-sInt16 = sWord16 . zzEncode16
 
-sInt32 :: Int32 -> NumBits
-sInt32 = sWord32 . zzEncode32
+sWord8 = 8
+sInt8 = 8
 
-sInt64 :: Int64 -> NumBits
-sInt64 = sWord64 . zzEncode64
+-- Max sizes
+sInt16 = 24
+sInt32 = 40
+sInt64 = 80
+sWord16 = 24
+sWord32 = 40
+sWord64 = 80
+
+-- Actual size
+sInt16V :: Int16 -> NumBits
+sInt16V = sWord16V . zzEncode16
+
+sInt32V :: Int32 -> NumBits
+sInt32V = sWord32V . zzEncode32
+
+sInt64V :: Int64 -> NumBits
+sInt64V = sWord64V . zzEncode64
+
+sWord16V :: Word16 -> NumBits
+sWord16V = sizeWord
+
+sWord32V :: Word32 -> NumBits
+sWord32V = sizeWord
+
+sWord64V :: Word64 -> NumBits
+sWord64V = sizeWord
 
 eInt8F :: Int8 -> Prim
 eInt8F = eWord8F . zzEncode8
@@ -370,24 +420,12 @@ eInt32F = eWord32F . zzEncode32
 eInt64F :: Int64 -> Prim
 eInt64F = eWord64F . zzEncode64
 
-sWord16 :: Word16 -> NumBits
-sWord16 = sizeWord
-
-sWord32 :: Word32 -> NumBits
-sWord32 = sizeWord
-
-sWord64 :: Word64 -> NumBits
-sWord64 = sizeWord
-
 {-# INLINE eWord8S #-}
 eWord8S :: Word8 -> Step
 eWord8S t = Step 8 (eWord8F t)
 
-sWord8 :: Word8 -> Int
-sWord8 _ = 8
-
-sInt8 :: Int8 -> Int
-sInt8 _ = 8
+-- sWord8 :: Word8 -> Int
+-- sInt8 :: Int8 -> Int
 
 {-# INLINE eBitsS #-}
 eBitsS :: NumBits -> Word8 -> Step
@@ -488,15 +526,27 @@ varWordF t s@(S _ _ o) | o == 0 = varWord pokeByteAligned t s
 varWord :: (Bits t, Integral t) => (Word8 -> Prim) -> t -> Prim
 varWord writeByte t s
   | t < 128 = writeByte (fromIntegral t) s
-  -- TODO: optimise, using a single Write16
-  | t < 16384 = writeByte (fromIntegral t .|. 0x80) s >>= writeByte (fromIntegral (t `shiftR` 7) .&. 0x7F)
-  | t < 2097152 = writeByte (fromIntegral t .|. 0x80) s >>= writeByte (fromIntegral (t `shiftR` 7) .|. 0x80) >>= writeByte (fromIntegral (t `shiftR` 14) .&. 0x7F)
-  | otherwise = go t s
-  where go v st = let l  = low7 v
-                      v' = v `shiftR` 7
-                  in if v' == 0
-                     then writeByte l st
-                     else writeByte (l .|. 0x80) st >>= go v'
+  | t < 16384 = varWord2_ writeByte t s
+  | t < 2097152 = varWord3_ writeByte t s
+  | otherwise = varWordN_ writeByte t s
+    where 
+      {-# INLINE varWord2_ #-}
+      -- TODO: optimise, using a single Write16?
+      varWord2_ writeByte t s = writeByte (fromIntegral t .|. 0x80) s >>= writeByte (fromIntegral (t `shiftR` 7) .&. 0x7F)
+
+      {-# INLINE varWord3_ #-}
+      varWord3_ writeByte t s = writeByte (fromIntegral t .|. 0x80) s >>= writeByte (fromIntegral (t `shiftR` 7) .|. 0x80) >>= writeByte (fromIntegral (t `shiftR` 14) .&. 0x7F)
+
+-- {-# INLINE varWordN #-}
+varWordN_ :: (Bits t, Integral t) => (Word8 -> Prim) -> t -> Prim
+varWordN_ writeByte = go
+  where
+    go !v !st =
+      let !l  = low7 v
+          !v' = v `shiftR` 7
+      in if v' == 0
+      then writeByte l st
+      else writeByte (l .|. 0x80) st >>= go v'
 
 {-# INLINE sizeWord #-}
 sizeWord :: (Ord a, Num a, Num t) => a -> t
@@ -518,6 +568,14 @@ sizeWord w | w < 128 = 8
 -- eArrayChar s = Step (length s*8*3) (eUTF16F . T.pack $ s) -- eUTF16 . T.pack
 
 --arrayBits = (8+) . bsBits_
+
+{-# INLINE arrayBits #-}
+arrayBits :: Int -> NumBits
+arrayBits = (8*) . arrayChunks
+
+{-# INLINE arrayChunks #-}
+arrayChunks :: Int -> NumBits
+arrayChunks = (1+) . numBlks 255
 
 {-# INLINE blobBits #-}
 blobBits :: Int -> NumBits

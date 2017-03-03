@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE PackageImports        #-}
-module PkgFlat(PkgFlat(..),Flat,maxSize,sd,serializeF,deserializeF,serlN2) where
+module PkgFlat(PkgFlat(..),Flat,getSize,sd,serializeF,deserializeF,serlN2) where
 
 import           Control.Exception
 import           Data.ByteString.Lazy   as L
@@ -21,7 +21,7 @@ instance Flat a => Serialize PkgFlat a where
   pkg = PkgFlat
   unpkg (PkgFlat a) = a
 
-sd = ("LazyEach",serializeF,deserializeF)
+sd = ("encoderStrict","decoderBinaryBits",serializeF,deserializeF)
 
 serializeF = flat
 deserializeF =  either (Left . error) Right . unflat

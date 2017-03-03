@@ -25,7 +25,8 @@ data PkgCBOR a = PkgCBOR a deriving (Eq,Show)
 
 instance Arbitrary a => Arbitrary (PkgCBOR a) where arbitrary = fmap PkgCBOR arbitrary
 
-sd = ("cbor",serializeF,deserializeF)
+sd = ("cbor","cbor",serializeF,deserializeF)
+
 serializeF = C.serialise
 deserializeF = either (Left . error . show) Right . C.deserialiseOrFail
 

@@ -123,7 +123,7 @@ readReports jsonReportFile = do
 report :: String -> String -> String -> [(String,Double)] -> IO ()
 report _ _ _ [] = return ()
 report name prop unit rs = do
-  -- print rs
+  print rs
   let (best,rss) = report_ rs
   let width = maximum . map (length . fst) $ rs
   putStrLn $ unwords [name,"ordered by",prop,"("++fst best++":",printInt (snd best),unit++")"]

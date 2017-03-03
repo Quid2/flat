@@ -1,5 +1,5 @@
 {-# LANGUAGE PackageImports ,FlexibleInstances ,MultiParamTypeClasses#-}
-module PkgCereal(PkgCereal(..)) where
+module PkgCereal(PkgCereal(..),Data.Serialize.Serialize,sd) where
 
 import Control.Exception
 
@@ -7,6 +7,7 @@ import Types hiding (Serialize)
 import qualified Types as T
 import Test.Data
 import Test.Data.Values
+import qualified Data.ByteString.Lazy as L
 
 import "cereal"  Data.Serialize
 
@@ -16,6 +17,9 @@ data PkgCereal a = PkgCereal a deriving (Eq,Show)
 
 instance Arbitrary a => Arbitrary (PkgCereal a) where arbitrary = fmap PkgCereal arbitrary
 
+sd = ("cereal","cereal",serializeF,deserializeF)
+serializeF = L.fromStrict . encode
+deserializeF = either (Left . error . show) Right . decode . L.toStrict
 {-
 instance Serialize a => T.Serialize (PkgCereal a) where
   serialize (PkgCereal a) = encodeLazy a
@@ -65,15 +69,22 @@ variance introduced by outliers: 43.485%
 variance is moderately inflated by outliers
 -}
 
-instance Serialize N
-instance Serialize a => Serialize (List a)
-instance Serialize a => Serialize (Tree a)
 instance Serialize Car
 instance Serialize Acceleration
 instance Serialize Consumption
 instance Serialize CarModel
 instance Serialize OptionalExtra
 instance Serialize Engine
+instance Serialize Various
+
+instance Serialize N
+instance {-# OVERLAPPABLE #-} Serialize a => Serialize (List a)
+instance {-# OVERLAPPABLE #-} Serialize a => Serialize (Tree a)
+
+instance {-# OVERLAPPING #-} Serialize (Tree N)
+instance {-# OVERLAPPING #-} Serialize (Tree (N,N,N))
+instance {-# OVERLAPPING #-} Serialize [N]
+instance {-# OVERLAPPING #-} Serialize (N,N,N)
 
 
 -- !! Apparently Generics based derivation is as fast as hand written one.

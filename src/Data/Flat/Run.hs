@@ -36,8 +36,8 @@ unflatWith dec bs = unflatChkWith (do
 
 -- |Encode value, if values does not end on byte boundary, 0s padding is added.
 flatRaw :: Flat a => a -> L.ByteString
-flatRaw a = E.encoderLazy (encode a)
--- flatRaw a = encoderStrict (maxSize $ postAligned a) (encode a)
+-- flatRaw a = E.encoderLazy (encode a)
+flatRaw a = E.encoderStrict (getSize $ postAligned a) (encode a)
 -- flatRaw a = bitEncoder (2000) (encode a)
 
 unflatRaw :: Flat a => L.ByteString -> Decoded a
@@ -56,6 +56,7 @@ unflatRaw = runGetOrFail decode
 --unflatRaw bs = runPartialGet decode bs 0
 
 -- unflatChk :: Flat a => L.ByteString -> Decoded a
+unflatChkWith :: Get a -> L.ByteString -> Either String a
 unflatChkWith dec bs = case unflatPartWith dec bs of
                          Left e -> Left e
                          Right (v,bs,n) | L.null bs -> Right v -- && n ==0
@@ -67,6 +68,7 @@ unflatChkWith dec bs = case unflatPartWith dec bs of
 -- unflatPart :: Flat a => L.ByteString -> Either String (a, L.ByteString, Int)
 -- unflatPart bs = runPartialGet decode bs 0
 
+unflatPartWith :: Get b -> L.ByteString -> Either String (b, L.ByteString, Int)
 unflatPartWith dec bs = runPartialGet dec bs 0
 
 --unflatIncremental = Get.runGetIncremental

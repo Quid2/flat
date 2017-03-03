@@ -127,7 +127,8 @@ import Test.Data
 import           Test.Data.Values
 import PkgBinary
 import qualified PkgBinary as B
-import PkgCereal
+-- import PkgCereal
+import qualified PkgCereal as CC
 import PkgCBOR
 import qualified PkgCBOR as C
 import PkgFlat
@@ -216,14 +217,13 @@ prints = do
   -- plf nativeListT
 
   -- print (yv,xv)
-
   -- print $ pt carT
 
-  print $ F.maxSize Three
-  print $ F.maxSize (Leaf Three)
-  print $ F.maxSize (treeNLarge) 
-  print $ F.maxSize (treeNNNLarge)
-  print $ F.maxSize (nativeList)
+  print $ F.getSize Three
+  print $ F.getSize (Leaf Three)
+  print $ F.getSize (treeNLarge) 
+  print $ F.getSize (treeNNNLarge)
+  print $ F.getSize (nativeList)
 
   -- print $ B.unpack (F.flat v1)
   -- print $ B.unpack (F.flat v2)
@@ -233,7 +233,7 @@ prints = do
   -- print $ [220,221,25] == B.unpack (F.flat t33)
 
   print $ 1175000 == B.length (F.flat treeNNNLarge)
-  print $ 550000 == B.length (F.flat treeNLarge)  
+  print $ 550000 == B.length (F.flat treeNLarge)
   print $ 2125001== B.length (F.flat nativeList)
   -- print $ 1 == B.length (F.flat v2)
   -- print $ 3 == B.length (F.flat t33)
@@ -328,26 +328,32 @@ mainBench = do
 
 --mainBench = defaultMainWith (defaultConfigFilePath {
 mainBench_ jsonReportFile = defaultMainWith (defaultConfig {jsonFile= Just jsonReportFile}) (
-  [
-   tstEnc carT
-   ,tstEnc nativeListT
-   ,tstEnc treeNLargeT
-   ,tstEnc treeNNNLargeT
-   ,tstEnc wordsT,tstEnc words0T
-   ,tstEnc vwT,tstEnc vfT,tstEnc viT
-   ,tstEnc v2T
-   ,tstEnc charT,tstEnc unicharT
-   ,tstEnc lN3T
-   ,tstEnc asciiStrT,tstEnc unicodeStrT
-   ,tstEnc unicodeTextT
-
-   -- -- ,tstEnc viiT,,tstEnc intsT
-   -- tstMaxSize treeNLargeT
-   -- ,tstMaxSize treeNNNLargeT,tstMaxSize nativeListT
-   -- ,tstMaxSize wordsT,tstMaxSize words0T
-   -- ,tstMaxSize vwT,tstMaxSize vfT,tstMaxSize viT,
-   -- ,tstMaxSize carT
-
+  concat [
+   tstDec carT
+   ,tstDec nativeListT
+   ,tstDec treeNLargeT
+   ,tstDec treeNNNLargeT
+   ,tstDec wordsT,tstDec words0T
+   ,tstDec vwT,tstDec vfT,tstDec viT
+   ,tstDec v2T
+   ,tstDec charT
+   ,tstDec unicharT
+   ,tstDec lN2T
+   --,tstDec lN3T
+   -- flat fails to complete:
+   ,tstDec seqNT
+   ,tstDec asciiStrT
+   ,tstDec unicodeStrT
+   --,tstDec unicodeTextT
+   ]
+   -- ++ [
+   --    tstMaxSize treeNLargeT
+   --    ,tstMaxSize treeNNNLargeT,tstMaxSize nativeListT
+   --    ,tstMaxSize wordsT,tstMaxSize words0T
+   --    ,tstMaxSize vwT,tstMaxSize vfT,tstMaxSize viT
+   --    ,tstMaxSize carT,tstMaxSize seqNT
+   -- ]
+     -- -- ,tstEnc viiT,,tstEnc intsT
   -- ,tstEnc sbs,tstEnc lbs --,tstEnc shortbs
 
   --,tstEnc treeN33LargeT
@@ -356,7 +362,7 @@ mainBench_ jsonReportFile = defaultMainWith (defaultConfig {jsonFile= Just jsonR
   --           --,tstDec wordsT,tstDec vwT
   --           --,tstDec lN3T,tstDec treeNLargeT,tstDec lN2T
   --
-  ]
+  --]
   )
 
 {-
@@ -581,33 +587,33 @@ tstEncE (vn,v) =
 tstMaxSize (vn,v) =
   let nm s = Prelude.concat [vn,"-",s] -- unwords [s,Prelude.take 400 $ show v]
   in bgroup ("tstMaxSize") [
-    bench (nm "store")  $ nf (S.getSize) v
-    ,bench (nm "flat")  $ nf (F.maxSize) v
+    bench (nm "flatClassSizeSimple")  $ nf (F.getSize) v
+    --,bench (nm "store")  $ nf (S.getSize) v
     ]
   where encodeOnly k = B.length . serialize . k
 
 tstEnc (vname,obj) =
   let nm s = Prelude.concat [vname,"-",s]
-  in bgroup ("tstEnc") $ map (\(pkg,s,d) -> bench (nm pkg) $ nf (L.length . s) obj) pkgs
+  in bgroup ("tstEnc") $ map (\(pkg,_,s,d) -> bench (nm pkg) $ nf (L.length . s) obj) pkgs
 
 tstDec (vname,obj) =
   let nm s = Prelude.concat [vname,"-",s] -- unwords [s,Prelude.take 400 $ show v]
-  --in bgroup ("tstDec") $ map (\(pkg,s,d) -> env (return $ s obj) $ (\bs -> bench (nm pkg) $ nf (\obj -> Right obj == d bs) obj)) pkgs
-  -- in bgroup ("tstDec") $ map (\(pkg,s,d) -> env (return $ s obj) $ (\bs -> bench (nm pkg) $ nf (\obj -> True) obj)) pkgs
-  in [bgroup ("tstEncDec") $ map (\(pkg,s,d) -> bench (nm pkg) $ nf (\obj -> d (s obj) == Right obj) obj) pkgs
+  in [--bgroup ("tstDec") $ map (\(_,pkg,s,d) -> env (return $! s obj) $ (\bs -> bench (nm pkg) $ nfIO ((Right obj ==) <$> (return . force . d) bs))) pkgs
+     bgroup ("tstEncDec") $ map (\(_,pkg,s,d) -> bench (nm pkg) $ nf (\obj -> d (s obj) == Right obj) obj) pkgs
+  -- in [bgroup ("tstEncDec") $ map (\(pkg,s,d) -> bench (nm pkg) $ nf (\obj -> d (s obj) == Right obj) obj) pkgs
      --,bgroup ("tstDec") $ map (\(pkg,s,d) -> env (return $ s obj) $ (\bs -> bench (nm pkg) $ nf (\obj -> Right obj == d bs) obj)) pkgs
      --,bgroup ("tstDec") $ map (\(pkg,s,d) -> env (return $ s obj) $ (\bs -> bench (nm pkg) $ nfIO ((Right obj ==) <$> return (d bs)))) pkgs
-     -- ,bgroup ("tstDec") $ map (\(pkg,s,d) -> env (s obj) $ (\bs -> bench pkg $ whnfIO ((obj ==) <$>  (return . force . d $ bs)))) pkgs
-     ,bgroup ("tstEnc") $ map (\(pkg,s,d) -> bench (nm pkg) $ nf (B.length . s) obj) pkgs
-     ,bench ("tstEq/"++nm "any") $ nf (\o -> o == o) obj]
+      --bgroup ("tstDec") $ map (\(_,pkg,s,d) -> env (return $ s obj) $ (\bs -> bench (nm pkg) $ whnfIO ((Right obj ==) <$>  (return . force . d $ bs)))) pkgs
+     ,bgroup ("tstEnc") $ map (\(pkg,_,s,d) -> bench (nm pkg) $ nf (B.length . s) obj) pkgs
+     --,bench ("tstEq/"++nm "any") $ nf (\o -> o == o) obj
+     ]
 
+pt (n,v) = map (\(_,pkg,s,d) -> Right v == d (s v)) pkgs
 
-pt (n,v) = map (\(pkg,s,d) -> Right v == d (s v)) pkgs
-
-pkgs :: (C.Serialise a,S.Store a,B.Binary a,F.Flat a) => [(String,a -> L.ByteString,L.ByteString -> Either String a)]
--- pkgs = [S.sd,B.sd,C.sd,F.sd]
+pkgs :: (CC.Serialize a ,C.Serialise a,S.Store a,B.Binary a,F.Flat a) => [(String,String,a -> L.ByteString,L.ByteString -> Either String a)]
+pkgs = [S.sd,B.sd,C.sd,CC.sd,F.sd]
 -- pkgs = [S.sd,F.sd]
-pkgs = [F.sd]
+-- pkgs = [F.sd]
 
 tstEncodeDeep name k1 k2 = bgroup ("serialize " ++ name) [
    bench "tree1"  $ nf (encodeOnly k1) tree1
