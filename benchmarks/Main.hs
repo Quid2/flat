@@ -320,7 +320,7 @@ mainAlternatives = dec_ tupleT >> dec_ tupleBools >> dec_ arr0 >> dec_ arr1 >> d
 #endif
 
 mainBench = do
-  let wdir = "/Users/titto/workspace/flat"
+  let wdir = "." -- "/Users/titto/workspace/flat"
   mainBench_ (reportsFile wdir)
   ms <- updateMeasures wdir
 
@@ -504,7 +504,7 @@ tstEncDecM lv@(vn,v) =
         tst n c = bench (unwords[n,vn]) $ nfIO (encDecM n c lv)
 
 
-df n vn = Prelude.concat["/Users/titto/workspace/flat/benchmarks/data/tstEncDec-",vn,"-",n]
+-- df n vn = Prelude.concat["/Users/titto/workspace/flat/benchmarks/data/tstEncDec-",vn,"-",n]
 
 encDecM n c (vn,v) = do
           let f = df n vn

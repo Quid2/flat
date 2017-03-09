@@ -24,7 +24,7 @@ module Data.Flat.Decoder (
     dInt,
     ) where
 
-import           Data.Binary.Bits.Get
+import Data.Flat.Peeks
 import           Data.Binary.FloatCast
 import           Data.Bits
 import qualified Data.ByteString       as B
@@ -43,11 +43,11 @@ import           Numeric.Natural
 
 {-# INLINE dFloat #-}
 dFloat :: Get Float
-dFloat = wordToFloat <$> getWord32be 32
+dFloat = wordToFloat <$> dWord32be
 
 {-# INLINE dDouble #-}
 dDouble :: Get Double
-dDouble = wordToDouble <$> getWord64be 64
+dDouble = wordToDouble <$> dWord64be
 
 {-# INLINE dNatural #-}
 dNatural :: Get Natural
@@ -91,10 +91,6 @@ dInt32 = zzDecode32 <$> dWord32
 dInt64 :: Get Int64
 dInt64 = zzDecode64 <$> dWord64
 
-{-# INLINE dWord8  #-}
-dWord8 :: Get Word8
-dWord8 = getWord8 8
-
 {-# INLINE dWord16  #-}
 dWord16 :: Get Word16
 dWord16 = wordStep 0 (wordStep 7 (lastStep 14)) 0
@@ -110,7 +106,7 @@ dWord64 = wordStep 0 (wordStep 7 (wordStep 14 (wordStep 21 (wordStep 28 (wordSte
 {-# INLINE lastStep #-}
 lastStep :: (FiniteBits b, Show b, Num b) => Int -> b -> Get b
 lastStep shl n = do
-  tw <- fromIntegral <$> getWord8 8
+  tw <- fromIntegral <$> dWord8
   let w = tw .&. 127
   let v = n .|. (w `shift` shl)
   if tw == w
@@ -123,7 +119,7 @@ lastStep shl n = do
 wordStep
   :: (Bits a, Num a) => Int -> (a -> Get a) -> a -> Get a
 wordStep shl k n = do
-  tw <- fromIntegral <$> getWord8 8
+  tw <- fromIntegral <$> dWord8
   let w = tw .&. 127
   let v = n .|. (w `shift` shl)
   if tw == w
@@ -143,7 +139,7 @@ dUnsigned = do
 {-# INLINE dUnsigned_ #-}
 dUnsigned_ :: (Bits t, Num t) => Int -> t -> Get (t, Int)
 dUnsigned_ shl n = do
-  tw <- getWord8 8
+  tw <- dWord8
   let w = tw .&. 127
   let v = n .|. (fromIntegral w `shift` shl)
   if tw == w
@@ -153,9 +149,6 @@ dUnsigned_ shl n = do
 -- {-# INLINE dBits  #-}
 --dBits = getWord8
 
-{-# INLINE dBool #-}
-dBool :: Get Bool
-dBool = getBool
 
 dArray :: Get a -> Get [a]
 dArray dec = DL.toList <$> getAsL_ dec
@@ -184,7 +177,7 @@ dUTF16 = do
 
 dFiller :: Get ()
 dFiller = do
-  tag <- getBool
+  tag <- dBool
   case tag of
     False -> dFiller
     True  -> return ()
@@ -207,6 +200,6 @@ dBytes_ =  do
   if l==0
     then return []
     else do
-       bs <- getByteString (fromIntegral l)
+       bs <- dByteString_ (fromIntegral l)
        bs' <- dBytes_
        return $ bs : bs'

@@ -30,7 +30,7 @@ module Data.Flat.Class (
   ,module GHC.Generics
   ) where
 
-import           Data.Binary.Bits.Get (Get, getBool)
+import           Data.Flat.Decoder (Get, dBool)
 import           GHC.Generics
 import           Data.Bits            (shiftL, (.|.))
 import           Data.Flat.Encoder
@@ -186,7 +186,7 @@ instance Flat a => GDecode (K1 i a) where
 -- Build constructor representation as single tag
 instance (GDecode a, GDecode b) => GDecode (a :+: b) where
   gget = do
-    !tag <- getBool
+    !tag <- dBool
     if tag then R1 <$> gget else L1 <$> gget
   {-# INLINE gget #-}
 
