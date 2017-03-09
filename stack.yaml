@@ -21,19 +21,19 @@ packages:
 # - optparse-applicative-0.13.0.0
 
 # 8.0.1
-# resolver: lts-7.19
-# extra-deps:
-# - store-0.4.1
-# - store-core-0.4
-# - binary-0.8.4.1
-# - criterion-1.1.4.0
-# - optparse-applicative-0.13.0.0
-
-# 8.0.2 - doesn't compile heavily mutually recursive data types, does not pass tests?
-resolver: lts-8.4
+resolver: lts-7.19
 extra-deps:
 - store-0.4.1
 - store-core-0.4
 - binary-0.8.4.1
-- th-utilities-0.2.0.1
-- derive-2.6.1
+- criterion-1.1.4.0
+- optparse-applicative-0.13.0.0
+
+# 8.0.2 - doesn't compile heavily mutually recursive data types, does not pass tests?
+# resolver: lts-8.4
+# extra-deps:
+# - store-0.4.1
+# - store-core-0.4
+# - binary-0.8.4.1
+# - th-utilities-0.2.0.1
+# - derive-2.6.1
