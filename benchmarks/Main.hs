@@ -22,7 +22,9 @@ bitEncoder numBits (Writer op) = L.fromStrict $ bitEncoderStrict numBits op
 able-profiling -p;/Users/titto/workspace/quid2/.cabal-sandbox/bin/benchsmall +RTS -ph -sstderr;cat benchsmall.prof;hp2ps -c benchsmall;profiteur benchsmall.prof;open file:///Users/titto/workspace/quid2/benchsmall.prof.eUnsigned64 :: Word64 -> Encodinghtml 
 
 Benchmarking
-cd /Users/titto/workspace/quid[133eBits ,197,164,33]2;cabal install;/Users/titto/workspace/quid2/.cabal-sandbox/bin/benchsmall
+cd /Users/titto/workspace/quid[133eBits ,197,164,33]2;cabal install;/Users/titto/workspace/quid2/.cabal-sandbo# - store-0.4.1
+# - store-core-0.4
+x/bin/benchsmall
 
 Benchmarking using cbor test suite, see LEGGIMI
 
@@ -329,22 +331,25 @@ mainBench = do
 --mainBench = defaultMainWith (defaultConfigFilePath {
 mainBench_ jsonReportFile = defaultMainWith (defaultConfig {jsonFile= Just jsonReportFile}) (
   concat [
-   tstDec carT
-   ,tstDec nativeListT
-   ,tstDec treeNLargeT
-   ,tstDec treeNNNLargeT
-   ,tstDec wordsT,tstDec words0T
-   ,tstDec vwT,tstDec vfT,tstDec viT
-   ,tstDec v2T
-   ,tstDec charT
-   ,tstDec unicharT
-   ,tstDec lN2T
-   --,tstDec lN3T
-   -- flat fails to complete:
-   ,tstDec seqNT
-   ,tstDec asciiStrT
-   ,tstDec unicodeStrT
-   --,tstDec unicodeTextT
+   -- tstDec carT
+   -- ,tstDec nativeListT
+   -- ,tstDec treeNLargeT
+   -- ,tstDec treeNNNLargeT
+   -- ,tstDec wordsT,tstDec words0T
+   -- ,tstDec vwT,tstDec vfT,tstDec viT
+   -- ,tstDec v2T
+   -- ,tstDec charT
+   -- ,tstDec unicharT
+   -- ,tstDec lN2T
+   -- --,tstDec lN3T
+   -- -- flat fails to complete:
+   -- ,tstDec seqNT
+   -- ,tstDec asciiStrT
+   -- ,tstDec unicodeStrT
+   -- ,tstDec unicodeTextT
+   -- ,
+   tstDec sbs,tstDec lbs
+   --,tstDec shortbs
    ]
    -- ++ [
    --    tstMaxSize treeNLargeT
@@ -598,22 +603,29 @@ tstEnc (vname,obj) =
 
 tstDec (vname,obj) =
   let nm s = Prelude.concat [vname,"-",s] -- unwords [s,Prelude.take 400 $ show v]
-  in [--bgroup ("tstDec") $ map (\(_,pkg,s,d) -> env (return $! s obj) $ (\bs -> bench (nm pkg) $ nfIO ((Right obj ==) <$> (return . force . d) bs))) pkgs
+  in [
      bgroup ("tstEncDec") $ map (\(_,pkg,s,d) -> bench (nm pkg) $ nf (\obj -> d (s obj) == Right obj) obj) pkgs
-  -- in [bgroup ("tstEncDec") $ map (\(pkg,s,d) -> bench (nm pkg) $ nf (\obj -> d (s obj) == Right obj) obj) pkgs
+     --,bgroup ("tstEnc") $ map (\(pkg,_,s,d) -> bench (nm pkg) $ nf (B.length . s) obj) pkgs
+
+
+     --bgroup ("tstDec") $ map (\(_,pkg,s,d) -> env (return $! s obj) $ (\bs -> bench (nm pkg) $ nfIO ((Right obj ==) <$> (return . force . d) bs))) pkgs
+     -- in [bgroup ("tstEncDec") $ map (\(pkg,s,d) -> bench (nm pkg) $ nf (\obj -> d (s obj) == Right obj) obj) pkgs
      --,bgroup ("tstDec") $ map (\(pkg,s,d) -> env (return $ s obj) $ (\bs -> bench (nm pkg) $ nf (\obj -> Right obj == d bs) obj)) pkgs
      --,bgroup ("tstDec") $ map (\(pkg,s,d) -> env (return $ s obj) $ (\bs -> bench (nm pkg) $ nfIO ((Right obj ==) <$> return (d bs)))) pkgs
       --bgroup ("tstDec") $ map (\(_,pkg,s,d) -> env (return $ s obj) $ (\bs -> bench (nm pkg) $ whnfIO ((Right obj ==) <$>  (return . force . d $ bs)))) pkgs
-     ,bgroup ("tstEnc") $ map (\(pkg,_,s,d) -> bench (nm pkg) $ nf (B.length . s) obj) pkgs
      --,bench ("tstEq/"++nm "any") $ nf (\o -> o == o) obj
      ]
 
 pt (n,v) = map (\(_,pkg,s,d) -> Right v == d (s v)) pkgs
 
-pkgs :: (CC.Serialize a ,C.Serialise a,S.Store a,B.Binary a,F.Flat a) => [(String,String,a -> L.ByteString,L.ByteString -> Either String a)]
-pkgs = [S.sd,B.sd,C.sd,CC.sd,F.sd]
+-- pkgs :: (CC.Serialize a ,C.Serialise a,S.Store a,B.Binary a,F.Flat a) => [(String,String,a -> L.ByteString,L.ByteString -> Either String a)]
+-- pkgs = [S.sd,B.sd,C.sd,CC.sd,F.sd]
+
+-- pkgs :: (C.Serialise a,S.Store a,B.Binary a,F.Flat a) => [(String,String,a -> L.ByteString,L.ByteString -> Either String a)]
+-- pkgs = [S.sd,B.sd,C.sd,F.sd]
+pkgs :: (S.Store a,F.Flat a) => [(String,String,a -> L.ByteString,L.ByteString -> Either String a)]
 -- pkgs = [S.sd,F.sd]
--- pkgs = [F.sd]
+pkgs = [F.sd]
 
 tstEncodeDeep name k1 k2 = bgroup ("serialize " ++ name) [
    bench "tree1"  $ nf (encodeOnly k1) tree1

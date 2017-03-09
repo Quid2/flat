@@ -74,9 +74,9 @@ module Data.Binary.Bits.Get
             , block
 
             -- ** Read in Blocks
-            ,dBool
-            ,dWord8,dWord32,dWord64,dBits,dUnsigned,dBytes,dLazyBytes,dShortBytes
-            ,dropBits
+            --,dBool
+            --,dWord8,dWord32,dWord64,dBits,dUnsigned
+            --,dropBits
             , bool
             , word8
             , word16be
@@ -98,7 +98,7 @@ import           Control.Applicative
 import           Data.Bits
 import           Data.ByteString          as S
 import qualified Data.ByteString.Lazy     as L
-import qualified Data.ByteString.Short     as SBS
+-- 
 import           Data.ByteString.Unsafe
 import           Data.Word
 import           Prelude                  as P
@@ -111,14 +111,6 @@ import Control.DeepSeq
 
 type Get = BitGet --BitG.Block --
 
-funny2 = funny . funny
-
-funny :: Int -> Int
-funny n = shiftR (shiftL n 3) 6
-
-{-# INLINE dBool #-}
-{-# INLINE dWord8  #-}
-{-# INLINE dBits  #-}
 
 {-
 dBool :: Block Bool
@@ -129,54 +121,6 @@ dWord8 = word8 8
 
 dBits = word8
 -}
-dBool = getBool
-dWord8 = getWord8 8
-dBits = getWord8
-
-dWord32 = getWord32be 32
-dWord64 = getWord64be 64
-
-dBytes :: BitGet ByteString
-dBytes = S.concat <$> dBytes_
-
-dLazyBytes :: BitGet L.ByteString
-dLazyBytes = L.fromChunks <$> dBytes_
-
-dShortBytes :: BitGet SBS.ShortByteString
-dShortBytes = SBS.toShort <$> dBytes
-
-dBytes_ =  do
-  l <- getWord8 8
-  if l==0
-    then return []
-    else do
-       bs <- getByteString (fromIntegral l)
-       bs' <- dBytes_
-       return $ bs : bs'
-
-{-# INLINE dUnsigned #-}
-{-# INLINE dUnsigned_ #-}
-dUnsigned :: (Num b, Bits b) => BitGet b
-dUnsigned = do
-  (v,shl) <- dUnsigned_ 0 0
-  -- return v
-  maybe (return v) (\s -> if shl>= s then fail "Unexpected extra data in unsigned integer" else return v) $ bitSizeMaybe v
-
--- dUnsigned_ :: (Num t, Bits t) => Int -> t -> BitGet (t, Int)
--- dUnsigned_ shl n = do
---   tag <- getBool
---   v <- (\w -> n .|. (fromIntegral w `shift` shl)) <$> (getWord8 7) -- dWord8 -- (d::Block Word8) -- dWord8 --
---   if tag
---     then dUnsigned_ (shl+7) v
---     else return (v,shl)
-
-dUnsigned_ shl n = do
-  tw <- getWord8 8
-  let w = tw .&. 127
-  let v = n .|. (fromIntegral w `shift` shl)
-  if tw == w
-    then return (v,shl)
-    else dUnsigned_ (shl+7) v
 
 -- $bitget
 -- Parse bits using a monad.
@@ -252,6 +196,7 @@ block (Block i p) = do
   putState $! (incS i s)
   return $! p s
 
+dropBits :: Int -> BitGet ()
 dropBits i = do
   ensureBits i
   s <- getState
@@ -280,6 +225,7 @@ bit_offset n = make_mask 3 .&. n
 byte_offset :: Int -> Int
 byte_offset n = n `shiftR` 3
 
+{-# INLINE readBool #-}
 readBool :: S -> Bool
 readBool (S bs n) = testBit (unsafeHead bs) (7-n)
 
@@ -515,6 +461,7 @@ putState :: S -> BitGet ()
 putState s = B $ \_ -> return (s,())
 
 -- | Make sure there are at least @n@ bits.
+{-# INLINE ensureBits #-}
 ensureBits :: Int -> BitGet ()
 ensureBits n = do
   (S bs o) <- getState

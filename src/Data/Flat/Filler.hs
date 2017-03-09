@@ -5,6 +5,7 @@ module Data.Flat.Filler(Filler(..),fillerLength
 
 import           Data.Flat.Class
 import           Data.Flat.Encoder
+-- import           Data.Flat.Decoder
 import           Control.DeepSeq
 import           Data.Typeable
 
@@ -18,13 +19,11 @@ data Filler = FillerBit Filler
 instance Flat Filler where
   encode _ = eFiller
   size = sFiller
+  -- use generated decode
 
 -- |A Post aligned value, a value followed by a filler
 data PostAligned a = PostAligned { postValue :: a, postFiller :: Filler }
   deriving (Show, Eq, Ord, Typeable, Generic, NFData,Flat)
-
--- TO REMOVE
--- instance Flat a => Flat (PostAligned a) where size (PostAligned a _) = size a 8
 
 -- |A Pre aligned value, a value preceded by a filler
 data PreAligned a = PreAligned { preFiller :: Filler, preValue :: a }

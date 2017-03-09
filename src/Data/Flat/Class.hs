@@ -46,13 +46,13 @@ class Flat a where
     {-# INLINE encode #-}
     encode :: a -> Encoding
 
-    default encode :: (Generic a, GFlat (Rep a)) => a -> Encoding
+    default encode :: (Generic a, GEncode (Rep a)) => a -> Encoding
     -- default encode :: (Generic a, GEnkode (Rep a)) => a -> Encoding
     encode = genericEncode
 
     {-# INLINE decode #-}
     decode :: Get a
-    default decode :: (Generic a, GFlat (Rep a)) => Get a
+    default decode :: (Generic a, GDecode (Rep a)) => Get a
     decode = genericDecode
 
     {-# INLINE size #-}
@@ -65,11 +65,11 @@ class Flat a where
     size = genericSize
 
 {-# INLINE genericEncode #-}
-genericEncode :: (GFlat (Rep a), Generic a) => a -> Encoding
+genericEncode :: (GEncode (Rep a), Generic a) => a -> Encoding
 genericEncode = gencode . from
 
 {-# INLINE genericDecode #-}
-genericDecode :: (GFlat (Rep b), Generic b) => Get b
+genericDecode :: (GDecode (Rep b), Generic b) => Get b
 genericDecode = to `fmap` gget
 
 {-# INLINE genericSize #-}
@@ -82,6 +82,47 @@ genericSize !x !n = gsize n $ from x
 -- NOTE: this is just for the value, does not include final filler
 getSize :: Flat a => a -> NumBits
 getSize a = size a 0
+
+-- |Default implementation based on Generics
+class GEncode f where
+  gencode :: f t -> Encoding
+
+-- Metadata (constructor name, etc)
+instance {-# OVERLAPPABLE #-} GEncode a => GEncode (M1 i c a) where
+  gencode = gencode . unM1
+  {-# INLINE  gencode #-}
+
+-- Special case, single constructor datatype
+instance {-# OVERLAPPING #-} (GEncode a,GEncoders a) => GEncode (D1 i (C1 c a)) where
+  gencode !x = encodersS $ gencoders x id []
+  {-# INLINE  gencode #-}
+
+-- Type without constructors
+instance GEncode V1 where
+  gencode _ = unused
+  {-# INLINE  gencode #-}
+
+-- Constructor without arguments
+instance GEncode U1 where
+  gencode U1 = mempty
+  {-# INLINE  gencode #-}
+
+-- Product: constructor with parameters
+instance (GEncode a, GEncode b) => GEncode (a :*: b) where
+  gencode _ = unused
+  {-# INLINE gencode #-}
+
+-- Constants, additional parameters, and rank-1 recursion
+instance Flat a => GEncode (K1 i a) where
+  gencode = encode . unK1
+  {-# INLINE gencode #-}
+
+-- Build constructor representation as single tag
+--instance (GSum a, GSum b, GEncode a, GEncode b) => GEncode (a :+: b) where
+instance (NumConstructors (a :+: b) <= 255, GEnkodeSum 0 0 (a :+: b),GEncode a, GEncode b) => GEncode (a :+: b) where
+  -- gencode = encodeBit 0 0
+  gencode x = genkodeSum x (Proxy :: Proxy 0) (Proxy :: Proxy 0)
+  {-# INLINE gencode #-}
 
 class GEncoders f where
   gencoders :: f t -> ([Encoding] -> [Encoding]) -> ([Encoding] -> [Encoding])
@@ -113,72 +154,41 @@ instance (GEncoders a, GEncoders b) => GEncoders (a :*: b) where
   gencoders (x :*: y) !l = gencoders y (gencoders x l)
   {-# INLINE gencoders #-}
 
--- |Default implementation based on Generics
-class GFlat f where
-  gencode :: f t -> Encoding
+
+class GDecode f where
   gget :: Get (f t)
 
 -- Metadata (constructor name, etc)
-instance {-# OVERLAPPABLE #-} GFlat a => GFlat (M1 i c a) where
-    gencode = gencode . unM1
-    {-# INLINE  gencode #-}
-
-    gget = M1 <$> gget
-    {-# INLINE  gget #-}
-
--- Special case, single constructor datatype
-instance {-# OVERLAPPING #-} (GFlat a,GEncoders a) => GFlat (D1 i (C1 c a)) where
-    --gencode x = encodersR $ gencodersR x []
-    gencode !x = encodersS $ gencoders x id []
-    -- gencode = gencode . unM1
-    {-# INLINE  gencode #-}
-
+instance GDecode a => GDecode (M1 i c a) where
     gget = M1 <$> gget
     {-# INLINE  gget #-}
 
 -- Type without constructors
-instance GFlat V1 where
-    gencode _ = error "unencodable"
+instance GDecode V1 where
     gget = undefined
+    {-# INLINE  gget #-}
 
 -- Constructor without arguments
-instance GFlat U1 where
-    gencode U1 = mempty
-    {-# INLINE  gencode #-}
-
+instance GDecode U1 where
     gget = pure U1
     {-# INLINE  gget #-}
 
 -- Product: constructor with parameters
-instance (GFlat a, GFlat b) => GFlat (a :*: b) where
-  gencode _ = unused -- error "unused" -- gencode x <> gencode y
-  {-# INLINE gencode #-}
-
+instance (GDecode a, GDecode b) => GDecode (a :*: b) where
   gget = (:*:) <$> gget <*> gget
   {-# INLINE gget #-}
 
 -- Constants, additional parameters, and rank-1 recursion
-instance Flat a => GFlat (K1 i a) where
-  gencode = encode . unK1
-  {-# INLINE gencode #-}
-
+instance Flat a => GDecode (K1 i a) where
   gget = K1 <$> decode
   {-# INLINE gget #-}
 
 -- Build constructor representation as single tag
---instance (GSum a, GSum b, GFlat a, GFlat b) => GFlat (a :+: b) where
-instance (NumConstructors (a :+: b) <= 255, GEnkodeSum 0 0 (a :+: b),GFlat a, GFlat b) => GFlat (a :+: b) where
-  -- gencode = encodeBit 0 0
-  gencode x = genkodeSum x (Proxy :: Proxy 0) (Proxy :: Proxy 0)
-  {-# INLINE gencode #-}
-
-  gget = {-# SCC "gget" #-} do
-    tag <- getBool
+instance (GDecode a, GDecode b) => GDecode (a :+: b) where
+  gget = do
+    !tag <- getBool
     if tag then R1 <$> gget else L1 <$> gget
   {-# INLINE gget #-}
-
-unused :: forall a . a
-unused = error $ "Now, now, you could not possibly have meant this.."
 
 class GSum f where
     encodeBit :: Word8 -> NumBits -> f a -> Encoding
@@ -278,6 +288,10 @@ instance (GSize a, KnownNat n) => GSizeSum n (C1 c a) where
     gsizeSum !n !x _ = gsize (constructorSize + n) x
       where
         constructorSize = fromInteger (natVal (Proxy :: Proxy n))
+
+unused :: forall a . a
+unused = error $ "Now, now, you could not possibly have meant this.."
+
 
 -- Store-Like Size
 
@@ -391,5 +405,4 @@ instance (GSize a, KnownNat n) => GSizeSum n (C1 c a) where
 --         constructorSize :: Int
 --         constructorSize = fromInteger (natVal (Proxy :: Proxy n))
 --     {-# INLINE gsizeSum #-}
-
 

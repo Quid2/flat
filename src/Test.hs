@@ -7,7 +7,7 @@
 module Test where
 import           Data.Binary.FloatCast
 import qualified Data.ByteString                as B
-import qualified Data.ByteString.Lazy           as L
+import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.Short.Internal as SBS
 import           Data.Coerce
 import           Data.Flat
@@ -117,7 +117,7 @@ n2 = Node (Node n1 n1) (Node (Node n1 n1) n1)
 u =  pp $ WW 11 22 33 44 True
 uu =  pp (11::Word32,22::Word64,33::Word64)
 --o = encodings $ postAligned $ T2 (11::Word32) (22::Word64)
-
+ww = unflat (flat (0::Word16)) :: Decoded Word16
 --encodings a = gencoders (from a) []
 
 t = do

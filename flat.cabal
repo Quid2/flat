@@ -13,7 +13,7 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules: Data.Binary.Bits.Get,Data.Binary.FloatCast,Data.ByteString.Builder.Extra,Data.Flat.Bits,Data.Flat.Class,Data.Flat.Encoder,Data.Flat.Encoding,Data.Flat.Filler,Data.Flat.Instances,Data.Flat.Pretty,Data.Flat.Run,Data.Flat.Types,Data.Flat,Data.Seq,Data.SeqStd,Data.Shift,Data.ZigZag,Data.Flat.Pokes,Test
+  exposed-modules: Data.Binary.Bits.Get,Data.Binary.FloatCast,Data.ByteString.Builder.Extra,Data.Flat.Bits,Data.Flat.BLOB,Data.Flat.Decoder,Data.Flat.Class,Data.Flat.Encoder,Data.Flat.Encoding,Data.Flat.Filler,Data.Flat.Instances,Data.Flat.Pretty,Data.Flat.Run,Data.Flat.Types,Data.Flat,Data.Seq,Data.SeqStd,Data.Shift,Data.ZigZag,Data.Flat.Pokes,Test
   build-depends:       array >= 0.5.1.0
                      , base
                      , binary
