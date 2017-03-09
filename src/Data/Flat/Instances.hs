@@ -33,8 +33,6 @@ import           Numeric.Natural
 -- import qualified Data.Vector.Unboxed            as VU
 -- import qualified Data.Vector.Storable as VS
 
-  #include "MachDeps.h"
-
 ---------- Flat Instances
 instance Flat () where
   encode _ = mempty
