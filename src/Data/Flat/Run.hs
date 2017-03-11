@@ -1,22 +1,20 @@
-{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE TypeSynonymInstances      #-}
-module Data.Flat.Run(flat,unflat,unflatWith
-                    ,flatRaw,unflatRaw
+module Data.Flat.Run(flat
+                    ,unflat
+                    ,flatRaw
+                    ,unflatRaw
                     ,DeserializeFailure
-                    --,runGet
-                    ,getBool,Get -- for dynamic decoding
                     ,Decoded
                     ) where
 
 import           Control.Exception
-import           Data.Binary.Bits.Get
--- -- -- import qualified Data.Binary.Get                as Get (Decoder (..), Get,
-                                                        -- runGetIncremental)
+import           Data.Flat.Decoder
 import qualified Data.ByteString.Lazy as L
 import           Data.Flat.Class
-import           qualified Data.Flat.Encoder as E   -- (lazyEncoder)
+import           qualified Data.Flat.Encoder as E
 import           Data.Flat.Filler
 import           Data.Flat.Pretty
 
@@ -24,52 +22,42 @@ import           Data.Flat.Pretty
 flat :: Flat a => a -> L.ByteString
 flat = flatRaw . postAligned
 
--- |Decode byte-padded value
-unflat :: Flat a => L.ByteString -> Decoded a
-unflat bs = (\(PostAligned v _) -> v) <$> unflatChkWith decode bs
-
-unflatWith :: Get a -> L.ByteString -> Either String a
-unflatWith dec bs = unflatChkWith (do
-                                      v <- dec
-                                      _::Filler <- decode
-                                      return v) bs
-
 -- |Encode value, if values does not end on byte boundary, 0s padding is added.
 flatRaw :: Flat a => a -> L.ByteString
 -- flatRaw a = E.encoderLazy (encode a)
 flatRaw a = E.encoderStrict (getSize $ postAligned a) (encode a)
 -- flatRaw a = bitEncoder (2000) (encode a)
 
+-- |Decode byte-padded value
+unflat :: Flat a => L.ByteString -> Decoded a
+unflat bs = postValue <$> unflatChkWith decode bs
+-- unflat bs = (\(PostAligned v _) -> v) <$> unflatChkWith decode bs
+
 unflatRaw :: Flat a => L.ByteString -> Decoded a
-unflatRaw = runGetOrFail decode
+-- unflatRaw = unflatChkWith decode
+unflatRaw bs = (\(v,_,_) -> v) <$> runGetLazy decode bs
 
---unflatRawWith :: Get a -> L.ByteString -> a
---unflatRawWith = runGet
-
--- unflat = runGetOrFail decode
--- unflat bs = case unflatRaw bs of
---               Left e -> Left e
---               Right (PostAligned v _,bs,n) | L.null bs && n ==0 -> Right v
---                                            | otherwise -> Left $ unwords ["Partial decoding, left over data:",prettyLBS bs,show n]
-
---unflatRaw :: Flat a => L.ByteString -> Either String (a, L.ByteString, Int)
---unflatRaw bs = runPartialGet decode bs 0
-
--- unflatChk :: Flat a => L.ByteString -> Decoded a
 unflatChkWith :: Get a -> L.ByteString -> Either String a
-unflatChkWith dec bs = case unflatPartWith dec bs of
+unflatChkWith dec bs = case runGetLazy dec bs of
                          Left e -> Left e
                          Right (v,bs,n) | L.null bs -> Right v -- && n ==0
                                         | otherwise -> Left $ unwords $ if n == 0
                                                                 then ["Partial decoding, left over data:",prettyLBS bs]
                                                                 else ["Partial decoding, left over data:",prettyLBS bs,"minus",show n,"bits"]
 
+--unflatPartWith :: Get b -> L.ByteString -> Either String (b, L.ByteString, Int)
+--unflatPartWith dec bs = runPartialGet dec bs 0
+-- unflatPartWith dec bs = runGetLazy dec bs
 
--- unflatPart :: Flat a => L.ByteString -> Either String (a, L.ByteString, Int)
--- unflatPart bs = runPartialGet decode bs 0
+-- unflatWith :: Get a -> L.ByteString -> Either String a
+-- unflatWith dec bs = unflatChkWith (do
+--                                       v <- dec
+--                                       _::Filler <- decode
+--                                       return v) bs
 
-unflatPartWith :: Get b -> L.ByteString -> Either String (b, L.ByteString, Int)
-unflatPartWith dec bs = runPartialGet dec bs 0
+-- unflatRaw :: Flat a => L.ByteString -> Decoded a
+-- unflatRaw = runGetOrFail decode
+
 
 --unflatIncremental = Get.runGetIncremental
 -- runGet decode

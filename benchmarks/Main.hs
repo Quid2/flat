@@ -319,10 +319,11 @@ mainAlternatives = dec_ tupleT >> dec_ tupleBools >> dec_ arr0 >> dec_ arr1 >> d
     op = encDecM
 #endif
 
+workDir = "."
+
 mainBench = do
-  let wdir = "." -- "/Users/titto/workspace/flat"
-  mainBench_ (reportsFile wdir)
-  ms <- updateMeasures wdir
+  mainBench_ (reportsFile workDir)
+  ms <- updateMeasures workDir
 
   printMeasuresDiff ms
   -- printMeasuresAll ms
@@ -331,12 +332,13 @@ mainBench = do
 --mainBench = defaultMainWith (defaultConfigFilePath {
 mainBench_ jsonReportFile = defaultMainWith (defaultConfig {jsonFile= Just jsonReportFile}) (
   concat [
-   -- tstDec carT
+   tstDec carT
    -- ,tstDec nativeListT
    -- ,tstDec treeNLargeT
    -- ,tstDec treeNNNLargeT
-   -- ,tstDec wordsT,tstDec words0T
-   -- ,tstDec vwT,tstDec vfT,tstDec viT
+   ,tstDec wordsT
+   -- ,tstDec words0T
+   ,tstDec vwT,tstDec vfT,tstDec viT
    -- ,tstDec v2T
    -- ,tstDec charT
    -- ,tstDec unicharT
@@ -347,9 +349,8 @@ mainBench_ jsonReportFile = defaultMainWith (defaultConfig {jsonFile= Just jsonR
    -- ,tstDec asciiStrT
    -- ,tstDec unicodeStrT
    -- ,tstDec unicodeTextT
-   -- ,
-   tstDec sbs,tstDec lbs
-   --,tstDec shortbs
+   -- ,tstDec sbs,tstDec lbs
+   -- -- ,tstDec shortbs
    ]
    -- ++ [
    --    tstMaxSize treeNLargeT
@@ -503,8 +504,7 @@ tstEncDecM lv@(vn,v) =
       where
         tst n c = bench (unwords[n,vn]) $ nfIO (encDecM n c lv)
 
-
--- df n vn = Prelude.concat["/Users/titto/workspace/flat/benchmarks/data/tstEncDec-",vn,"-",n]
+df n vn = Prelude.concat[workDir,"/benchmarks/data/tstEncDec-",vn,"-",n]
 
 encDecM n c (vn,v) = do
           let f = df n vn
@@ -620,6 +620,9 @@ pt (n,v) = map (\(_,pkg,s,d) -> Right v == d (s v)) pkgs
 
 -- pkgs :: (CC.Serialize a ,C.Serialise a,S.Store a,B.Binary a,F.Flat a) => [(String,String,a -> L.ByteString,L.ByteString -> Either String a)]
 -- pkgs = [S.sd,B.sd,C.sd,CC.sd,F.sd]
+
+-- pkgs :: (C.Serialise a) => [(String,String,a -> L.ByteString,L.ByteString -> Either String a)]
+-- pkgs = [C.sd]
 
 -- pkgs :: (C.Serialise a,S.Store a,B.Binary a,F.Flat a) => [(String,String,a -> L.ByteString,L.ByteString -> Either String a)]
 -- pkgs = [S.sd,B.sd,C.sd,F.sd]

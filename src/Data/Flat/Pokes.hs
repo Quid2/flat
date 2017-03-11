@@ -240,7 +240,6 @@ availBits = (8*) . availBytes
 bitsToBytes :: Int -> Int
 bitsToBytes = numBlks 8
 
-
 {-# INLINE numBlks #-}
 numBlks :: Integral t => t -> t -> t
 numBlks blkSize bits = let (d,m) = bits `divMod` blkSize

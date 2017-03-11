@@ -36,11 +36,27 @@ toMeasure r = Measure (reportName r) ((1000 *) . estPoint . anMean . reportAnaly
 
 updateMeasures :: FilePath -> IO (Measures,Measures,Measures)
 updateMeasures dir = do
+  m' <- readCriterionMeasures dir
+  addMeasures_ dir m'
+
+addMeasures_
+  :: FilePath
+     -> Measures
+     -> IO (Measures, Measures, Measures)
+addMeasures_ dir m' = do
   !m <- readMeasures dir
-  m' <- readLastMeasures dir
   let m'' = M.union m' m
   writeMeasures dir m''
   return (m,m',m'')
+
+addMeasures
+  :: FilePath
+     -> String
+     -> [(String, Double)]
+     -> IO () -- (Measures, Measures, Measures)
+addMeasures dir name ms = do
+  _ <- addMeasures_ dir (M.fromList $ map (\(pkg,val) -> let n = concat [name,"-",pkg] in (n,Measure n val)) ms)
+  return ()
 
 readMeasures :: FilePath -> IO Measures
 readMeasures dir =  do
@@ -53,8 +69,8 @@ readMeasures dir =  do
 writeMeasures :: FilePath -> Measures -> IO ()
 writeMeasures dir = writeFile (measuresFile dir) . show
 
-readLastMeasures :: FilePath -> IO Measures
-readLastMeasures dir = toMeasures <$> readReports (reportsFile dir)
+readCriterionMeasures :: FilePath -> IO Measures
+readCriterionMeasures dir = toMeasures <$> readReports (reportsFile dir)
 
 measuresFile dir = dir </> "measures"
 reportsFile dir = dir </> "report.json"
@@ -123,10 +139,12 @@ readReports jsonReportFile = do
 report :: String -> String -> String -> [(String,Double)] -> IO ()
 report _ _ _ [] = return ()
 report name prop unit rs = do
-  print rs
+  -- print rs
   let (best,rss) = report_ rs
   let width = maximum . map (length . fst) $ rs
-  putStrLn $ unwords [name,"ordered by",prop,"("++fst best++":",printInt (snd best),unit++")"]
+  -- putStrLn $ unwords [name,"ordered by",prop,"("++fst best++":",printInt (snd best),unit++")"]
+  putStrLn $ unwords [name,"(best first)"] -- package: "++fst best++" with ",printInt (snd best)++")"]
+  -- putStrLn name -- ,"(Best package: "++fst best++" with ",printInt (snd best)++")"]
   mapM_ (\(n,v) -> putStrLn $ unwords [printString width n,printDouble v]) rss
   putStrLn ""
 

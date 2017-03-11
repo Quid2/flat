@@ -6,28 +6,28 @@ packages:
 - '.'
 - location:
     git: https://github.com/well-typed/binary-serialise-cbor
-    commit: 1e11ea5cc7810d241b2fe1bca0ed435baa4d4371
+    commit: 5e2f20c0a2d8fd750f431af9a17ba116a6f31cf0
   extra-dep: true
 
 # ghc-7.10.3
-# resolver: lts-6.30
-# extra-deps:
-# - mono-traversable-1.0.1.1
-# - store-0.2.1.2
-# - store-core-0.2.0.2
-# - binary-0.8.4.1
-# - th-utilities-0.2.0.1
-# - criterion-1.1.4.0
-# - optparse-applicative-0.13.0.0
-
-# 8.0.1
-resolver: lts-7.19
+resolver: lts-6.30
 extra-deps:
+- mono-traversable-1.0.2
 - store-0.4.1
 - store-core-0.4
 - binary-0.8.4.1
+- th-utilities-0.2.0.1
 - criterion-1.1.4.0
 - optparse-applicative-0.13.0.0
+
+# 8.0.1
+# resolver: lts-7.19
+# extra-deps:
+# - store-0.4.1
+# - store-core-0.4
+# - binary-0.8.4.1
+# - criterion-1.1.4.0
+# - optparse-applicative-0.13.0.0
 
 # 8.0.2 - doesn't compile heavily mutually recursive data types, does not pass tests?
 # resolver: lts-8.4

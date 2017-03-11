@@ -22,10 +22,11 @@ module Data.Flat.Decoder (
     dInt32,
     dInt64,
     dInt,
+    runGetLazy,
     ) where
 
 import Data.Flat.Peeks
-import           Data.Binary.FloatCast
+
 import           Data.Bits
 import qualified Data.ByteString       as B
 import qualified Data.ByteString.Lazy  as L
@@ -41,14 +42,11 @@ import           Numeric.Natural
 
 #include "MachDeps.h"
 
-{-# INLINE dFloat #-}
-dFloat :: Get Float
-dFloat = wordToFloat <$> dWord32be
+-- {-# INLINE dFloat #-}
+-- dFloat :: Get Float
+-- dFloat = dFlo -- wordToFloat <$> dWord32be
 
-{-# INLINE dDouble #-}
-dDouble :: Get Double
-dDouble = wordToDouble <$> dWord64be
-
+ 
 {-# INLINE dNatural #-}
 dNatural :: Get Natural
 dNatural = fromInteger <$> dUnsigned
@@ -63,13 +61,18 @@ dChar = chr . fromIntegral <$> dWord32
 
 {-# INLINE dWord  #-}
 {-# INLINE dInt  #-}
+dWord :: Get Word
+dInt :: Get Int
+
 #if WORD_SIZE_IN_BITS == 64
 dWord = (fromIntegral :: Word64 -> Word) <$> dWord64
 dInt = (fromIntegral :: Int64 -> Int) <$> dInt64
 
 #elif WORD_SIZE_IN_BITS == 32
 dWord = (fromIntegral :: Word32 -> Int) <$> dWord32
-dInt = (fromIntegral :: Int32 -> Int) <$> dInt32
+dInt = (fromIntegral ::  -- where
+  -- encode = eString
+  -- size = sStringInt32 -> Int) <$> dInt32
 
 #else
 #error expected WORD_SIZE_IN_BITS to be 32 or 64
@@ -168,6 +171,9 @@ getAsL_ dec = do
   where
     gets 0 = return DL.empty
     gets n = DL.cons <$> dec <*> gets (n-1)
+
+--encode = encode . blob UTF8Encoding . L.fromStrict . T.encodeUtf8
+--decode = T.decodeUtf8 . L.toStrict . (unblob :: BLOB UTF8Encoding -> L.ByteString) <$> decode
 
 -- BLOB UTF16Encoding
 dUTF16 :: Get T.Text

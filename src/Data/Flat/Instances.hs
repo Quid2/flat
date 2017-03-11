@@ -229,25 +229,12 @@ instance {-# OVERLAPPABLE #-} Flat a => Flat [a] -- where
 --   encode = eArrayChar
 --   decode = T.unpack <$> decode
 
-instance {-# OVERLAPPING #-} Flat [Char] -- where
-  -- encode = eString
-  -- size = sString
+instance {-# OVERLAPPING #-} Flat [Char]
 
 -- BLOB UTF8Encoding
 instance Flat T.Text where
-  -- 100 times slower
-  -- encode l = (mconcat . map (\t -> T.foldl' (\r x -> r <> encode x) (eWord8 . fromIntegral . T.length$ t) t) . T.chunksOf 255 $ l) <> eWord8 0
-    -- -- 200 times slower
-    -- encode = encode . T.unpack
-    -- decode = T.pack <$> dArray
-
-  -- 4 times slower
-   --encode = encode . blob UTF8Encoding . L.fromStrict . T.encodeUtf8
-   --decode = T.decodeUtf8 . L.toStrict . (unblob :: BLOB UTF8Encoding -> L.ByteString) <$> decode
-
    size = sUTF16
    encode = eUTF16
-   -- encode = eText
    decode = dUTF16
 
 ---------- Words and Ints

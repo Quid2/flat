@@ -5,7 +5,6 @@ module Data.Flat.BLOB (BLOB(..),blob,unblob,FlatEncoding(..),UTF8Encoding(..))wh
 import           Data.Flat.Class
 import qualified Data.ByteString.Lazy as L
 import           Control.DeepSeq
-
 import Data.Flat.Instances
 
 data UTF8Encoding = UTF8Encoding

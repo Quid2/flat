@@ -29,7 +29,7 @@ library
                      , primitive >= 0.6.1.0
                      , text
                      , transformers
-                     , vector >= 0.11.0.0,store
+                     , vector >= 0.11.0.0
   default-language:    Haskell2010
   cpp-options: -DENC_8 -DOP_ENC -DPKG_QUID2 -DLIST_BIT -DARRDEC_DIRECT
   ghc-options:  -O2 -funbox-strict-fields  -Wall -fno-warn-orphans -fno-warn-name-shadowing -fno-warn-unused-binds

@@ -1,8 +1,21 @@
-module Data.Flat.Peeks(Get,dBool,dWord8,dWord32be,dWord64be,dByteString_) where
+module Data.Flat.Peeks (
+    Get,
+    dBool,
+    dWord8,
+    dFloat,dDouble,
+    -- dWord32be,
+    --dWord64be,
+    dByteString_,
+    runGetLazy
+    ) where
 
 import           Data.Binary.Bits.Get
 import           Data.ByteString
 import           Data.Word
+import qualified Data.ByteString.Lazy as L
+
+runGetLazy :: Get b -> L.ByteString -> Either String (b, L.ByteString, Int)
+runGetLazy get bs = runPartialGet get bs 0
 
 {-# INLINE dBool #-}
 dBool :: Get Bool
@@ -10,15 +23,23 @@ dBool = getBool
 
 {-# INLINE dWord8  #-}
 dWord8 :: Get Word8
-dWord8 = getWord8 8
+dWord8 = getByte
 
-{-# INLINE dWord32be  #-}
-dWord32be :: Get Word32
-dWord32be = getWord32be 32
+{-# INLINE dFloat #-}
+dFloat :: Get Float
+dFloat = getFloat
 
-{-# INLINE dWord64be  #-}
-dWord64be :: Get Word64
-dWord64be = getWord64be 64
+{-# INLINE dDouble #-}
+dDouble :: Get Double
+dDouble = getDouble
+
+-- {-# INLINE dWord32be  #-}
+-- dWord32be :: Get Word32
+-- dWord32be = getWord32be 32
+
+-- {-# INLINE dWord64be  #-}
+-- dWord64be :: Get Word64
+-- dWord64be = getWord64be 64
 
 {-# INLINE dByteString_  #-}
 dByteString_ :: Int -> Get ByteString

@@ -24,6 +24,8 @@ rrr = reverse [3,2,1]
 
 e = getSystemEndianness
 
+data Logico = Falso | Vero deriving (Generic,Show,Flat)
+
 data LLL a = NIL | CONS a (LLL a) deriving (Generic,Show)
 
 data NN = N1 | N2 | N3 | N4 | N5 | N6 | N7 | N8 | N9 | N10 | N11
@@ -121,6 +123,7 @@ ww = unflat (flat (0::Word16)) :: Decoded Word16
 --encodings a = gencoders (from a) []
 
 t = do
+  pp $ (Vero,Falso)
   pp $ S.fromList "aaa"
   pp ""
   pp "aaa"
@@ -222,11 +225,26 @@ jl = T.length (T.pack "\x1F600\&\x1F600\&")
 q :: Decoded T.Text
 q = unflat $ flat (T.pack "D\226\FStz\GS3]\n8\149sV\243J\181\181\235\214&y\226\231\&2\239\212\174\DC1J'F\129hpsu\199\178")
 
-g :: Decoded (Bool,Word8,Bool)
-g = unflat $ flat (False,1::Word8,False)
+g = let v = (False,1::Word8,0::Word8,False)
+    in (unflat (flat v) == Right v,valueBits v)
+
+g1 :: Decoded (Bool,Bool,Bool,Bool)
+g1 = unflat $ flat (True,False,True,True)
+
+g2 :: Decoded (Bool,Word8,Word8,Bool)
+g2 = unflat $ flat (False,1::Word8,1::Word8,False)
+
+g3 :: Decoded Word8
+g3 = unflat $ flat (0::Word8)
+
+g4 :: Decoded (Bool,Word8,Bool)
+g4 = unflat $ flat (False,0::Word8,False)
+
+g5 :: Decoded (Float,Double,Bool,Float,Double,Bool)
+g5 = unflat $ flat (8.11E-11::Float,8.11E-11::Double,True,8.11E-11::Float,8.11E-11::Double,True)
 
 f0 = valueBits ((False,255::Word8,False,255::Word8))
-f = valueBits (False,1::Word8,False)
+f = valueBits (False,0::Word8,False)
 
 p :: String
 p = printf "%032b" $ floatToWord (-0.15625)

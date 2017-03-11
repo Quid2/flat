@@ -258,7 +258,7 @@ unitTests = testGroup "De/Serialisation Unit tests" $ concat [
       sz v e = [testCase (unwords ["size of",show v]) $ getSize v @?= e]
 
       s v e = [testCase (unwords ["flat raw",show v]) $ serRaw v @?= e
-              ,testCase (unwords ["unflat raw",show v]) $ Right v @?= desRaw e]
+              ,testCase (unwords ["unflat raw",show v]) $ desRaw e @?= Right v]
 
       -- Aligned values unflat to the original value, modulo the added filler.
       a v e = [testCase (unwords ["flat",show v]) $ ser v @?= e
