@@ -111,10 +111,8 @@ Tested with [ghc](https://www.haskell.org/ghc/) 7.10.3 and 8.0.1.
 
 
 ### Known Bugs and Infelicities
-
-* Encoding and decoding of String/Text and Float/Double is very slow
-* Contains code 'lifted' and modified from the binary-bits package
 * Messy source code
+* Contains code 'lifted' and modified from the binary-bits package
 
 -----
 [Source code](https://github.com/tittoassini/flat/blob/master/src/README.lhs)
