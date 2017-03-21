@@ -16,7 +16,6 @@ Tested-With: GHC == 7.10.3,GHC == 8.0.1,GHC == 8.0.2
 
 library
   hs-source-dirs:      src
-  -- exposed-modules: Data.Binary.Bits.Get,Data.Binary.FloatCast,Data.ByteString.Builder.Extra,Data.Flat.Bits,Data.Flat.Decoder,Data.Flat.Class,Data.Flat.Encoder,Data.Flat.Filler,Data.Flat.Instances,Data.Flat.Peeks,Data.Flat.Pretty,Data.Flat.Run,Data.Flat.Types,Data.Flat,Data.Seq,Data.SeqStd,Data.Shift,Data.ZigZag,Data.Flat.Pokes,Data.Flat.Memory
   exposed-modules: Data.Binary.FloatCast,Data.Flat.Bits,Data.Flat.Class,Data.Flat.Decoder,Data.Flat.Encoder,Data.Flat.Filler,Data.Flat.Instances,Data.Flat.Peeks,Data.Flat.Pokes,Data.Flat.Pretty,Data.Flat.Memory,Data.Flat.Run,Data.Flat.Types,Data.Flat,Data.ZigZag
   build-depends:       array >= 0.5.1.0 
                      , base >= 4.7 && < 5
@@ -37,7 +36,6 @@ library
   default-language:    Haskell2010
   ghc-options:  -O2 -funbox-strict-fields  -Wall -fno-warn-orphans -fno-warn-name-shadowing
   cpp-options: -DLIST_BIT
-  -- -fno-warn-unused-binds
   default-extensions: CPP
 
 test-suite flat-test

@@ -16,6 +16,7 @@
 {-# LANGUAGE TypeSynonymInstances      #-}
 {-# LANGUAGE UndecidableInstances      #-}
 
+-- |Generics-based generation of Flat instances
 module Data.Flat.Class (
   -- * The Flat class
   Flat(..)

@@ -67,10 +67,8 @@ dWord = (fromIntegral :: Word64 -> Word) <$> dWord64
 dInt = (fromIntegral :: Int64 -> Int) <$> dInt64
 
 #elif WORD_SIZE_IN_BITS == 32
-dWord = (fromIntegral :: Word32 -> Int) <$> dWord32
-dInt = (fromIntegral ::  -- where
-  -- encode = eString
-  -- size = sStringInt32 -> Int) <$> dInt32
+dWord = (fromIntegral :: Word32 -> Word) <$> dWord32
+dInt = (fromIntegral :: Int32 -> Int) <$> dInt32
 
 #else
 #error expected WORD_SIZE_IN_BITS to be 32 or 64

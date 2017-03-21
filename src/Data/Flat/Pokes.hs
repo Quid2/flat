@@ -300,40 +300,35 @@ eCharF = eWord32F . fromIntegral . ord
 -- eWordS :: Word -> Step
 -- eWordS w = Step ()
 
-#if WORD_SIZE_IN_BITS == 64
-
+{-# INLINE eWordF #-}
 eWordF :: Word -> Prim
-eWordF = eWord64F . (fromIntegral :: Word -> Word64)
 
+{-# INLINE eIntF #-}
 eIntF :: Int -> Prim
-eIntF = eInt64F . (fromIntegral :: Int -> Int64)
-
-sWord = sWord64
-sInt = sInt64
 
 {-# INLINE sWordV #-}
 sWordV :: Word -> NumBits
-sWordV = sWord64V . fromIntegral
 
 {-# INLINE sIntV #-}
 sIntV :: Int -> NumBits
-sIntV = sInt64V . fromIntegral
 
--- sWord :: Word -> NumBits
--- sWord = sWord64 . (fromIntegral :: Word -> Word64)
--- sInt :: Int -> NumBits
--- sInt = sInt64 . (fromIntegral :: Int -> Int64)
+#if WORD_SIZE_IN_BITS == 64
+
+eWordF = eWord64F . (fromIntegral :: Word -> Word64)
+eIntF = eInt64F . (fromIntegral :: Int -> Int64)
+sWord = sWord64
+sInt = sInt64
+sWordV = sWord64V . fromIntegral
+sIntV = sInt64V . fromIntegral
 
 #elif WORD_SIZE_IN_BITS == 32
 
-eWordF :: Word -> Prim
 eWordF = eWord32F . (fromIntegral :: Word -> Word32)
-eIntF :: Int -> Prim
 eIntF = eInt32F . (fromIntegral :: Int -> Int32)
 sWord = sWord32
 sInt = sInt32
-sWordV = sWord32V
-sIntV = sInt32V
+sWordV = sWord32V . fromIntegral
+sIntV = sInt32V . fromIntegral
 
 #else
 #error expected WORD_SIZE_IN_BITS to be 32 or 64

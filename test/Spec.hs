@@ -24,6 +24,7 @@ import           Data.Proxy
 import qualified Data.Sequence         as Seq
 import qualified Data.Text             as T
 import           Data.Word
+import           Numeric.Natural
 import           System.Exit
 import           Test.Data
 import           Test.Data.Arbitrary
@@ -61,6 +62,7 @@ properties = testGroup "Properties"
     ,rt "Int64" (prop_Flat_Large_roundtrip:: RTL Int64)
     ,rt "Int" (prop_Flat_Large_roundtrip:: RTL Int)
     ,rt "Integer" (prop_Flat_roundtrip:: RT Integer)
+    ,rt "Natural" (prop_Flat_roundtrip:: RT Natural)
     ,rt "(Bool,Integer)" (prop_Flat_roundtrip:: RT (Bool,Integer))
     ,rt "Float" (prop_Flat_roundtrip:: RT Float)
     ,rt "(Bool,Float)" (prop_Flat_roundtrip:: RT (Bool,Float))
