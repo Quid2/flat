@@ -21,7 +21,7 @@ matrix:
 
   - env: BUILD=cabal GHCVER=7.10.3 CABALVER=1.22
     compiler: ": #GHC 7.10.3"
-    addons: {apt: {packages: [cabal-install-1.22,happy,ghc-7.10.3], sources: [hvr-ghc]}}
+    addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3], sources: [hvr-ghc]}}
 
   # - env: BUILD=cabal GHCVER=8.0.2 CABALVER=1.24
   #   compiler: ": #GHC 8.0.2"
@@ -74,6 +74,7 @@ install:
       cabal --version
       travis_retry cabal update
       sed -i 's/^jobs:/-- jobs:/' ${HOME}/.cabal/config
+      cabal install happy
       cabal install --only-dependencies --enable-tests --enable-benchmarks
       ;;
   esac
