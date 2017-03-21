@@ -1,4 +1,4 @@
-
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Trustworthy #-}
 -- COPIED FROM binary
@@ -24,15 +24,15 @@ floatToWord :: Float -> Word32
 floatToWord x = runST (cast x)
 {-# INLINE floatToWord #-}
 
--- | Reinterpret-casts a `Word32` to a `Float`.
-wordToFloat :: Word32 -> Float
-wordToFloat x = runST (cast x)
-{-# INLINE wordToFloat #-}
-
 -- | Reinterpret-casts a `Double` to a `Word64`.
 doubleToWord :: Double -> Word64
 doubleToWord x = runST (cast x)
 {-# INLINE doubleToWord #-}
+
+-- | Reinterpret-casts a `Word32` to a `Float`.
+wordToFloat :: Word32 -> Float
+wordToFloat x = runST (cast x)
+{-# INLINE wordToFloat #-}
 
 -- | Reinterpret-casts a `Word64` to a `Double`.
 wordToDouble :: Word64 -> Double

@@ -34,14 +34,17 @@ main = do
   -- p 5000000 vw
   -- p 10000 unicodeStr
 
+  let v = unicodeStr
   -- let v = nativeList
-  --let v = treeNLarge
-  let v = treeNNNLarge
+  -- let v = nativeList -- treeNLarge
+  --let v = treeNNNLarge
   -- let v = [1::Word64 .. 4000000]
   -- evaluate $ force' (NF v)
   -- putStrLn . commas . length $ v
 
-  putStrLn . commas . L.length . flat $ v
+  -- putStrLn . commas . L.length . flat $ v
+  --putStrLn . show . (length <$>) $ (unflat (flat nativeList) :: Decoded [N])
+  putStrLn . show . (length <$>) $ (unflat (flat nativeList) :: Decoded [Char])
 
   where p n = print . sum . map (L.length . flat) . take n . repeat
 

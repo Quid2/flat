@@ -76,7 +76,7 @@ properties = testGroup "Properties"
     ,rt "Maybe N" (prop_Flat_roundtrip:: RT (Maybe N))
     ,rt "Either N Bool" (prop_Flat_roundtrip:: RT (Either N Bool))
     ,rt "Either Int Char" (prop_Flat_roundtrip:: RT (Either Int Char))
-    ,rt "Tree Bool" (prop_Flat_roundtrip:: RT (Tree Bool))
+    -- ,rt "Tree Bool" (prop_Flat_roundtrip:: RT (Tree Bool))
     -- ,rt "Tree N" (prop_Flat_roundtrip:: RT (Tree N))
     ,rt "List N" (prop_Flat_roundtrip:: RT (List N))
     ,rt "[Int16]" (prop_Flat_roundtrip:: RT [Int16])
@@ -188,6 +188,7 @@ unitTests = testGroup "De/Serialisation Unit tests" $ concat [
   ,s 'a' [97]
   ,s 'à' [224,1]
   ,s '经' [207,253,1]
+  ,map trip [chr 0x10FFFF]
   ,s Unit []
   ,s (Un False) [0]
   ,s (One,Two,Three) [16+8]

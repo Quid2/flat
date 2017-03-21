@@ -1,6 +1,6 @@
 module Data.Flat.Encoding(eFiller,eBits,eBool,eFalse,eTrue,eWord8,eWord32,eWord64,eBitList,eUnsigned,eBytes,eLazyBytes,showEncoding) where
 
-import Data.Flat.Types
+import Data.Flat.TypesEncoding
 import Data.Foldable(toList)
 import Data.Shift
 import Data.Word

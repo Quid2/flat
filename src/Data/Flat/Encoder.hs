@@ -60,18 +60,16 @@ module Data.Flat.Encoder (
     sShortBytes,
     sUTF16,
     sFiller,
-    sBool,
+    sBool,sUTF8,eUTF8
     ) where
 
 -- import           Control.Monad
 import qualified Data.ByteString      as B
 import qualified Data.ByteString.Lazy as L
-import           Data.Flat.Pokes      hiding (eLazyBytes, eShortBytes, sBool,
-                                       sBytes, sChar, sDouble, sFiller, sFloat,
-                                       sInt, sInt16, sInt32, sInt64, sInt8,
-                                       sInteger, sLazyBytes, sNatural,
-                                       sShortBytes, sUTF16, sWord, sWord16,
-                                       sWord32, sWord64, sWord8)
+import           Data.Flat.Pokes hiding (sBool, sBytes, sChar, sDouble, sFiller, sFloat, sInt, sInt16,
+                                         sInt32, sInt64, sInt8, sInteger, sLazyBytes, sNatural,
+                                         sShortBytes, sUTF16, sWord, sWord16, sWord32, sWord64,
+                                         sWord8, sUTF8)
 import qualified Data.Flat.Pokes      as P
 -- -- -- -- import           Data.Flat.Size
 import           Data.Foldable
@@ -110,11 +108,13 @@ encoderStrict numBits (Writer op) = L.fromStrict $ bitEncoderStrict numBits op
  #-}
 
 {-# NOINLINE encodersS #-}
+-- PROB: GHC 8.02 won't always apply the rules leading to much worse times (e.g. with lists)
 encodersS :: [Writer] -> Writer
 -- without the explicit parameter the rules won't fire
 encodersS ws =  foldl' mappend mempty ws
--- encodersS ws = mconcat ws -- BAD: rules won't fire (gets inlined before rules are applied?)
 -- encodersS ws = error $ unwords ["encodersS CALLED",show ws]
+
+-- encodersS ws = mconcat ws -- BAD: rules won't fire (gets inlined before rules are applied?)
 
 -- {-# INLINE eList #-}
 -- eList ws e = Writer $ \s ->
@@ -148,6 +148,7 @@ eArray f ws = Writer $ go ws
                        | otherwise = runWriter (f x) s >>= gol xs (n+1)
 
 {-# INLINE eChar #-}
+{-# INLINE eUTF8 #-}
 {-# INLINE eUTF16 #-}
 {-# INLINE eNatural #-}
 {-# INLINE eFloat #-}
@@ -173,6 +174,8 @@ eChar :: Char -> Writer
 eChar = Writer . eCharF
 eUTF16 :: Text -> Writer
 eUTF16 = Writer . eUTF16F
+eUTF8 :: Text -> Writer
+eUTF8 = Writer . eUTF8F
 eBytes :: B.ByteString -> Writer
 eBytes = Writer . eBytesF
 eLazyBytes :: L.ByteString -> Writer
@@ -282,6 +285,7 @@ sLazyBytes = vsize P.sLazyBytes
 sShortBytes = vsize P.sShortBytes
 sNatural = vsize P.sNatural
 sInteger = vsize P.sInteger
+sUTF8 = vsize P.sUTF8
 sUTF16 = vsize P.sUTF16
 
 sInt8 = csize P.sInt8

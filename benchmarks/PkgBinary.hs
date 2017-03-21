@@ -22,7 +22,8 @@ instance Binary.Binary a => Serialize (PkgBinary a) where
   deserialize = either (Left . error . show) (\(_,_,v) -> Right $ PkgBinary v) . Binary.decodeOrFail
 -}
 
-sd = ("binary","binary",serializeF,deserializeF)
+name = "binary"
+sd = (name,name,serializeF,deserializeF)
 
 instance Binary a => Serialize PkgBinary a where
   serialize (PkgBinary a) = serializeF a

@@ -21,7 +21,11 @@ instance Flat a => Serialize PkgFlat a where
   pkg = PkgFlat
   unpkg (PkgFlat a) = a
 
-sd = ("encoderStrict","decoderBinaryBits",serializeF,deserializeF)
+--name = "decoderBinaryBits"
+ver = "7103"
+name = "decoderStrict"++ver
+sd = ("encoderStrict"++ver, name, serializeF, deserializeF)
+
 
 serializeF = flat
 deserializeF =  either (Left . error) Right . unflat

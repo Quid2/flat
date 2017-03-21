@@ -24,6 +24,8 @@ module Data.Flat.Pokes (
     eUTF16S,
     eUTF16F,
     sUTF16,
+    sUTF8,
+    eUTF8F,
     eCharF,
     eNaturalF,eNaturalS,eIntegerS,
     eIntegerF,
@@ -92,6 +94,7 @@ import qualified Data.ByteString.Lazy.Internal  as L
 import qualified Data.ByteString.Short.Internal as SBS
 import           Data.Primitive.ByteArray
 import qualified Data.Text                      as T
+import qualified Data.Text.Encoding                      as T
 import qualified Data.Text.Array                as TA
 import qualified Data.Text.Internal             as T
 import           Data.Word
@@ -107,6 +110,7 @@ import           Data.ZigZag
 import           Data.Char
 import           Numeric.Natural
 import           Data.Binary.FloatCast
+import Data.Flat.Types
 
 -- import Debug.Trace
 #include "MachDeps.h"
@@ -260,8 +264,6 @@ data Step = Step { stepSize :: !NumBits, stepF :: Prim }
 
 type Prim = S -> IO S
 
--- FIX: Should be Int64 or Word64
-type NumBits = Int
 
 instance Show Step where show (Step n _) = unwords ["Step",show n]
 
@@ -390,13 +392,13 @@ sWord64 = 80
 
 -- Actual size
 sInt16V :: Int16 -> NumBits
-sInt16V = sWord16V . zzEncode16
+sInt16V = sWord16V . zzEncode
 
 sInt32V :: Int32 -> NumBits
-sInt32V = sWord32V . zzEncode32
+sInt32V = sWord32V . zzEncode
 
 sInt64V :: Int64 -> NumBits
-sInt64V = sWord64V . zzEncode64
+sInt64V = sWord64V . zzEncode
 
 sWord16V :: Word16 -> NumBits
 sWord16V = sizeWord
@@ -408,16 +410,16 @@ sWord64V :: Word64 -> NumBits
 sWord64V = sizeWord
 
 eInt8F :: Int8 -> Prim
-eInt8F = eWord8F . zzEncode8
+eInt8F = eWord8F . zzEncode
 
 eInt16F :: Int16 -> Prim
-eInt16F = eWord16F . zzEncode16
+eInt16F = eWord16F . zzEncode
 
 eInt32F :: Int32 -> Prim
-eInt32F = eWord32F . zzEncode32
+eInt32F = eWord32F . zzEncode
 
 eInt64F :: Int64 -> Prim
-eInt64F = eWord64F . zzEncode64
+eInt64F = eWord64F . zzEncode
 
 {-# INLINE eWord8S #-}
 eWord8S :: Word8 -> Step
@@ -588,6 +590,19 @@ blkBitsBS = blksBits . B.length
 {-# INLINE blksBits #-}
 blksBits :: Int -> NumBits
 blksBits numBytes = 8*(numBytes + numBlks 255 numBytes)
+
+{-# INLINE sUTF8 #-}
+sUTF8 :: T.Text -> NumBits
+
+-- PROB: double conversion to calculate length
+-- sUTF8 = blobBits . B.length . T.encodeUtf8
+
+-- incorrect but faster
+sUTF8 = blobBits . (4*) . T.length
+
+-- PROB: encodeUtf8 calls a C primitive, not compatible with GHCJS
+eUTF8F :: T.Text -> Prim
+eUTF8F = eBytesF . T.encodeUtf8
 
 eUTF16S :: T.Text -> Step
 eUTF16S !t = Step (sUTF16 t) (eUTF16F t)

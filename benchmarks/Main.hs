@@ -29,7 +29,7 @@ x/bin/benchsmall
 Benchmarking using cbor test suite, see LEGGIMI
 
 Profi(Leaf (Step n2 s2))ling using eventlog:
-cd /Users/titto/workspace/quid2;cabal install;time /Users/titto/workspace/quid2/.cabal-sandbox/bin/benchsmall +RTS -l;ghc-event-- let v = [1::Word64 .. 4000000]
+cd /Users/titto/workspace/quid2;cabal install;time /Users/titto/workspace/quid2/.cabal-sandbox/bin/benchs-- mall +RTS -l;ghc-event-- let v = [1::Word64 .. 4000000]
   -- evaluate $ force' (NF v)
   -- putStrLn . commas . length $ v
 
@@ -206,12 +206,11 @@ xv = yv + cl [2]
 mainB = do
   forceCafs
 
-  prints
+  --prints
   mainBench
 
-  -- mainProfile
+  --mainProfile
   -- mainAlternatives
-
 
 prints = do
   -- plf treeNLargeT
@@ -223,7 +222,7 @@ prints = do
 
   print $ F.getSize Three
   print $ F.getSize (Leaf Three)
-  print $ F.getSize (treeNLarge) 
+  print $ F.getSize (treeNLarge)
   print $ F.getSize (treeNNNLarge)
   print $ F.getSize (nativeList)
 
@@ -267,7 +266,7 @@ mainWeight = do
   pp nativeListT
   pp treeNLargeT
   pp wordsT
-  
+
   where
     ww o = do
       weightT "store" PkgStore o
@@ -291,7 +290,7 @@ mainEvents = mainAlternatives
 
 -- #define PKG_BINARY
 
-mainProfile = mapM_ (\_ -> enc arr1) [1..1000] -- mapM_ (\_ -> enc (0x34::Word) >> enc tree1 >> enc tree2) [1..10]
+mainProfile = mapM_ (\_ -> enc treeNT) [1..1000] -- mapM_ (\_ -> enc (0x34::Word) >> enc tree1 >> enc tree2) [1..10]
   where enc = evaluate . B.length . serialize . PkgFlat -- PkgBit2
 
 mainAlternatives = dec_ tupleT >> dec_ tupleBools >> dec_ arr0 >> dec_ arr1 >> dec_ asciiStrT >> dec_ unicodeStrT >> dec_ lN3T >> dec_ treeNLargeT -- dec_ sbs >> dec_ lbs >>
@@ -323,7 +322,7 @@ workDir = "."
 
 mainBench = do
   mainBench_ (reportsFile workDir)
-  ms <- updateMeasures workDir
+  ms <- updateMeasures_ workDir
 
   printMeasuresDiff ms
   -- printMeasuresAll ms
@@ -333,25 +332,25 @@ mainBench = do
 mainBench_ jsonReportFile = defaultMainWith (defaultConfig {jsonFile= Just jsonReportFile}) (
   concat [
    tstDec carT
-   -- ,tstDec nativeListT
-   -- ,tstDec treeNLargeT
-   -- ,tstDec treeNNNLargeT
-   ,tstDec wordsT
-   -- ,tstDec words0T
-   ,tstDec vwT,tstDec vfT,tstDec viT
+   ,tstDec nativeListT
+   --,tstDec treeNLargeT
+   --,tstDec treeNNNLargeT
+   -- tstDec wordsT,tstDec words0T
+   tstDec vwT,tstDec vfT,tstDec viT
    -- ,tstDec v2T
-   -- ,tstDec charT
+   -- -- ,tstDec charT
    -- ,tstDec unicharT
    -- ,tstDec lN2T
-   -- --,tstDec lN3T
+   -- -- --,tstDec lN3T
    -- -- flat fails to complete:
    -- ,tstDec seqNT
-   -- ,tstDec asciiStrT
-   -- ,tstDec unicodeStrT
-   -- ,tstDec unicodeTextT
-   -- ,tstDec sbs,tstDec lbs
-   -- -- ,tstDec shortbs
+   ,tstDec asciiStrT
+   ,tstDec unicodeStrT
+   ,tstDec unicodeTextT
+   --,tstDec sbs,tstDec lbs
+   --,tstDec shortbs
    ]
+
    -- ++ [
    --    tstMaxSize treeNLargeT
    --    ,tstMaxSize treeNNNLargeT,tstMaxSize nativeListT
@@ -605,7 +604,7 @@ tstDec (vname,obj) =
   let nm s = Prelude.concat [vname,"-",s] -- unwords [s,Prelude.take 400 $ show v]
   in [
      bgroup ("tstEncDec") $ map (\(_,pkg,s,d) -> bench (nm pkg) $ nf (\obj -> d (s obj) == Right obj) obj) pkgs
-     --,bgroup ("tstEnc") $ map (\(pkg,_,s,d) -> bench (nm pkg) $ nf (B.length . s) obj) pkgs
+     ,bgroup ("tstEnc") $ map (\(pkg,_,s,d) -> bench (nm pkg) $ nf (B.length . s) obj) pkgs
 
 
      --bgroup ("tstDec") $ map (\(_,pkg,s,d) -> env (return $! s obj) $ (\bs -> bench (nm pkg) $ nfIO ((Right obj ==) <$> (return . force . d) bs))) pkgs
@@ -626,9 +625,12 @@ pt (n,v) = map (\(_,pkg,s,d) -> Right v == d (s v)) pkgs
 
 -- pkgs :: (C.Serialise a,S.Store a,B.Binary a,F.Flat a) => [(String,String,a -> L.ByteString,L.ByteString -> Either String a)]
 -- pkgs = [S.sd,B.sd,C.sd,F.sd]
-pkgs :: (S.Store a,F.Flat a) => [(String,String,a -> L.ByteString,L.ByteString -> Either String a)]
--- pkgs = [S.sd,F.sd]
+--pkgs :: (B.Binary a,S.Store a,F.Flat a) => [(String,String,a -> L.ByteString,L.ByteString -> Either String a)]
+--pkgs = [S.sd,F.sd]
+
+pkgs :: (F.Flat a) => [(String,String,a -> L.ByteString,L.ByteString -> Either String a)]
 pkgs = [F.sd]
+
 
 tstEncodeDeep name k1 k2 = bgroup ("serialize " ++ name) [
    bench "tree1"  $ nf (encodeOnly k1) tree1

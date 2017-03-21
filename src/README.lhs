@@ -19,6 +19,7 @@ Setup a couple of extensions:
 Import the Flat library:
 
 > import Data.Flat
+> import Data.Flat.Bits
 > import Data.Flat.Pretty
 
 Define a couple of custom data types, deriving `Generic` and `Flat`:
@@ -69,13 +70,18 @@ It is not yet on [hackage](https://hackage.haskell.org/) but you can use it in y
   extra-dep: true
 ````
 
- ### Compatibility
+ ### Haskell Compatibility
 
-Tested with [ghc](https://www.haskell.org/ghc/) 7.10.3 and 8.0.1.
+Tested with [ghc](https://www.haskell.org/ghc/) 7.10.3, 8.0.1 and 8.0.2 (x64).
 
  ### Performance
 
- See this [comparison of some haskell serialisation libraries](https://github.com/tittoassini/serialization-bench).
+See this [comparison of the major haskell serialisation libraries](https://github.com/haskell-perf/serialization).
+
+Briefly:
+ * Significantly most compact than other libraries (3/4 times usually)
+ * Encoding is usually faster than 'binary' ..
+ * Decoding ..
 
  Brief summary: flat produces significantly more compact binary representation.
 
@@ -112,6 +118,7 @@ Tested with [ghc](https://www.haskell.org/ghc/) 7.10.3 and 8.0.1.
 * Encoding and decoding of String/Text and Float/Double is very slow
 * Contains code 'lifted' and modified from the binary-bits package
 * Messy source code
+* Long compilation times for generated Flat instances
 
 -----
 [Source code](https://github.com/tittoassini/flat/blob/master/src/README.lhs)

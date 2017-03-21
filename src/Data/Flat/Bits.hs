@@ -12,10 +12,9 @@ import           Data.Flat.Run
 import qualified Data.Vector.Unboxed            as V
 import           Text.PrettyPrint.HughesPJClass
 import Data.Word
-
 --import           Data.Flat.Instances
---x = pPrint $ bits ()
---y = pPrint $ bits (True,False,True,True,False,True,True,True)
+-- x = pPrint $ bits ()
+-- y = pPrint $ bits (True,False,True,True,False,True,True,True)
 --z = pPrint $ bits (True,False,True,True,False,True,True,True,False)
 
 type Bits = V.Vector Bool

@@ -11,6 +11,8 @@ import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.Short.Internal as SBS
 import           Data.Coerce
 import           Data.Flat
+import           Data.Flat.Peeks
+import           Data.Flat.Decoder
 import           Data.Flat.Pretty
 import           Data.Int
 import qualified Data.Sequence                  as S
@@ -204,6 +206,13 @@ e3 = encode [True,False]
 e4 = encode $ DD True True
 -- e5 = encode $ ZZ (ZZ (ZZ (DD True True)))
 
+m = runGetStrict getChunksInfo $ B.pack [3,11,22,33,2,11,22,0]
+
+m2 = B.unpack <$> runGetStrict dByteString_ (B.pack [3,11,22,33,2,11,22,0])
+m3 = SBS.unpack <$> runGetStrict dShortByteString_ (B.pack [3,11,22,33,2,11,22,0])
+m4 = unflat (flat (T.pack "abc")) :: Decoded T.Text
+m5 = unflat (flat '经') :: Decoded Char
+
 {-# NOINLINE tup2 #-}
 tup2 a b = flat (a,b)
 --t = coerce (1::Word32) :: Float
@@ -225,7 +234,7 @@ jl = T.length (T.pack "\x1F600\&\x1F600\&")
 q :: Decoded T.Text
 q = unflat $ flat (T.pack "D\226\FStz\GS3]\n8\149sV\243J\181\181\235\214&y\226\231\&2\239\212\174\DC1J'F\129hpsu\199\178")
 
-g = let v = (False,1::Word8,0::Word8,False)
+g = let v = (-1::Int16,255::Word8,False,-1::Int16,1::Word8,0::Word8,False)
     in (unflat (flat v) == Right v,valueBits v)
 
 g1 :: Decoded (Bool,Bool,Bool,Bool)

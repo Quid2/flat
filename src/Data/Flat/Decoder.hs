@@ -1,10 +1,12 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP ,BangPatterns #-}
 module Data.Flat.Decoder (
     Get,
     dByteString,
     dLazyByteString,
     dShortByteString,
+    dShortByteString_,
     dUTF16,
+    dUTF8,
     dArray,
     dFloat,
     dDouble,
@@ -23,41 +25,37 @@ module Data.Flat.Decoder (
     dInt64,
     dInt,
     runGetLazy,
+    runGetRawLazy,
     ) where
 
-import Data.Flat.Peeks
-
+import           Data.Flat.Peeks
 import           Data.Bits
 import qualified Data.ByteString       as B
 import qualified Data.ByteString.Lazy  as L
 import qualified Data.ByteString.Short as SBS
-import           Data.Char
+import qualified Data.ByteString.Short.Internal as SBS
 import qualified Data.DList            as DL
 import           Data.Int
 import qualified Data.Text    as T
 import qualified Data.Text.Encoding    as T
+import qualified Data.Text.Internal as T
+import qualified Data.Text.Array as TA
 import           Data.Word
 import           Data.ZigZag
 import           Numeric.Natural
+import           Data.Primitive.ByteArray
+import GHC.Base(unsafeChr)
+-- import Data.Char(chr)
 
 #include "MachDeps.h"
 
--- {-# INLINE dFloat #-}
--- dFloat :: Get Float
--- dFloat = dFlo -- wordToFloat <$> dWord32be
-
- 
 {-# INLINE dNatural #-}
 dNatural :: Get Natural
 dNatural = fromInteger <$> dUnsigned
 
 {-# INLINE dInteger #-}
 dInteger :: Get Integer
-dInteger = zzDecodeInteger <$> dUnsigned
-
-{-# INLINE dChar #-}
-dChar :: Get Char
-dChar = chr . fromIntegral <$> dWord32
+dInteger = zzDecodeInteger <$> (dUnsigned::Get Integer)
 
 {-# INLINE dWord  #-}
 {-# INLINE dInt  #-}
@@ -94,17 +92,60 @@ dInt32 = zzDecode32 <$> dWord32
 dInt64 :: Get Int64
 dInt64 = zzDecode64 <$> dWord64
 
-{-# INLINE dWord16  #-}
+-- {-# INLINE dWord16  #-}
 dWord16 :: Get Word16
 dWord16 = wordStep 0 (wordStep 7 (lastStep 14)) 0
 
-{-# INLINE dWord32  #-}
+-- {-# INLINE dWord32  #-}
 dWord32 :: Get Word32
 dWord32 = wordStep 0 (wordStep 7 (wordStep 14 (wordStep 21 (lastStep 28)))) 0
 
 -- {-# INLINE dWord64  #-}
 dWord64 :: Get Word64
 dWord64 = wordStep 0 (wordStep 7 (wordStep 14 (wordStep 21 (wordStep 28 (wordStep 35 (wordStep 42 (wordStep 49 (wordStep 56 (wordStep 63 (wordStep 70 (lastStep 77))))))))))) 0
+
+{-# INLINE dChar #-}
+dChar :: Get Char
+-- dChar = chr . fromIntegral <$> dWord32
+
+-- Not really faster than the simple version above
+dChar = charStep 0 (charStep 7 (lastCharStep 14)) 0
+
+{-# INLINE charStep #-}
+charStep :: Int -> (Int -> Get Char) -> Int -> Get Char
+charStep !shl !cont !n = do
+  !tw <- fromIntegral <$> dWord8
+  let !w = tw .&. 127
+  let !v = n .|. (w `shift` shl)
+  if tw == w
+    then return $ unsafeChr v
+    else cont v
+
+{-# INLINE lastCharStep #-}
+lastCharStep :: Int -> Int -> Get Char
+lastCharStep !shl !n = do
+  !tw <- fromIntegral <$> dWord8
+  let !w = tw .&. 127
+  let !v = n .|. (w `shift` shl)
+  if tw == w
+    then if v > 0x10FFFF
+         then charErr v
+         else return $ unsafeChr v
+    else charErr v
+
+charErr :: (Show a1, Monad m) => a1 -> m a
+charErr v = fail $ concat ["Unexpected extra byte or non unicode char",show v]
+
+{-# INLINE wordStep #-}
+wordStep
+  :: (Bits a, Num a) => Int -> (a -> Get a) -> a -> Get a
+wordStep shl k n = do
+  tw <- fromIntegral <$> dWord8
+  let w = tw .&. 127
+  let v = n .|. (w `shift` shl)
+  if tw == w
+    then return v
+    else k v
 
 {-# INLINE lastStep #-}
 lastStep :: (FiniteBits b, Show b, Num b) => Int -> b -> Get b
@@ -118,28 +159,17 @@ lastStep shl n = do
          else return v
     else wordErr v
 
-{-# INLINE wordStep #-}
-wordStep
-  :: (Bits a, Num a) => Int -> (a -> Get a) -> a -> Get a
-wordStep shl k n = do
-  tw <- fromIntegral <$> dWord8
-  let w = tw .&. 127
-  let v = n .|. (w `shift` shl)
-  if tw == w
-    then return v
-    else k v
-
 wordErr :: (Show a1, Monad m) => a1 -> m a
 wordErr v = fail $ concat ["Unexpected extra byte in unsigned integer",show v]
 
-{-# INLINE dUnsigned #-}
+-- {-# INLINE dUnsigned #-}
 dUnsigned :: (Num b, Bits b) => Get b
 dUnsigned = do
   (v,shl) <- dUnsigned_ 0 0
   -- return v
   maybe (return v) (\s -> if shl>= s then fail "Unexpected extra data in unsigned integer" else return v) $ bitSizeMaybe v
 
-{-# INLINE dUnsigned_ #-}
+-- {-# INLINE dUnsigned_ #-}
 dUnsigned_ :: (Bits t, Num t) => Int -> t -> Get (t, Int)
 dUnsigned_ shl n = do
   tw <- dWord8
@@ -148,10 +178,6 @@ dUnsigned_ shl n = do
   if tw == w
     then return (v,shl)
     else dUnsigned_ (shl+7) v
-
--- {-# INLINE dBits  #-}
---dBits = getWord8
-
 
 dArray :: Get a -> Get [a]
 dArray dec = DL.toList <$> getAsL_ dec
@@ -179,7 +205,16 @@ getAsL_ dec = do
 dUTF16 :: Get T.Text
 dUTF16 = do
   _ <- dFiller
-  T.decodeUtf16LE <$> dBytes
+  -- Checked decoding
+  -- T.decodeUtf16LE <$> dByteString_
+  -- Unchecked decoding
+  (ByteArray array,lengthInBytes) <- dByteArray_
+  return (T.Text (TA.Array array) 0 (lengthInBytes `div` 2))
+
+dUTF8 :: Get T.Text
+dUTF8 = do
+  _ <- dFiller
+  T.decodeUtf8 <$> dByteString_
 
 dFiller :: Get ()
 dFiller = do
@@ -188,24 +223,16 @@ dFiller = do
     False -> dFiller
     True  -> return ()
 
-dByteString :: Get B.ByteString
-dByteString = dFiller >> dBytes
-
 dLazyByteString :: Get L.ByteString
-dLazyByteString = dFiller >> L.fromChunks <$> dBytes_
+dLazyByteString = dFiller >> dLazyByteString_
 
 dShortByteString :: Get SBS.ShortByteString
-dShortByteString = dFiller >> SBS.toShort <$> dBytes
+dShortByteString = dFiller >> dShortByteString_
 
-dBytes :: Get B.ByteString
-dBytes = B.concat <$> dBytes_
+dShortByteString_ :: Get SBS.ShortByteString
+dShortByteString_ = do
+  (ByteArray array,_) <- dByteArray_
+  return $ SBS.SBS array
 
-dBytes_ :: Get [B.ByteString]
-dBytes_ =  do
-  l <- dWord8
-  if l==0
-    then return []
-    else do
-       bs <- dByteString_ (fromIntegral l)
-       bs' <- dBytes_
-       return $ bs : bs'
+dByteString :: Get B.ByteString
+dByteString = dFiller >> dByteString_
