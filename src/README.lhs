@@ -96,6 +96,12 @@ Briefly:
  -- Almost 2x faster
  instance {-# OVERLAPPING #-} Flat (Tree N)
 
+But this creates toruble in cases like:
+
+data Content user message = Users [User]
+
+Solution: define Flat instances only for concrete types
+
  b) Writing instances by hand (really? why?):
 
   Difficult to do:

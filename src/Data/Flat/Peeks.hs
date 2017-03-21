@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 -- {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DeriveFunctor ,BangPatterns ,ScopedTypeVariables ,MagicHash #-}
 module Data.Flat.Peeks (
@@ -26,7 +27,8 @@ import           System.Endian
 import Control.Monad
 import           Data.Binary.FloatCast
 import Data.Flat.Memory
--- import GHC.Types
+-- import GHC.Generics(Generic)
+import Control.DeepSeq
 
 --{-# INLINE unsafeChr #-}
 --unsafeChr i@(I# i#) = C# (chr# i#)
@@ -178,7 +180,12 @@ newtype Get a = Get {runGet ::
                         Ptr Word8 -- End Ptr
                         -> S
                         -> IO (GetResult a)
-                    } deriving Functor
+                    } deriving (Functor)
+
+-- Is this correct?
+instance NFData (Get a) where rnf !_ = ()
+
+instance Show (Get a) where show _ = "Get"
 
 instance Applicative Get where
     pure x = Get (\_ ptr -> return $ GetResult ptr x)

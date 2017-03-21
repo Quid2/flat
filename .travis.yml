@@ -73,8 +73,7 @@ install:
       cabal --version
       travis_retry cabal update
       sed -i 's/^jobs:/-- jobs:/' ${HOME}/.cabal/config
-      cabal install hsb2hs
-      cabal install --only-dependencies --enable-tests --enable-benchmarks
+      cabal install hsb2hs      
       ;;
   esac
 
@@ -89,6 +88,7 @@ script:
       cabal sdist --output-directory=sourcedist && \
       cd sourcedist && \
       cabal configure --enable-tests --enable-benchmarks -v2 && \
+      cabal install --only-dependencies --enable-tests --enable-benchmarks && \
       cabal build && \
       cabal test
       ;;
