@@ -66,8 +66,8 @@ install:
     stack)
       ulimit -n 4096
       stack --no-terminal config set system-ghc --global true
-      stack --no-terminal setup
       stack --no-terminal install hsb2hs
+      stack --no-terminal setup
       ;;
     cabal)
       cabal --version
