@@ -21,7 +21,7 @@ matrix:
 
   - env: BUILD=cabal GHCVER=7.10.3 CABALVER=1.22
     compiler: ": #GHC 7.10.3"
-    addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3], sources: [hvr-ghc]}}
+    addons: {apt: {packages: [cabal-install-1.22,happy-1.19.5,ghc-7.10.3], sources: [hvr-ghc]}}
 
   # - env: BUILD=cabal GHCVER=8.0.2 CABALVER=1.24
   #   compiler: ": #GHC 8.0.2"
@@ -44,7 +44,7 @@ matrix:
 before_install:
 # Using compiler above sets CC to an invalid value, so unset it
 - unset CC
-- export PATH=$PATH:/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$HOME/.local/bin:$HOME/.cabal/bin
+- export PATH=$PATH:/opt/happy/1.19.5/bin/:/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$HOME/.local/bin:$HOME/.cabal/bin
 
 # Download and unpack the stack executable
 - |
@@ -67,13 +67,13 @@ install:
       ulimit -n 4096
       stack --no-terminal config set system-ghc --global true
       stack --no-terminal setup
-      stack install hsc2hs
+      stack --no-terminal install hsb2hs
       ;;
     cabal)
       cabal --version
       travis_retry cabal update
       sed -i 's/^jobs:/-- jobs:/' ${HOME}/.cabal/config
-      cabal install happy
+      cabal install hsb2hs
       cabal install --only-dependencies --enable-tests --enable-benchmarks
       ;;
   esac
