@@ -16,6 +16,7 @@ import           Data.Char
 import           Data.DeriveTH
 import           Data.Either
 import           Data.Flat
+import           Data.Flat.Bits
 import           Data.Int
 import           Data.List
 import           Data.Ord

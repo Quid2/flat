@@ -1,3 +1,5 @@
+pvp-bounds: lower
+
 flags:
   binary-serialise-cbor:
     newtime15: true

@@ -168,7 +168,7 @@ instance GDecode a => GDecode (M1 i c a) where
 
 -- Type without constructors
 instance GDecode V1 where
-    gget = undefined
+    gget = unused
     {-# INLINE  gget #-}
 
 -- Constructor without arguments
