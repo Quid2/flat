@@ -16,6 +16,7 @@ import qualified Data.ByteString.Lazy           as L
 import           Data.Flat.Class
 import           Data.Flat.Filler
 import           Data.Flat.Run
+import           Data.Int
 import qualified Data.Vector.Unboxed            as V
 import           Data.Word
 import           Text.PrettyPrint.HughesPJClass
@@ -41,7 +42,7 @@ valueBits v = let lbs = flat v
                   Right (PostAligned _ f) = unflatRaw lbs :: Decoded (PostAligned a)
               in takeBits (8 * L.length lbs - fillerLength f) lbs
   where
-    takeBits :: Integral a => a -> L.ByteString -> V.Vector Bool
+    takeBits :: Int64 -> L.ByteString -> V.Vector Bool
     takeBits numBits lbs  = V.generate (fromIntegral numBits) (\n -> let (bb,b) = n `divMod` 8 in testBit (L.index lbs (fromIntegral bb)) (7-b))
 
 -- |Convert a sequence of bits to the corresponding list of bytes
