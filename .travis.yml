@@ -65,7 +65,6 @@ install:
   case "$BUILD" in
     stack)
       ulimit -n 4096
-      --travis_wait stack --no-terminal --system-ghc setup
       stack --no-terminal config set system-ghc --global true
       stack --no-terminal setup
       stack install hsc2hs
