@@ -3,13 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables  #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 -- |Utilities to represent and display bit sequences
-module Data.Flat.Bits (
-    Bits,
-    --bits,
-    -- bools,
-    valueBits,
-    asBytes,
-    ) where
+module Data.Flat.Bits (Bits, toBools, valueBits, asBytes) where
 
 import           Data.Bits                      hiding (Bits)
 import qualified Data.ByteString.Lazy           as L
@@ -21,20 +15,11 @@ import qualified Data.Vector.Unboxed            as V
 import           Data.Word
 import           Text.PrettyPrint.HughesPJClass
 
---import           Data.Flat.Instances
--- x = pPrint $ bits ()
--- y = pPrint $ bits (True,False,True,True,False,True,True,True)
---z = pPrint $ bits (True,False,True,True,False,True,True,True,False)
-
 -- |A sequence of bits
 type Bits = V.Vector Bool
 
--- -- |The sequence of booleans correspo
--- bools :: Flat a => a -> [Bool]
--- bools = V.toList . valueBits
-
--- bits :: L.ByteString -> Bits
--- bits lbs = takeBits (8 * L.length lbs) lbs
+toBools :: Bits -> [Bool]
+toBools = V.toList
 
 -- |The sequence of bits corresponding to the serialization of the passed value (without any final byte padding)
 valueBits :: forall a. Flat a => a -> Bits
