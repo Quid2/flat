@@ -198,16 +198,16 @@ unitTests = testGroup "De/Serialisation Unit tests" $ concat [
   ,s (Five,Five,Five) [255,128]
     --,s (NECons True (Elem True)) [128+64+16]
   ,s "" [0]
-   #ifdef LIST_BIT
+#ifdef LIST_BIT
   ,s "abc" [176,216,172,96]
   ,s [False,True,False,True] [128
                                +32+16
                                +8
                                +2+1,0]
-   #elif defined(LIST_BYTE)
+#elif defined(LIST_BYTE)
   ,s "abc" s3
   ,s (cs 600) s600
-   #endif
+#endif
     -- Aligned structures
     --,s (T.pack "") [1,0]
     --,s (Just $ T.pack "abc") [128+1,3,97,98,99,0]
