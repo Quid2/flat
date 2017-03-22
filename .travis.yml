@@ -66,14 +66,14 @@ install:
     stack)
       ulimit -n 4096
       stack --no-terminal config set system-ghc --global true
-      stack --no-terminal install hsb2hs
+      stack --no-terminal install hsc2hs
       stack --no-terminal setup
       ;;
     cabal)
       cabal --version
       travis_retry cabal update
       sed -i 's/^jobs:/-- jobs:/' ${HOME}/.cabal/config
-      cabal install hsb2hs      
+      cabal install hsc2hs      
       ;;
   esac
 
