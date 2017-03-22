@@ -1,10 +1,7 @@
-# Use new container infrastructure to enable caching
 sudo: false
 
-# Do not choose a language; we provide our own build tools.
 language: c
 
-# Caching so the next build will be fast too.
 cache:
   directories:
   - $HOME/.ghc
@@ -13,8 +10,7 @@ cache:
 
 matrix:
   include:
-  # We grab the appropriate GHC and cabal-install versions from hvr's PPA. See:
-  # https://github.com/hvr/multi-ghc-travis
+
   #- env: BUILD=cabal GHCVER=7.8.4 CABALVER=1.18
   #  compiler: ": #GHC 7.8.4"
   #  addons: {apt: {packages: [cabal-install-1.18,ghc-7.8.4], sources: [hvr-ghc]}}
@@ -25,7 +21,7 @@ matrix:
 
   # - env: BUILD=cabal GHCVER=8.0.2 CABALVER=1.24
   #   compiler: ": #GHC 8.0.2"
-  #   addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.2], sources: [hvr-ghc]}}
+  #   addons: {apt: {packages: [cabal-install-1.24,happy-1.19.5,ghc-8.0.2], sources: [hvr-ghc]}}
 
   # - env: BUILD=cabal GHCVER=8.2.1 CABALVER=1.24
   #   compiler: ": #GHC 8.2.1"
@@ -82,16 +78,18 @@ script:
   case "$BUILD" in
     stack)
       ulimit -n 4096
-      echo "SCRIPT NOW"
-      stack --no-terminal $ARGS test
+      stack --no-terminal $ARGS test > tst
       # > tst # --haddock --no-haddock-deps --ghc-options="-O0 -Wall -fno-warn-unused-do-bind -Werror"
       ;;
     cabal)
       cabal sdist --output-directory=sourcedist && \
       cd sourcedist && \
       cabal configure --enable-tests --enable-benchmarks -v2 && \
+      echo "[INSTALL" && \
       cabal install --only-dependencies --enable-tests --enable-benchmarks && \
+      echo "INSTALL]" && \
       cabal build && \
-      cabal test
+      echo "BUILD]" && \
+      cabal test > tst
       ;;
   esac
