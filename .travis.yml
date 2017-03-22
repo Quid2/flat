@@ -19,21 +19,21 @@ matrix:
     compiler: ": #GHC 7.10.3"
     addons: {apt: {packages: [cabal-install-1.22,happy-1.19.5,ghc-7.10.3], sources: [hvr-ghc]}}
 
-  # - env: BUILD=cabal GHCVER=8.0.2 CABALVER=1.24
-  #   compiler: ": #GHC 8.0.2"
-  #   addons: {apt: {packages: [cabal-install-1.24,happy-1.19.5,ghc-8.0.2], sources: [hvr-ghc]}}
+  - env: BUILD=cabal GHCVER=8.0.2 CABALVER=1.24
+    compiler: ": #GHC 8.0.2"
+    addons: {apt: {packages: [cabal-install-1.24,happy-1.19.5,ghc-8.0.2], sources: [hvr-ghc]}}
 
   # - env: BUILD=cabal GHCVER=8.2.1 CABALVER=1.24
   #   compiler: ": #GHC 8.2.1"
   #   addons: {apt: {packages: [cabal-install-1.24,ghc-8.2.1], sources: [hvr-ghc]}}
 
-  - env: BUILD=stack ARGS="" # --resolver lts-8"
-    compiler: ": #stack 7.10.3"
-    addons: {apt: {packages: [ghc-7.10.3], sources: [hvr-ghc]}}
+  # - env: BUILD=stack ARGS="" # --resolver lts-8"
+  #   compiler: ": #stack 7.10.3"
+  #   addons: {apt: {packages: [ghc-7.10.3], sources: [hvr-ghc]}}
 
-  - env: BUILD=stack ARGS="--stack-yaml stack.yaml.8" # --resolver lts-8"
-    compiler: ": #stack 8.0.2"
-    addons: {apt: {packages: [ghc-8.0.2], sources: [hvr-ghc]}}
+  # - env: BUILD=stack ARGS="--stack-yaml stack.yaml.8" # --resolver lts-8"
+  #   compiler: ": #stack 8.0.2"
+  #   addons: {apt: {packages: [ghc-8.0.2], sources: [hvr-ghc]}}
  
   fast_finish: true
 
@@ -70,9 +70,7 @@ install:
       travis_retry cabal update
       sed -i 's/^jobs:/-- jobs:/' ${HOME}/.cabal/config
       cabal install hsc2hs
-      echo "[INSTALL"
       cabal install --only-dependencies --enable-tests --enable-benchmarks
-      echo "INSTALL]"
       ;;
   esac
 
@@ -92,6 +90,6 @@ script:
       echo "[BUILD" && \
       cabal build && \
       echo "BUILD]" && \
-      cabal test > tst
+      cabal test #-- > tst
       ;;
   esac
