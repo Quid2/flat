@@ -85,11 +85,10 @@ script:
     cabal)
       cabal sdist --output-directory=sourcedist && \
       cd sourcedist && \
-      echo "[CONFIGURE" && \
       cabal configure --enable-tests --enable-benchmarks -v2 && \
       echo "[BUILD" && \
       cabal build && \
       echo "BUILD]" && \
-      cabal test #-- > tst
+      cabal test > tst
       ;;
   esac
