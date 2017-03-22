@@ -31,10 +31,10 @@ matrix:
     compiler: ": #stack 7.10.3"
     addons: {apt: {packages: [ghc-7.10.3], sources: [hvr-ghc]}}
 
-  # - env: BUILD=stack ARGS="--stack-yaml stack.yaml.8" # --resolver lts-8"
-  #   compiler: ": #stack 8.0.2"
-  #   addons: {apt: {packages: [ghc-8.0.2], sources: [hvr-ghc]}}
-
+  - env: BUILD=stack ARGS="--stack-yaml stack.yaml.8" # --resolver lts-8"
+    compiler: ": #stack 8.0.2"
+    addons: {apt: {packages: [ghc-8.0.2], sources: [hvr-ghc]}}
+ 
   fast_finish: true
 
 before_install:
@@ -69,7 +69,10 @@ install:
       cabal --version
       travis_retry cabal update
       sed -i 's/^jobs:/-- jobs:/' ${HOME}/.cabal/config
-      cabal install hsc2hs      
+      cabal install hsc2hs
+      echo "[INSTALL"
+      cabal install --only-dependencies --enable-tests --enable-benchmarks
+      echo "INSTALL]"
       ;;
   esac
 
@@ -84,10 +87,9 @@ script:
     cabal)
       cabal sdist --output-directory=sourcedist && \
       cd sourcedist && \
+      echo "[CONFIGURE" && \
       cabal configure --enable-tests --enable-benchmarks -v2 && \
-      echo "[INSTALL" && \
-      cabal install --only-dependencies --enable-tests --enable-benchmarks && \
-      echo "INSTALL]" && \
+      echo "[BUILD" && \
       cabal build && \
       echo "BUILD]" && \
       cabal test > tst
