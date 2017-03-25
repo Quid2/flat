@@ -30,6 +30,7 @@ import           Data.Proxy
 import           GHC.Generics
 import           GHC.TypeLits
 import           Prelude           hiding (mempty)
+-- import GHC.Magic(inline)
 
 -- |Class of types that can be encoded/decoded
 class Flat a where
@@ -96,6 +97,7 @@ instance GEncode (a :*: b) where
 
 -- Constants, additional parameters, and rank-1 recursion
 instance Flat a => GEncode (K1 i a) where
+  --gencode = inline encode . unK1
   gencode = encode . unK1
   {-# INLINE gencode #-}
 

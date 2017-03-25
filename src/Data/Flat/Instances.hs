@@ -4,6 +4,7 @@
 {-# LANGUAGE RankNTypes                #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE UndecidableInstances      #-}
+-- |Flat Instances for common, primitive or 'opaque' data types for which instances cannot be automatically derived
 module Data.Flat.Instances () where
 
 import qualified Data.ByteString       as B
@@ -18,7 +19,7 @@ import           Data.Int
 import qualified Data.Map              as M
 import           Data.MonoTraversable
 import qualified Data.Sequence         as S
-import qualified Data.Sequences        as O
+-- import qualified Data.Sequences        as O
 import qualified Data.Text             as T
 import           Data.Word
 import           Numeric.Natural
@@ -28,7 +29,8 @@ import           Prelude               hiding (mempty)
 -- import qualified Data.Vector.Unboxed            as VU
 -- import qualified Data.Vector.Storable as VS
 
----------- Flat Instances
+---------- Common Types
+
 instance Flat () where
   encode _ = mempty
   decode = pure ()
@@ -38,23 +40,18 @@ instance Flat Bool where
   size = sBool
   decode = dBool
 
-instance Flat a => Flat (Maybe a)
+instance {-# OVERLAPPABLE #-} (Flat a, Flat b) => Flat (a,b)
+instance {-# OVERLAPPABLE #-} (Flat a, Flat b, Flat c) => Flat (a,b,c)
+instance {-# OVERLAPPABLE #-} (Flat a, Flat b, Flat c, Flat d) => Flat (a,b,c,d)
+instance {-# OVERLAPPABLE #-} (Flat a, Flat b, Flat c, Flat d, Flat e) => Flat (a,b,c,d,e)
+instance {-# OVERLAPPABLE #-} (Flat a, Flat b, Flat c, Flat d, Flat e, Flat f) => Flat (a,b,c,d,e,f)
+instance {-# OVERLAPPABLE #-} (Flat a, Flat b, Flat c, Flat d, Flat e, Flat f, Flat g) => Flat (a,b,c,d,e,f,g)
 
-instance (Flat a,Flat b) => Flat (Either a b)
-
--- data Map a b = Map [(a,b)]
-instance (Flat a, Flat b,Ord a) => Flat (M.Map a b) where
-  encode = encode . M.toList
-  -- size = cmapSize M.toList
-  size = size . M.toList
-  decode = M.fromList <$> decode
-
--- == Array Word8 (prob: encoder might fail if used on their own)
--- or BLOB NoEncoding
+-- Primitive types
 instance Flat B.ByteString where
-  encode = eBytes
-  size = sBytes
-  decode = dByteString
+   encode = eBytes
+   size = sBytes
+   decode = dByteString
 
 instance Flat L.ByteString where
   encode = eLazyBytes
@@ -66,46 +63,15 @@ instance Flat SBS.ShortByteString where
   size = sShortBytes
   decode = dShortByteString
 
--- data Array a = Array0 | Array1 a ...
---data Array a = Array [a] deriving (Eq, Ord, Show, NFData, Generic)
+instance Flat a => Flat (Maybe a)
 
--- instance {-# OVERLAPPABLE #-} Flat a => Flat (Array a) where
---     encode (Array l) = encodeArray l
---     -- size = arraySize
---     -- size = arraySize
---     decode = Array <$> dArray
+instance (Flat a,Flat b) => Flat (Either a b)
 
--- arraySize (Array vs) = 8*(numBlks 255 (length vs) + 1) + sum (map size vs)
--- INEFFICIENT
--- arraySize (Array vs) = 8*(numBlks 255 (length vs) + 1) + sum (map (size 0) vs)
-
--- instance {-# OVERLAPPING #-} Flat (Array Word8) where
---     encode (Array l) = encode $ B.pack l
---     decode = Array . B.unpack <$> decode
-
-instance Flat a => Flat (S.Seq a) where
-  size s acc = F.foldl' (flip size) acc s + arrayBits (S.length s)
-  encode = eArray encode . F.toList
-  decode = S.fromList <$> dArray decode
-
-{-# INLINE sSequence #-}
-sSequence
-  :: (MonoFoldable mono, Flat (Element mono)) =>
-     mono -> NumBits -> NumBits
-sSequence s acc = ofoldl' (flip size) acc s + arrayBits (olength s)
-
-instance {-# OVERLAPPABLE #-} (MonoFoldable mono, O.IsSequence mono, Flat (Element mono)) => Flat mono where
-  size = sSequence
-
-  {-# INLINE encode #-}
-  encode = eArray encode . otoList
-
-  {-# INLINE decode #-}
-  decode = O.pack <$> dArray decode -- dList -- try with O.replicateM
-
-instance {-# OVERLAPPABLE #-} Flat a => Flat [a]
-
-instance {-# OVERLAPPING #-} Flat [Char]
+-- Do not provide this to 'force' users to declare instances of concrete list types
+-- instance Flat a => Flat [a]
+instance Flat [Char]
+--instance {-# OVERLAPPABLE #-} Flat a => Flat [a]
+--instance {-# OVERLAPPING #-} Flat [Char]
 
 -- BLOB UTF8Encoding
 instance Flat T.Text where
@@ -113,36 +79,11 @@ instance Flat T.Text where
    encode = eUTF16
    decode = dUTF16
 
----------- Words and Ints
-
--- x = map (\v -> showEncoding $ encode (v::Word32)) [3,255,258]
-{-
--- Little Endian encoding
-| Coding                             | Min Len | Max Len   |
-| data Unsigned = NonEmptyList Word7 | 8       | 10*8=80   | ascii equivalent,byte align
-| data Unsigned = NonEmptyList Word8 | 9       | 8*9=72    |
-| data Unsigned = List Word7         | 1       | 10*8+1=81 | ascii equivalent
-
--}
--- Encoded as: data Word8 = U0 | U1 .. | U255
 instance Flat Word8 where
   encode = eWord8
   decode = dWord8
   size = sWord8
 
-{- Word16 to Word64 are encoded as:
--- data VarWord = VarWord (NonEmptyList Word7)
--- data NonEmptyList a = Elem a | Cons a (NonEmptyList a)
--- data Word7 = U0 .. U127
--- VarWord is a sequence of Word7, where every byte except the last one has the most significant bit (msb) set.
-
-as in google protocol buffer VarInt
-
-Example:
-3450 :: Word16/32/64.. = 0000110101111010 = 11010(26) 1111010(122) coded as:
-Word16 (Cons V122 (Elem V26))
-so Least Significant Byte first.
--}
 instance Flat Word16 where
   encode = eWord16
   decode = dWord16
@@ -163,16 +104,11 @@ instance Flat Word where
   encode = eWord
   decode = dWord
 
--- Encoded as data Int8 = Z | N1 |P1| N2 |P2 | N3 .. |P127 | N128
 instance Flat Int8 where
   encode = eInt8
   decode = dInt8
   size = sInt8
 
--- Ints and Integer are encoded as
--- Encoded as ZigZag Word16
--- ZigZag indicates ZigZag encoding
--- where data ZigZag a = ZigZag a
 instance Flat Int16 where
   size = sInt16
   encode = eInt16
@@ -203,7 +139,6 @@ instance Flat Natural where
   encode = eNatural
   decode = dNatural
 
---------------- Floats
 instance Flat Float where
   size = sFloat
   encode = eFloat
@@ -214,31 +149,95 @@ instance Flat Double where
   encode = eDouble
   decode = dDouble
 
------------------ Characters
--- data Char = Char Word32
 instance Flat Char where
   size = sChar
   encode = eChar
   decode = dChar
 
-{-
--- data Unicode = Unicode Word32
-instance Flat Char where
-  encode c = encode (fromIntegral . ord $ c :: Word32)
+-- Abstract/Opaque types
 
-  decode = do
-    w :: Word32 <- decode
-    if w > 0x10FFFF
-      then error $ "Not a valid Unicode code point: " ++ show w
-      else return . chr .fromIntegral $ w
--}
+instance (Flat a, Flat b,Ord a) => Flat (M.Map a b) where
+  --size = sizeList M.toList
+  size = sizeList_
+  --encode = encodeList M.toList
+  -- encode = encodeList2_
+  encode = encodeList_ .  M.toList
+  decode = M.fromList <$> decodeList_
 
+-- data Array a = Array0 | Array1 a ...
+--data Array a = Array [a] deriving (Eq, Ord, Show, NFData, Generic)
 
----------- Tuples
+-- instance {-# OVERLAPPABLE #-} Flat a => Flat (Array a) where
+--     encode (Array l) = encodeArray l
+--     -- size = arraySize
+--     -- size = arraySize
+--     decode = Array <$> dArray
 
-instance {-# OVERLAPPABLE #-} (Flat a, Flat b) => Flat (a,b)
-instance {-# OVERLAPPABLE #-} (Flat a, Flat b, Flat c) => Flat (a,b,c)
-instance {-# OVERLAPPABLE #-} (Flat a, Flat b, Flat c, Flat d) => Flat (a,b,c,d)
-instance {-# OVERLAPPABLE #-} (Flat a, Flat b, Flat c, Flat d, Flat e) => Flat (a,b,c,d,e)
-instance {-# OVERLAPPABLE #-} (Flat a, Flat b, Flat c, Flat d, Flat e, Flat f) => Flat (a,b,c,d,e,f)
-instance {-# OVERLAPPABLE #-} (Flat a, Flat b, Flat c, Flat d, Flat e, Flat f, Flat g) => Flat (a,b,c,d,e,f,g)
+-- arraySize (Array vs) = 8*(numBlks 255 (length vs) + 1) + sum (map size vs)
+-- INEFFICIENT
+-- arraySize (Array vs) = 8*(numBlks 255 (length vs) + 1) + sum (map (size 0) vs)
+
+-- instance {-# OVERLAPPING #-} Flat (Array Word8) where
+--     encode (Array l) = encode $ B.pack l
+--     decode = Array . B.unpack <$> decode
+
+instance Flat a => Flat (S.Seq a) where
+  size = sizeArray F.foldl' S.length
+  encode = encodeArray F.toList
+  decode = decodeArray S.fromList
+
+{-# INLINE sizeList #-}
+sizeList
+  :: (Foldable t, Flat a) => (t1 -> t a) -> t1 -> NumBits -> NumBits
+sizeList toList l = sizeList_ (toList l)
+-- sizeList = sizeList_
+
+{-# INLINE sizeList_ #-}
+sizeList_ :: (Foldable t, Flat a) => t a -> NumBits -> NumBits
+sizeList_ l acc = F.foldl' (\acc n -> size n (acc + 1)) (acc+1) l
+
+{-# INLINE encodeList #-}
+encodeList toList = encodeList_ . toList
+
+{-# INLINE encodeList_ #-}
+encodeList_ :: Flat a => [a] -> Encoding
+encodeList_ [] = eFalse
+encodeList_ (x:xs) = eTrue <> encode x <> encodeList_ xs
+
+encodeList2_ l = F.foldl' (\e n -> e <> eTrue <> encode n) mempty l <> eFalse 
+
+{-# INLINE decodeList #-}
+decodeList :: Flat a => ([a] -> b) -> Get b
+decodeList fromList = fromList <$> decodeList_
+
+{-# INLINE decodeList_ #-}
+decodeList_ :: Flat a => Get [a]
+decodeList_ = do
+  b <- dBool
+  if b
+    then (:) <$> decode <*> decodeList_
+    else return []
+
+{-# INLINE sizeArray #-}
+sizeArray foldl length s acc = foldl (flip size) acc s + arrayBits (length s)
+
+{-# INLINE encodeArray #-}
+encodeArray toList = eArray encode . toList
+
+{-# INLINE decodeArray #-}
+decodeArray fromList = fromList <$> dArray decode
+
+{-# INLINE sSequence #-}
+sSequence
+  :: (MonoFoldable mono, Flat (Element mono)) =>
+     mono -> NumBits -> NumBits
+sSequence s acc = ofoldl' (flip size) acc s + arrayBits (olength s)
+
+-- instance {-# OVERLAPPABLE #-} (MonoFoldable mono, O.IsSequence mono, Flat (Element mono)) => Flat mono where
+--   size = sSequence
+
+--   {-# INLINE encode #-}
+--   encode = eArray encode . otoList
+
+--   {-# INLINE decode #-}
+--   decode = O.pack <$> dArray decode -- dList -- try with O.replicateM

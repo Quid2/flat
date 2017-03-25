@@ -45,6 +45,7 @@ import           Data.ZigZag
 import           Numeric.Natural
 import           Data.Primitive.ByteArray
 import GHC.Base(unsafeChr)
+import GHC.Magic(oneShot)
 -- import Data.Char(chr)
 
 #include "MachDeps.h"
@@ -102,6 +103,20 @@ dWord32 = wordStep 0 (wordStep 7 (wordStep 14 (wordStep 21 (lastStep 28)))) 0
 dWord64 :: Get Word64
 dWord64 = wordStep 0 (wordStep 7 (wordStep 14 (wordStep 21 (wordStep 28 (wordStep 35 (wordStep 42 (wordStep 49 (wordStep 56 (wordStep 63 (wordStep 70 (lastStep 77))))))))))) 0
 
+
+{-
+-- data Unicode = Unicode Word32
+instance Flat Char where
+  encode c = encode (fromIntegral . ord $ c :: Word32)
+
+  decode = do
+    w :: Word32 <- decode
+    if w > 0x10FFFF
+      then error $ "Not a valid Unicode code point: " ++ show w
+      else return . chr .fromIntegral $ w
+-}
+
+
 {-# INLINE dChar #-}
 dChar :: Get Char
 -- dChar = chr . fromIntegral <$> dWord32
@@ -143,6 +158,7 @@ wordStep shl k n = do
   let v = n .|. (w `shift` shl)
   if tw == w
     then return v
+    --else oneShot k v
     else k v
 
 {-# INLINE lastStep #-}

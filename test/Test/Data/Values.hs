@@ -16,6 +16,7 @@ import qualified Test.Data2           as D2
 import qualified Data.ByteString.Short.Internal as SBS
 import Data.Foldable
 import qualified Data.Sequence as Seq
+import qualified Data.Map as M
 
 instance NFData Various
 instance NFData a => NFData (List a)
@@ -101,6 +102,9 @@ lN = C Three (C Three (C One (C One (C Three (C Four (C One (C Five (C Two (C Th
 
 largeSize = 1000000
 
+couples :: [(Word32,N)]
+couples = zip [1..] $ ns 1000
+
 lN2 :: List N
 lN2 = lnx 1000
 
@@ -185,7 +189,11 @@ arr2 = ("ByteString from String",B.pack . map (fromIntegral . ord) $ unicodeStr)
 sbs = ("StrictByteString",b2)
 lbs = ("LazyByteString",lb2)
 shortbs = ("ShortByteString",SBS.toShort b2)
- 
+
+mapT = ("map",mapV)
+mapV = M.fromList couples
+mapListT = ("mapList",couples)
+
 lN2T = ("List N",lN2)
 lN3T = ("Large List N",lN3)
 nativeListT = ("Large [N]",nativeList)
@@ -262,6 +270,8 @@ cafs = [
        , NF treeNT
        , NF lN2T
        , NF lN3T
+       , NF mapT
+       , NF mapListT
        , NF nativeListT
        , NF seqNT
        , NF arr1

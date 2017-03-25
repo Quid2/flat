@@ -2,7 +2,7 @@
 {-# LANGUAGE DeriveAnyClass    #-}
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances ,CPP #-}
 {-# LANGUAGE LambdaCase    ,ScopedTypeVariables    #-}
 module Test where
 import           Data.Binary.FloatCast
@@ -21,6 +21,14 @@ import           Data.Word
 import           Prelude                        hiding (exponent, sign)
 import           System.Endian
 import           Text.Printf
+import Data.Flat.Bits
+
+instance Flat [Word16]
+instance Flat [Int16]
+instance Flat [Bool]
+instance Flat [Word8]
+instance Flat [(Word64,Word16)]
+instance Flat [ABC]
 
 rrr = reverse [3,2,1]
 
@@ -167,6 +175,8 @@ t = do
   pp "aaa"
   pp (Node (Node (Leaf True) (Leaf False)) (Node (Leaf True) (Leaf False)))
   pf (Node (Node (Leaf True) (Leaf False)) (Node (Leaf True) (Leaf False)))
+
+y11 =show __GLASGOW_HASKELL__
 
 --pp v = print (v,F.encode v F.<> F.eFiller)
 pp :: forall a . (Flat a, Show a) => a -> IO ()

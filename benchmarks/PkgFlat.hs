@@ -1,15 +1,16 @@
+{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE PackageImports        #-}
 module PkgFlat(PkgFlat(..),Flat,getSize,sd,serializeF,deserializeF,serlN2) where
 
 import           Control.Exception
-import           Data.ByteString.Lazy   as L
+import           Data.ByteString.Lazy as L
 import           Data.Flat
 import           Test.Data
 import           Test.Data.Flat
 import           Test.Data.Values
-import Types
+import           Types
 
 data PkgFlat a = PkgFlat a deriving (Eq,Show)
 
@@ -22,10 +23,10 @@ instance Flat a => Serialize PkgFlat a where
   unpkg (PkgFlat a) = a
 
 --name = "decoderBinaryBits"
-ver = "7103"
+ver = show __GLASGOW_HASKELL__
+-- ver = "801"
 name = "decoderStrict"++ver
 sd = ("encoderStrict"++ver, name, serializeF, deserializeF)
-
 
 serializeF = flat
 deserializeF =  either (Left . error) Right . unflat
@@ -40,11 +41,16 @@ instance Flat CarModel
 instance Flat OptionalExtra
 instance Flat Engine
 
--- Car components -10%
--- instance {-# OVERLAPPING #-} Flat [Int32]
--- instance {-# OVERLAPPING #-} Flat [OptionalExtra]
--- instance {-# OVERLAPPING #-} Flat [Consumption]
--- instance {-# OVERLAPPING #-} Flat [(OctaneRating,[Acceleration])]
+
+-- Car components -37%
+instance {-# OVERLAPPING #-} Flat [Word]
+instance {-# OVERLAPPING #-} Flat [Bool]
+instance {-# OVERLAPPING #-} Flat [Acceleration]
+instance {-# OVERLAPPING #-} Flat [Int32]
+instance {-# OVERLAPPING #-} Flat [OptionalExtra]
+instance {-# OVERLAPPING #-} Flat [Consumption]
+instance {-# OVERLAPPING #-} Flat [(OctaneRating,[Acceleration])]
+instance {-# OVERLAPPING #-} Flat (OctaneRating,[Acceleration])
 
 s = L.unpack $ flat $ lN2
 

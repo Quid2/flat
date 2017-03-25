@@ -93,6 +93,14 @@ Briefly:
  Define instances of parametric data types as OVERLAPPABLE
  instance {-# OVERLAPPABLE #-} Flat a => Flat (Tree a)
 
+-- Or do not define them at all and just add instances of concrete types when necessary
+
+Define also
+
+data SomeLists = SomeLists [Bool] [Int]
+
+The compiler won't create specialised [Bool] and [Int], by adding them we get some extra speed.
+
  -- Almost 2x faster
  instance {-# OVERLAPPING #-} Flat (Tree N)
 

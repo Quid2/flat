@@ -13,6 +13,17 @@ import Data.Foldable
 import Data.Int
 import GHC.Generics
 
+{-
+Compilation times:
+           encoderS specials cases |
+| 7.10.3 | NO                      | 0:44 |
+| 7.10.3 | YES                     | 0:39 |
+| 8.0.1  | NO                      | 1:30 |
+| 8.0.1  | YES                     | 1:30 |
+| 8.0.2  | NO                      | 4:18 |
+| 8.0.2  | YES                     | 4:18 |
+-}
+
 -- GHC 8.0.2 chokes on this
 -- instance Flat A0
 -- instance Flat B0
@@ -25,8 +36,10 @@ deriving instance Generic (a,b,c,d,e,f,g,h,i)
 instance {-# OVERLAPPABLE #-} (Flat a, Flat b, Flat c, Flat d, Flat e, Flat f, Flat g,Flat h) => Flat (a,b,c,d,e,f,g,h)
 instance {-# OVERLAPPABLE #-} (Flat a, Flat b, Flat c, Flat d, Flat e, Flat f, Flat g,Flat h,Flat i) => Flat (a,b,c,d,e,f,g,h,i)
 
-instance Flat a => Flat (List a)
+instance Flat N
 instance Flat Unit
+
+instance Flat a => Flat (List a)
 
 instance Flat Direction
 instance Flat Words
@@ -44,11 +57,8 @@ instance Flat B
 instance Flat D2
 instance Flat D4
 
-instance Flat Various
-
 instance Flat a => Flat (Phantom a)
 
-instance Flat N
 instance  {-# OVERLAPPING #-}  Flat (Tree N)
 instance {-# OVERLAPPABLE #-} Flat a => Flat (Tree a)
 instance {-# OVERLAPPING #-} Flat (Tree (N,N,N))
@@ -56,6 +66,10 @@ instance {-# OVERLAPPING #-} Flat [N]
 instance {-# OVERLAPPING #-} Flat (N,N,N)
 instance {-# OVERLAPPING #-} Flat (Word,Word8,Word16,Word32,Word64)
 
+-- Slow to compile
+instance Flat Various
+
+-- Custom instances
 -- instance {-# OVERLAPPING #-} Flat (Tree (N,N,N)) --where
 --   size (Node t1 t2) = 1 + size t1 + size t2
 --   size (Leaf a) = 1 + size a

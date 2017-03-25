@@ -1,6 +1,7 @@
 {-# LANGUAGE BinaryLiterals            #-}
 {-# LANGUAGE CPP                       #-}
 {-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
 {-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NegativeLiterals          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
@@ -45,7 +46,8 @@ mainTest = defaultMain tests
 
 tests :: TestTree
 tests = testGroup "Tests" [properties
-                           ,unitTests]
+                           ,unitTests
+                          ]
 
 properties = testGroup "Properties"
   [  rt "()" (prop_Flat_roundtrip:: RT ())
@@ -91,6 +93,9 @@ properties = testGroup "Properties"
     ,rt "Short ByteString" (prop_Flat_roundtrip:: RT SBS.ShortByteString)
   ]
    where rt n = QC.testProperty (unwords ["round trip",n])
+
+instance Flat [Int16]
+instance Flat [Word8]
 
 unitTests = testGroup "De/Serialisation Unit tests" $ concat [
   sz () 0
@@ -191,7 +196,7 @@ unitTests = testGroup "De/Serialisation Unit tests" $ concat [
   ,s 'a' [97]
   ,s 'à' [224,1]
   ,s '经' [207,253,1]
-  ,map trip [chr 0x10FFFF]
+  ,[trip [chr 0x10FFFF]]
   ,s Unit []
   ,s (Un False) [0]
   ,s (One,Two,Three) [16+8]
@@ -216,9 +221,13 @@ unitTests = testGroup "De/Serialisation Unit tests" $ concat [
   ,s (B.pack $ csb 3) (bsl c3)
   ,s (B.pack $ csb 600) (bsl s600)
   ,s (L.pack $ csb 3) (bsl c3)
-    -- Long LazyStrings can have internal sections shorter than 255
-    --,s (L.pack $ csb 600) (bsl s600)
-  ,[trip longSeq,trip longBS,trip longLBS,trip longSBS,trip unicodeText]
+   -- Long LazyStrings can have internal sections shorter than 255
+   --,s (L.pack $ csb 600) (bsl s600)
+  ,[trip [1..100::Int16]]
+  ,[trip longSeq]
+  ,[trip mapV]
+  ,[trip unicodeText]
+  ,[trip longBS,trip longLBS,trip longSBS]
   ]
     where
       ns :: [(Word64, Int)]
@@ -259,21 +268,22 @@ unitTests = testGroup "De/Serialisation Unit tests" $ concat [
 
       teq a b = ser a @?= ser b
 
-      sz v e = [testCase (unwords ["size of",show v]) $ getSize v @?= e]
+      sz v e = [testCase (unwords ["size of",sshow v]) $ getSize v @?= e]
 
-      s v e = [testCase (unwords ["flat raw",show v]) $ serRaw v @?= e
-              ,testCase (unwords ["unflat raw",show v]) $ desRaw e @?= Right v]
+      s v e = [testCase (unwords ["flat raw",sshow v]) $ serRaw v @?= e
+              ,testCase (unwords ["unflat raw",sshow v]) $ desRaw e @?= Right v]
 
       -- Aligned values unflat to the original value, modulo the added filler.
-      a v e = [testCase (unwords ["flat",show v]) $ ser v @?= e
-              ,testCase (unwords ["unflat",show v]) $ let Right v' = des e in v @?= v']
+      a v e = [testCase (unwords ["flat",sshow v]) $ ser v @?= e
+              ,testCase (unwords ["unflat",sshow v]) $ let Right v' = des e in v @?= v']
       -- a v e = [testCase (unwords ["flat postAligned",show v]) $ ser (postAligned v) @?= e
       --         ,testCase (unwords ["unflat postAligned",show v]) $ let Right (PostAligned v' _) = des e in v @?= v']
       cs n = replicate n 'c' -- take n $ cycle ['a'..'z']
       csb = map (fromIntegral . ord) . cs
+      sshow = take 80 . show
 
       trip :: forall a .(Show a,Flat a) => a -> TestTree
-      trip v = testCase (unwords ["roundtrip",show v]) $ show (unflat (flat v)::Decoded a) @?= show (Right v::Decoded a) -- we use show to get Right NaN == Right NaN
+      trip v = testCase (unwords ["roundtrip",sshow v]) $ show (unflat (flat v)::Decoded a) @?= show (Right v::Decoded a) -- we use show to get Right NaN == Right NaN
 
 errDec :: forall a . (Flat a, Eq a, Show a) => Proxy a -> [Word8] -> [TestTree]
 --errDec _ bs = [testCase "bad decode" $ let ev = (des bs::Decoded a) in ev @?= Left ""]

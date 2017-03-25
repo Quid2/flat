@@ -101,14 +101,14 @@ instance Monoid Writer where
 encoderStrict :: Int -> Encoding -> L.ByteString
 encoderStrict numBits (Writer op) = L.fromStrict $ bitEncoderStrict numBits op
 
+-- The special cases considerably speed up compilation time, at least for 7.10.3
 {-# RULES
 "encodersSN" forall h t. encodersS (h:t) = h `mappend` encodersS t
-"encodersS1" forall a. encodersS [a] = a
 "encodersS0" encodersS [] = mempty
  #-}
 
 {-# NOINLINE encodersS #-}
--- PROB: GHC 8.02 won't always apply the rules leading to much worse times (e.g. with lists)
+-- PROB: GHC 8.02 won't always apply the rules leading to poor execution times (e.g. with lists)
 encodersS :: [Writer] -> Writer
 -- without the explicit parameter the rules won't fire
 encodersS ws =  foldl' mappend mempty ws

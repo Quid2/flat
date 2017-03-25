@@ -331,12 +331,13 @@ mainBench = do
 --mainBench = defaultMainWith (defaultConfigFilePath {
 mainBench_ jsonReportFile = defaultMainWith (defaultConfig {jsonFile= Just jsonReportFile}) (
   concat [
-   tstDec carT
-   ,tstDec nativeListT
+   --tstDec carT
+   tstDec mapT
+   --,tstDec nativeListT
    --,tstDec treeNLargeT
    --,tstDec treeNNNLargeT
-   -- tstDec wordsT,tstDec words0T
-   tstDec vwT,tstDec vfT,tstDec viT
+   --,tstDec wordsT,tstDec words0T
+   --,tstDec vwT,tstDec vfT,tstDec viT
    -- ,tstDec v2T
    -- -- ,tstDec charT
    -- ,tstDec unicharT
@@ -344,10 +345,10 @@ mainBench_ jsonReportFile = defaultMainWith (defaultConfig {jsonFile= Just jsonR
    -- -- --,tstDec lN3T
    -- -- flat fails to complete:
    -- ,tstDec seqNT
-   ,tstDec asciiStrT
-   ,tstDec unicodeStrT
-   ,tstDec unicodeTextT
-   --,tstDec sbs,tstDec lbs
+   -- ,tstDec asciiStrT
+   -- ,tstDec unicodeStrT
+   -- ,tstDec unicodeTextT
+   -- --,tstDec sbs,tstDec lbs
    --,tstDec shortbs
    ]
 
