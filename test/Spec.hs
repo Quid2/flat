@@ -224,10 +224,10 @@ unitTests = testGroup "De/Serialisation Unit tests" $ concat [
    -- Long LazyStrings can have internal sections shorter than 255
    --,s (L.pack $ csb 600) (bsl s600)
   ,[trip [1..100::Int16]]
-  ,[trip longSeq]
-  ,[trip mapV]
   ,[trip unicodeText]
   ,[trip longBS,trip longLBS,trip longSBS]
+  ,[trip longSeq]
+  ,[trip mapV]
   ]
     where
       ns :: [(Word64, Int)]

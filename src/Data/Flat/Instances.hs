@@ -157,8 +157,8 @@ instance Flat Char where
 -- Abstract/Opaque types
 
 instance (Flat a, Flat b,Ord a) => Flat (M.Map a b) where
-  --size = sizeList M.toList
-  size = sizeList_
+  size = sizeList M.toList
+  -- size = sizeList_
   --encode = encodeList M.toList
   -- encode = encodeList2_
   encode = encodeList_ .  M.toList
