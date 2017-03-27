@@ -64,7 +64,7 @@ export PATH="$HOME/.cabal/bin:$PATH";install:
       travis_retry cabal update
       sed -i 's/^jobs:/-- jobs:/' ${HOME}/.cabal/config
       cabal install hsc2hs
-      cabal install --only-dependencies --enable-tests --enable-benchmarks
+      cabal install --only-dependencies --enable-tests --force-reinstalls #--enable-benchmarks 
       ;;
   esac
 
@@ -79,7 +79,7 @@ script:
     cabal)
       cabal sdist --output-directory=sourcedist && \
       cd sourcedist && \
-      cabal configure --enable-tests --enable-benchmarks -v2 && \
+      cabal configure --enable-tests -v2 && \ # --enable-benchmarks 
       echo "[BUILD" && \
       cabal build && \
       echo "BUILD]" && \
