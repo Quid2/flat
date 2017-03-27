@@ -48,7 +48,7 @@ before_install:
     fi
   fi
 
-export PATH="$HOME/.cabal/bin:$PATH";install:
+install:
 - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
 - if [ -f configure.ac ]; then autoreconf -i; fi
 - |
@@ -60,6 +60,8 @@ export PATH="$HOME/.cabal/bin:$PATH";install:
       stack --no-terminal setup
       ;;
     cabal)
+      echo "[cabal preinstall"
+      export PATH="$HOME/.cabal/bin:$PATH";
       cabal --version
       travis_retry cabal update
       sed -i 's/^jobs:/-- jobs:/' ${HOME}/.cabal/config
