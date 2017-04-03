@@ -14,6 +14,7 @@ import           Data.Char
 import           Data.Flat.Class
 import           Data.Flat.Decoder
 import           Data.Flat.Encoder
+import           Data.Flat.Size(arrayBits)
 import qualified Data.Foldable         as F
 import           Data.Int
 import qualified Data.Map              as M
@@ -68,9 +69,8 @@ instance Flat a => Flat (Maybe a)
 instance (Flat a,Flat b) => Flat (Either a b)
 
 -- Do not provide this to 'force' users to declare instances of concrete list types
--- instance Flat a => Flat [a]
 instance Flat [Char]
---instance {-# OVERLAPPABLE #-} Flat a => Flat [a]
+instance {-# OVERLAPPABLE #-} Flat a => Flat [a]
 --instance {-# OVERLAPPING #-} Flat [Char]
 
 -- BLOB UTF8Encoding
@@ -159,10 +159,11 @@ instance Flat Char where
 instance (Flat a, Flat b,Ord a) => Flat (M.Map a b) where
   size = sizeList M.toList
   -- size = sizeList_
-  --encode = encodeList M.toList
+  encode = encodeList M.toList
   -- encode = encodeList2_
-  encode = encodeList_ .  M.toList
-  decode = M.fromList <$> decodeList_
+  -- encode = encodeList_ .  M.toList
+  --decode = M.fromList <$> decodeList_
+  decode = decodeList M.fromList -- <$> decodeList_
 
 -- data Array a = Array0 | Array1 a ...
 --data Array a = Array [a] deriving (Eq, Ord, Show, NFData, Generic)
@@ -190,7 +191,6 @@ instance Flat a => Flat (S.Seq a) where
 sizeList
   :: (Foldable t, Flat a) => (t1 -> t a) -> t1 -> NumBits -> NumBits
 sizeList toList l = sizeList_ (toList l)
--- sizeList = sizeList_
 
 {-# INLINE sizeList_ #-}
 sizeList_ :: (Foldable t, Flat a) => t a -> NumBits -> NumBits

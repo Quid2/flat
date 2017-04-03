@@ -18,7 +18,7 @@ data Filler = FillerBit Filler
 -- |Use a special encoding for the filler
 instance Flat Filler where
   encode _ = eFiller
-  size = sFiller
+  size = sFillerMax
   -- use generated decode
 
 -- |A Post aligned value, a value followed by a filler

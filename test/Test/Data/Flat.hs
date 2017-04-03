@@ -8,7 +8,7 @@ import Data.Flat.Decoder
 import Test.Data
 import Test.Data2.Flat()
 import Data.Word
-import Data.Flat.Pokes
+--import Data.Flat.Poke
 import Data.Foldable
 import Data.Int
 import GHC.Generics

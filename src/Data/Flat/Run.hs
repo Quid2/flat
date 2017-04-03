@@ -19,7 +19,7 @@ import           Data.Flat.Class
 import           Data.Flat.Decoder
 import qualified Data.Flat.Encoder    as E
 import           Data.Flat.Filler
--- -- import           Data.Flat.Pretty
+-- import           Data.Flat.Types
 
 -- |Encode byte-padded value.
 flat :: Flat a => a -> L.ByteString
@@ -28,7 +28,7 @@ flat = flatRaw . postAligned
 -- |Encode value, if values does not end on byte boundary, 0s padding is added.
 flatRaw :: Flat a => a -> L.ByteString
 -- flatRaw a = E.encoderLazy (encode a)
-flatRaw a = E.encoderStrict (getSize $ postAligned a) (encode a)
+flatRaw a = L.fromStrict $ E.encoderStrict (getSize $ postAligned a) (encode a)
 
 -- |Decode byte-padded value
 unflat :: Flat a => L.ByteString -> Decoded a
@@ -41,6 +41,7 @@ unflatRaw bs = (\(v, _, _) -> v) <$> runGetRawLazy decode bs
 
 unflatWith :: Get a -> L.ByteString -> Decoded a
 unflatWith = runGetLazy
+
 
   -- unflatRaw bs = (\(v,_,_) -> v) <$> runGetLazy decode bs
 -- unflatChkWith dec bs = case runGetLazy dec bs of

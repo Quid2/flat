@@ -28,7 +28,7 @@ module Data.Flat.Decoder (
     runGetRawLazy,
     ) where
 
-import           Data.Flat.Peeks
+import           Data.Flat.Peek
 import           Data.Bits
 import qualified Data.ByteString       as B
 import qualified Data.ByteString.Lazy  as L
@@ -45,7 +45,7 @@ import           Data.ZigZag
 import           Numeric.Natural
 import           Data.Primitive.ByteArray
 import GHC.Base(unsafeChr)
-import GHC.Magic(oneShot)
+-- import GHC.Magic(oneShot)
 -- import Data.Char(chr)
 
 #include "MachDeps.h"
@@ -121,7 +121,7 @@ instance Flat Char where
 dChar :: Get Char
 -- dChar = chr . fromIntegral <$> dWord32
 
--- Not really faster than the simple version above
+-- Not really faster than the simpler version above
 dChar = charStep 0 (charStep 7 (lastCharStep 14)) 0
 
 {-# INLINE charStep #-}

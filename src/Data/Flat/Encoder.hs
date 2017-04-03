@@ -1,15 +1,15 @@
 {-# LANGUAGE BangPatterns              #-}
-{-# LANGUAGE NoMonomorphismRestriction ,ScopedTypeVariables #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
 module Data.Flat.Encoder (
     Encoding,
     (<>),
     NumBits,
-    numBlks,
-    arrayBits,
+    --numBlks,
+    --arrayBits,
     encodersS,
     mempty,
     encoderStrict,
-    eBitsS,
     eTrueF,
     eFalseF,
     eFloat,
@@ -27,7 +27,6 @@ module Data.Flat.Encoder (
     eFalse,
     eBytes,
     eUTF16,
-    sizeWord,
     eLazyBytes,
     eShortBytes,
     eInt,
@@ -37,8 +36,6 @@ module Data.Flat.Encoder (
     eInt64,
     eWord,
     eChar,
-    --eString,
-    --sString,
     eArray,
     sWord,
     sWord8,
@@ -59,23 +56,28 @@ module Data.Flat.Encoder (
     sLazyBytes,
     sShortBytes,
     sUTF16,
-    sFiller,
-    sBool,sUTF8,eUTF8
+    sFillerMax,
+    sBool
+    --,sUTF8,eUTF8
     ) where
 
--- import           Control.Monad
 import qualified Data.ByteString      as B
 import qualified Data.ByteString.Lazy as L
-import           Data.Flat.Pokes hiding (sBool, sBytes, sChar, sDouble, sFiller, sFloat, sInt, sInt16,
-                                         sInt32, sInt64, sInt8, sInteger, sLazyBytes, sNatural,
-                                         sShortBytes, sUTF16, sWord, sWord16, sWord32, sWord64,
-                                         sWord8, sUTF8)
-import qualified Data.Flat.Pokes      as P
--- -- -- -- import           Data.Flat.Size
+import           Data.Flat.Memory
+import           Data.Flat.Poke
+import qualified Data.Flat.Size       as S
+import           Data.Flat.Types
 import           Data.Foldable
 import           Data.Monoid
--- -- -- -- import qualified Data.Sequences as O
--- -- -- import           Data.MonoTraversable
+
+-- |Strict encoder
+encoderStrict :: NumBits -> Encoding -> B.ByteString
+encoderStrict numBits (Writer op) =
+  let bufSize = S.bitsToBytes numBits
+  in fst $ unsafeCreateUptoN' bufSize $
+        \ptr -> do
+          (S ptr' 0 0) <- op (S ptr 0 0)
+          return (ptr' `minusPtr` ptr,())
 
 -- Strict encoder, calculate max length of encoding then alloc single buffer and encode unsafely.
 type Encoding = Writer
@@ -97,9 +99,6 @@ instance Monoid Writer where
 
   {-# INLINE mconcat #-}
   mconcat = foldl' mappend mempty
-
-encoderStrict :: Int -> Encoding -> L.ByteString
-encoderStrict numBits (Writer op) = L.fromStrict $ bitEncoderStrict numBits op
 
 -- The special cases considerably speed up compilation time, at least for 7.10.3
 {-# RULES
@@ -130,7 +129,7 @@ encodersS ws =  foldl' mappend mempty ws
 -- sString l n = n + length l * 32 -- BAD
 
 {-# INLINE eArray #-}
--- eArray :: Eq t => (t -> Writer -> [t] -> Writer
+-- |Encode as Array
 eArray :: (t -> Writer) -> [t] -> Writer
 eArray _ [] = eWord8 0
 eArray f ws = Writer $ go ws
@@ -147,8 +146,9 @@ eArray f ws = Writer $ go ws
     gol l@(x:xs) !n !s | n == 255 = return (255,s,l)
                        | otherwise = runWriter (f x) s >>= gol xs (n+1)
 
+-- Encoding primitives
 {-# INLINE eChar #-}
-{-# INLINE eUTF8 #-}
+--{-# INLINE eUTF8 #-}
 {-# INLINE eUTF16 #-}
 {-# INLINE eNatural #-}
 {-# INLINE eFloat #-}
@@ -174,8 +174,8 @@ eChar :: Char -> Writer
 eChar = Writer . eCharF
 eUTF16 :: Text -> Writer
 eUTF16 = Writer . eUTF16F
-eUTF8 :: Text -> Writer
-eUTF8 = Writer . eUTF8F
+--eUTF8 :: Text -> Writer
+--eUTF8 = Writer . eUTF8F
 eBytes :: B.ByteString -> Writer
 eBytes = Writer . eBytesF
 eLazyBytes :: L.ByteString -> Writer
@@ -221,76 +221,79 @@ eTrue = Writer eTrueF
 eFalse :: Writer
 eFalse = Writer eFalseF
 
+-- Size Primitives
 
--- Store like Sizes
--- actual sizes
--- sChar = VarSize P.sCharV
--- sWord = VarSize P.sWordV
--- sInt = VarSize P.sIntV
--- sWord64 = VarSize P.sWord64V
--- sWord32 = VarSize P.sWord32V
--- sWord16 = VarSize P.sWord16V
--- sInt64 = VarSize P.sInt64V
--- sInt32 = VarSize P.sInt32V
--- sInt16 = VarSize P.sInt16V
-
--- -- Fixed sizes
--- sChar = ConstSize P.sChar
--- sInt64 = ConstSize P.sInt64
--- sInt32 = ConstSize P.sInt32
--- sInt16 = ConstSize P.sInt16
--- sInt8 = ConstSize P.sInt8
--- sInt = ConstSize P.sInt
--- sWord64 = ConstSize P.sWord64
--- sWord32 = ConstSize P.sWord32
--- sWord16 = ConstSize P.sWord16
--- sWord8 = ConstSize P.sWord8
--- sWord = ConstSize P.sWord
-
--- sBytes = VarSize P.sBytes
--- sLazyBytes = VarSize P.sLazyBytes
--- sShortBytes = VarSize P.sShortBytes
--- sNatural = VarSize P.sNatural
--- sInteger = VarSize P.sInteger
--- sUTF16 = VarSize P.sUTF16
-
--- sInt8 = ConstSize P.sInt8
--- sWord8 = ConstSize P.sWord8
--- sFloat = ConstSize P.sFloat
--- sDouble = ConstSize P.sDouble
--- sFiller = ConstSize P.sFiller
--- sBool = ConstSize P.sBool
-
--- Simple sizes
+-- Variable size
 {-# INLINE vsize #-}
 vsize :: (t -> NumBits) -> t -> NumBits -> NumBits
-vsize f t n = f t + n
+vsize !f !t !n = f t + n
 
+-- Constant size
 {-# INLINE csize #-}
 csize :: NumBits -> t -> NumBits -> NumBits
 csize !n _ !s = n+s
 
-sChar = vsize P.sCharV
-sInt64 = vsize P.sInt64V
-sInt32 = vsize P.sInt32V
-sInt16 = vsize P.sInt16V
-sInt = vsize P.sIntV
-sWord64 = vsize P.sWord64V
-sWord32 = vsize P.sWord32V
-sWord16 = vsize P.sWord16V
-sWord = vsize P.sWordV
+sChar :: Size Char
+sChar = vsize S.sChar
 
-sBytes = vsize P.sBytes
-sLazyBytes = vsize P.sLazyBytes
-sShortBytes = vsize P.sShortBytes
-sNatural = vsize P.sNatural
-sInteger = vsize P.sInteger
-sUTF8 = vsize P.sUTF8
-sUTF16 = vsize P.sUTF16
+sInt64 :: Size Int64
+sInt64 = vsize S.sInt64
 
-sInt8 = csize P.sInt8
-sWord8 = csize P.sWord8
-sFloat = csize P.sFloat
-sDouble = csize P.sDouble
-sFiller = csize P.sFiller
-sBool = csize P.sBool
+sInt32 :: Size Int32
+sInt32 = vsize S.sInt32
+
+sInt16 :: Size Int16
+sInt16 = vsize S.sInt16
+
+sInt8 :: Size Int8
+sInt8 = csize S.sInt8
+
+sInt :: Size Int
+sInt = vsize S.sInt
+
+sWord64 :: Size Word64
+sWord64 = vsize S.sWord64
+
+sWord32 :: Size Word32
+sWord32 = vsize S.sWord32
+
+sWord16 :: Size Word16
+sWord16 = vsize S.sWord16
+
+sWord8 :: Size Word8
+sWord8 = csize S.sWord8
+
+sWord :: Size Word
+sWord = vsize S.sWord
+
+sFloat :: Size Float
+sFloat = csize S.sFloat
+
+sDouble :: Size Double
+sDouble = csize S.sDouble
+
+sBytes :: Size B.ByteString
+sBytes = vsize S.sBytes
+
+sLazyBytes :: Size L.ByteString
+sLazyBytes = vsize S.sLazyBytes
+
+sShortBytes :: Size ShortByteString
+sShortBytes = vsize S.sShortBytes
+
+sNatural :: Size Natural
+sNatural = vsize S.sNatural
+
+sInteger :: Size Integer
+sInteger = vsize S.sInteger
+--sUTF8 = vsize S.sUTF8
+
+sUTF16 :: Size Text
+sUTF16 = vsize S.sUTF16
+
+
+sFillerMax :: Size a
+sFillerMax = csize S.sFillerMax
+
+sBool :: Size Bool
+sBool = csize S.sBool

@@ -26,6 +26,7 @@ import qualified Data.Sequence         as Seq
 import qualified Data.Text             as T
 import           Data.Word
 import           Numeric.Natural
+import           System.Arch
 import           System.Exit
 import           Test.Data
 import           Test.Data.Arbitrary
@@ -34,9 +35,16 @@ import           Test.Data.Values
 import           Test.Tasty
 import           Test.Tasty.HUnit
 import           Test.Tasty.QuickCheck as QC
+import System.Endian
 
-main = mainTest
+main = do
+  printInfo
+  mainTest
 -- main = mainShow
+
+printInfo = do
+  print getSystemArch
+  print getSystemEndianness
 
 mainShow = do
   mapM_ (\_ -> generate (arbitrary :: Gen Int) >>= print) [1..10]

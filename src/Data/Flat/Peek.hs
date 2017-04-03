@@ -1,7 +1,10 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric       #-}
 -- {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE DeriveFunctor ,BangPatterns ,ScopedTypeVariables ,MagicHash #-}
-module Data.Flat.Peeks (
+{-# LANGUAGE BangPatterns        #-}
+{-# LANGUAGE DeriveFunctor       #-}
+{-# LANGUAGE MagicHash           #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+module Data.Flat.Peek (
     Get,
     dBool,
     dWord8,
@@ -13,22 +16,19 @@ module Data.Flat.Peeks (
     runGetStrict,runGetLazy,runGetRawLazy
     ) where
 
-import        qualified    Data.ByteString as B
-import qualified Data.ByteString.Lazy          as L
---import qualified Data.ByteString          as B
+import           Control.DeepSeq
+import           Control.Exception
+import           Control.Monad
+import           Data.Binary.FloatCast
+import qualified Data.ByteString          as B
 import qualified Data.ByteString.Internal as BS
-import           Data.Flat.Types
+import qualified Data.ByteString.Lazy     as L
+import           Data.Flat.Memory
+import           Data.Flat.Types          (NumBits)
 import           Data.Word
 import           Foreign
-import           System.IO.Unsafe
-import           Control.Exception
--- -- -- -- -- -- -- import           Data.Bits
 import           System.Endian
-import Control.Monad
-import           Data.Binary.FloatCast
-import Data.Flat.Memory
--- import GHC.Generics(Generic)
-import Control.DeepSeq
+import           System.IO.Unsafe
 
 --{-# INLINE unsafeChr #-}
 --unsafeChr i@(I# i#) = C# (chr# i#)
@@ -63,13 +63,13 @@ dWord8 = Get $ \endPtr s -> do
 ensureBits :: Ptr Word8 -> S -> Int -> IO ()
 ensureBits endPtr s n = when ((endPtr `minusPtr` currPtr s) * 8 - usedBits s < n) $ notEnoughSpace endPtr s
 
-{-# INLINE incBits #-}
-incBits :: Int -> S -> S
-incBits 1 s = if usedBits s == 7
-           then s {currPtr=currPtr s `plusPtr` 1,usedBits=0}
-           else s {usedBits=usedBits s+1}
+-- {-# INLINE incBits #-}
+-- incBits :: Int -> S -> S
+-- incBits 1 s = if usedBits s == 7
+--            then s {currPtr=currPtr s `plusPtr` 1,usedBits=0}
+--            else s {usedBits=usedBits s+1}
 
-incBits 8 s = s {currPtr=currPtr s `plusPtr` 1}
+-- incBits 8 s = s {currPtr=currPtr s `plusPtr` 1}
 
 {-# INLINE dFloat #-}
 dFloat :: Get Float
@@ -122,7 +122,7 @@ getChunksInfo = Get $ \endPtr s -> do
 
 runGetLazy :: Get a -> L.ByteString -> Either String a
 runGetLazy get lbs = case runGetStrict get (L.toStrict lbs) of
-  Left e -> Left (show e)
+  Left e  -> Left (show e)
   Right r -> Right r
 
 runGetRawLazy
@@ -135,7 +135,7 @@ runGetStrict :: Get a -> B.ByteString -> Either GetException a
 --                         Left e -> Left e
 --                         Right (a,bs,o) ->
 --                           if bs.length > 0 || o /= 0
---                           then 
+--                           then
 
 runGetStrict get (BS.PS base off len) = unsafePerformIO . try $
     withForeignPtr base $ \base0 ->
@@ -158,7 +158,7 @@ runGetRawStrict
 -- --             else return a
 
 --                              if bs.length > 0 || o /= 0
---                              then 
+--                              then
 
 runGetRawStrict get (BS.PS base off len) = unsafePerformIO . try $
     withForeignPtr base $ \base0 ->
