@@ -17,6 +17,7 @@ import qualified Data.ByteString.Short.Internal as SBS
 import Data.Foldable
 import qualified Data.Sequence as Seq
 import qualified Data.Map as M
+import Data.Flat
 
 instance NFData Various
 instance NFData a => NFData (List a)
@@ -170,6 +171,9 @@ treeN = mkTree asN3 1
 
 asciiStrT = ("asciiStr", longS $ "To hike, or not to hike? US Federal Reserve chair Janet Yellen faces a tricky decision at today's FOMC meeting. Photograph: Action Press/Rex. Theme park operator Merlin Entertainments suffered a significant drop in visitor numbers to its Alton Towers attraction after a serious rollercoaster accident in June.")
 
+unicodeTextUTF8T = ("unicodeTextUTF8",UTF8Text unicodeText)
+unicodeTextUTF16T = ("unicodeTextUTF16",UTF16Text unicodeText)
+
 unicodeTextT = ("unicodeText",unicodeText)
 unicodeText = T.pack unicodeStr
 
@@ -281,6 +285,8 @@ cafs = [
        , NF asciiStrT
        , NF unicodeStrT
        , NF unicodeTextT
+       --, NF unicodeTextUTF8T
+       --, NF unicodeTextUTF16T
        , NF v1T
        , NF v2T
        , NF vfT

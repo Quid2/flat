@@ -58,7 +58,7 @@ module Data.Flat.Encoder (
     sUTF16,
     sFillerMax,
     sBool
-    --,sUTF8,eUTF8
+    ,sUTF8Max,eUTF8
     ) where
 
 import qualified Data.ByteString      as B
@@ -93,7 +93,7 @@ instance Monoid Writer where
   {-# INLINE mappend #-}
   -- mappend (Writer f) (Writer g) = Writer (f >=> g)
   mappend (Writer f) (Writer g) = Writer m
-    where m !s@(S !_ !_ !_) = do
+    where m s@(S !_ !_ !_) = do
             !s1 <- f s
             g s1
 
@@ -138,7 +138,7 @@ eArray f ws = Writer $ go ws
       s' <- eWord8F 0 s
       (n,s'',l) <- gol l 0 s'
       _ <- eWord8F n s
-      if length l == 0 -- l==[]
+      if null l
         then eWord8F 0 s''
         else go l s''
 
@@ -148,7 +148,7 @@ eArray f ws = Writer $ go ws
 
 -- Encoding primitives
 {-# INLINE eChar #-}
---{-# INLINE eUTF8 #-}
+{-# INLINE eUTF8 #-}
 {-# INLINE eUTF16 #-}
 {-# INLINE eNatural #-}
 {-# INLINE eFloat #-}
@@ -174,8 +174,8 @@ eChar :: Char -> Writer
 eChar = Writer . eCharF
 eUTF16 :: Text -> Writer
 eUTF16 = Writer . eUTF16F
---eUTF8 :: Text -> Writer
---eUTF8 = Writer . eUTF8F
+eUTF8 :: Text -> Writer
+eUTF8 = Writer . eUTF8F
 eBytes :: B.ByteString -> Writer
 eBytes = Writer . eBytesF
 eLazyBytes :: L.ByteString -> Writer
@@ -286,7 +286,10 @@ sNatural = vsize S.sNatural
 
 sInteger :: Size Integer
 sInteger = vsize S.sInteger
---sUTF8 = vsize S.sUTF8
+-- sUTF8 = vsize S.sUTF8
+
+sUTF8Max :: Size Text
+sUTF8Max = vsize S.sUTF8Max
 
 sUTF16 :: Size Text
 sUTF16 = vsize S.sUTF16

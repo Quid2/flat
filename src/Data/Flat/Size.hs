@@ -1,17 +1,18 @@
+{-# LANGUAGE CPP          #-}
 {-# LANGUAGE BangPatterns #-}
 module Data.Flat.Size where
 
-import           Data.Flat.Types
-import           Data.Char
-import           Data.ZigZag
 import qualified Data.ByteString                as B
 import qualified Data.ByteString.Lazy           as L
+import           Data.Char
+import           Data.Flat.Types
+import           Data.ZigZag
 -- import qualified Data.ByteString.Lazy.Internal  as L
+import           Data.Bits
 import qualified Data.ByteString.Short.Internal as SBS
+import           Data.Flat.Poke                 (w7l)
 import qualified Data.Text                      as T
 import qualified Data.Text.Internal             as T
-import           Data.Bits
-import           Data.Flat.Poke (w7l)
 
 #include "MachDeps.h"
 
@@ -111,11 +112,13 @@ sIntegral :: (Bits t, Integral t) => t -> Int
 sIntegral t = let vs = w7l t
               in length vs*8
 
--- {-# INLINE sUTF8Max #-}
--- sUTF8 :: T.Text -> NumBits
+--sUTF8 :: T.Text -> NumBits
+--sUTF8 t = fold
 
 -- incorrect but faster
--- sUTF8MAx = blobBits . (4*) . T.length
+{-# INLINE sUTF8Max #-}
+sUTF8Max :: Text -> NumBits
+sUTF8Max = blobBits . (4*) . T.length
 
 {-# INLINE sUTF16 #-}
 sUTF16 :: T.Text -> NumBits

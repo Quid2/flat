@@ -135,7 +135,7 @@ report_ rs =
   let
     rss = sortBy (comparing snd) rs
     best = snd . head $ rss
-  in (head rss, map (second (\v -> v / best)) rss)
+  in (head rss, map (second (/ best)) rss)
 
 printDouble :: Double -> String
 printDouble = printf "%5.1f"

@@ -37,8 +37,6 @@ extra-deps:
 # #- binary-0.9.0.0
 # - criterion-1.1.4.0
 # - optparse-applicative-0.13.2.0
-
-# 8.0.2 - doesn't compile heavily mutually recursive data types.
 # low performance on certain tests as encoder RULES are not applied
 # resolver: lts-8.5
 # extra-deps:

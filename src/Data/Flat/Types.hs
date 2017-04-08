@@ -7,7 +7,9 @@ module Data.Flat.Types (
     module Data.Int,
     Natural,
     SBS.ShortByteString,
-    T.Text,
+    T.Text
+    ,UTF8Text(..)
+    ,UTF16Text(..)
     ) where
 
 import qualified Data.ByteString.Short.Internal as SBS
@@ -30,3 +32,7 @@ type Prim = S -> IO S
 
 -- FIX: Should be Int64 or Word64
 type NumBits = Int
+
+newtype UTF8Text = UTF8Text T.Text deriving (Eq,Ord,Show) -- Generic,Flat)
+
+newtype UTF16Text = UTF16Text T.Text deriving (Eq,Ord,Show) -- Generic,Flat)

@@ -1,0 +1,29 @@
+test-suite flat-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  other-modules: Test.Data,Test.Data2,Test.Data.Arbitrary,Test.Data.Flat,Test.Data2.Flat,Test.Data.Values
+  build-depends:       base,tasty,tasty-hunit,tasty-quickcheck,ghc-prim,derive,text,bytestring,deepseq,containers,flat
+  -- ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
+
+-- executable flat-multi-bench
+--   main-is:             TestAlternatives.hs
+--   hs-source-dirs:      benchmarks,test,src
+--   -- other-modules:       Data.TypeHash
+--   other-extensions:    StandaloneDeriving, DeriveDataTypeable, DeriveGeneric, CPP
+--   default-language:    Haskell2010
+--   build-depends:       base ;
+--                      , regex-compat,text,filepath,containers,directory,process
+--                      , flat
+
+executable flat-profile
+  main-is:             Profile.hs
+  hs-source-dirs:      benchmarks,test
+  --ghc-options: -dumpdir /tmp/dump -ddump-to-file -dsuppress-all -ddump-asm -ddump-opt-cmm -eventlog
+  ghc-options: -O2 -fprof-auto
+  ghc-options: -dumpdir /tmp/dump -ddump-to-file -dsuppress-all -ddump-simpl-stats
+  other-modules:  Data,Test.Data,Test.Data.Flat,Test.Data2,Test.Data2.Flat,Test.Data.Values
+  build-depends: base,flat,bytestring,text,deepseq,weigh,containers
+  default-language:    Haskell2010
+ 

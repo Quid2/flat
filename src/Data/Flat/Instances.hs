@@ -15,15 +15,16 @@ import           Data.Flat.Class
 import           Data.Flat.Decoder
 import           Data.Flat.Encoder
 import           Data.Flat.Size(arrayBits)
+import Data.Flat.Types
 import qualified Data.Foldable         as F
-import           Data.Int
+-- import           Data.Int
 import qualified Data.Map              as M
-import           Data.MonoTraversable
+-- import           Data.MonoTraversable
 import qualified Data.Sequence         as S
 -- import qualified Data.Sequences        as O
 import qualified Data.Text             as T
-import           Data.Word
-import           Numeric.Natural
+-- import           Data.Word
+-- import           Numeric.Natural
 import           Prelude               hiding (mempty)
 
 -- import qualified Data.Vector            as V
@@ -70,14 +71,23 @@ instance (Flat a,Flat b) => Flat (Either a b)
 
 -- Do not provide this to 'force' users to declare instances of concrete list types
 instance Flat [Char]
-instance {-# OVERLAPPABLE #-} Flat a => Flat [a]
+-- instance {-# OVERLAPPABLE #-} Flat a => Flat [a]
 --instance {-# OVERLAPPING #-} Flat [Char]
 
--- BLOB UTF8Encoding
+instance Flat UTF8Text where
+  size (UTF8Text t)= sUTF8Max t
+  encode (UTF8Text t) = eUTF8 t
+  decode = UTF8Text <$> dUTF8
+
+instance Flat UTF16Text where
+  size (UTF16Text t)= sUTF16 t
+  encode (UTF16Text t) = eUTF16 t
+  decode = UTF16Text <$> dUTF16
+
 instance Flat T.Text where
-   size = sUTF16
-   encode = eUTF16
-   decode = dUTF16
+   size = sUTF8Max
+   encode = eUTF8
+   decode = dUTF8
 
 instance Flat Word8 where
   encode = eWord8
@@ -197,6 +207,7 @@ sizeList_ :: (Foldable t, Flat a) => t a -> NumBits -> NumBits
 sizeList_ l acc = F.foldl' (\acc n -> size n (acc + 1)) (acc+1) l
 
 {-# INLINE encodeList #-}
+encodeList :: Flat a1 => (a -> [a1]) -> a -> Encoding
 encodeList toList = encodeList_ . toList
 
 {-# INLINE encodeList_ #-}
@@ -204,7 +215,7 @@ encodeList_ :: Flat a => [a] -> Encoding
 encodeList_ [] = eFalse
 encodeList_ (x:xs) = eTrue <> encode x <> encodeList_ xs
 
-encodeList2_ l = F.foldl' (\e n -> e <> eTrue <> encode n) mempty l <> eFalse 
+-- encodeList2_ l = F.foldl' (\e n -> e <> eTrue <> encode n) mempty l <> eFalse 
 
 {-# INLINE decodeList #-}
 decodeList :: Flat a => ([a] -> b) -> Get b
@@ -219,19 +230,25 @@ decodeList_ = do
     else return []
 
 {-# INLINE sizeArray #-}
+sizeArray
+  :: Flat a =>
+     ((NumBits -> a -> NumBits) -> t -> t1 -> NumBits)
+     -> (t1 -> Int) -> t1 -> t -> NumBits
 sizeArray foldl length s acc = foldl (flip size) acc s + arrayBits (length s)
 
 {-# INLINE encodeArray #-}
+encodeArray :: Flat a1 => (a -> [a1]) -> a -> Encoding
 encodeArray toList = eArray encode . toList
 
 {-# INLINE decodeArray #-}
+decodeArray :: Flat a => ([a] -> b) -> Get b
 decodeArray fromList = fromList <$> dArray decode
 
-{-# INLINE sSequence #-}
-sSequence
-  :: (MonoFoldable mono, Flat (Element mono)) =>
-     mono -> NumBits -> NumBits
-sSequence s acc = ofoldl' (flip size) acc s + arrayBits (olength s)
+-- {-# INLINE sSequence #-}
+-- sSequence
+--   :: (MonoFoldable mono, Flat (Element mono)) =>
+--      mono -> NumBits -> NumBits
+-- sSequence s acc = ofoldl' (flip size) acc s + arrayBits (olength s)
 
 -- instance {-# OVERLAPPABLE #-} (MonoFoldable mono, O.IsSequence mono, Flat (Element mono)) => Flat mono where
 --   size = sSequence

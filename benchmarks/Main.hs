@@ -206,7 +206,7 @@ xv = yv + cl [2]
 mainB = do
   forceCafs
 
-  --prints
+  prints
   mainBench
 
   --mainProfile
@@ -236,6 +236,9 @@ prints = do
   print $ 1175000 == B.length (F.flat treeNNNLarge)
   print $ 550000 == B.length (F.flat treeNLarge)
   print $ 2125001== B.length (F.flat nativeList)
+  print $ (B.length (F.flat unicodeTextT),B.length (F.flat unicodeTextUTF8T),B.length (F.flat unicodeStrT))
+  pp car1
+  -- ),B.length (serialize PkgStore car1))
   -- print $ 1 == B.length (F.flat v2)
   -- print $ 3 == B.length (F.flat t33)
   -- print $ 10 == B.length (F.flat wordsV)
@@ -266,6 +269,8 @@ mainWeight = do
   pp nativeListT
   pp treeNLargeT
   pp wordsT
+  pp unicodeStrT
+  --pp unicodeTextUTF8T
 
   where
     ww o = do
@@ -274,10 +279,10 @@ mainWeight = do
       -- weightT "cbor" PkgCBOR o
       weightT "flat" PkgFlat o
 
-    pp o = do
-      pl "store" PkgStore o
-      pl "binary" PkgBinary o
-      pl "flat" PkgFlat o
+pp o = do
+  pl "store" PkgStore o
+  pl "binary" PkgBinary o
+  pl "flat" PkgFlat o
 
 plf = pl "flat" PkgFlat
 
@@ -331,8 +336,8 @@ mainBench = do
 --mainBench = defaultMainWith (defaultConfigFilePath {
 mainBench_ jsonReportFile = defaultMainWith (defaultConfig {jsonFile= Just jsonReportFile}) (
   concat [
-   --tstDec carT
-   tstDec mapT
+   tstDec carT
+   --,tstDec mapT
    --,tstDec nativeListT
    --,tstDec treeNLargeT
    --,tstDec treeNNNLargeT
@@ -346,8 +351,9 @@ mainBench_ jsonReportFile = defaultMainWith (defaultConfig {jsonFile= Just jsonR
    -- -- flat fails to complete:
    -- ,tstDec seqNT
    -- ,tstDec asciiStrT
-   -- ,tstDec unicodeStrT
-   -- ,tstDec unicodeTextT
+   --,tstDec unicodeStrT
+   --,tstDec unicodeTextT
+   --,tstDec unicodeTextUTF8T
    -- --,tstDec sbs,tstDec lbs
    --,tstDec shortbs
    ]
@@ -618,7 +624,7 @@ tstDec (vname,obj) =
 
 pt (n,v) = map (\(_,pkg,s,d) -> Right v == d (s v)) pkgs
 
--- pkgs :: (CC.Serialize a ,C.Serialise a,S.Store a,B.Binary a,F.Flat a) => [(String,String,a -> L.ByteString,L.ByteString -> Either String a)]
+--pkgs :: (CC.Serialize a ,C.Serialise a,S.Store a,B.Binary a,F.Flat a) => [(String,String,a -> L.ByteString,L.ByteString -> Either String a)]
 -- pkgs = [S.sd,B.sd,C.sd,CC.sd,F.sd]
 
 -- pkgs :: (C.Serialise a) => [(String,String,a -> L.ByteString,L.ByteString -> Either String a)]
@@ -627,7 +633,7 @@ pt (n,v) = map (\(_,pkg,s,d) -> Right v == d (s v)) pkgs
 -- pkgs :: (C.Serialise a,S.Store a,B.Binary a,F.Flat a) => [(String,String,a -> L.ByteString,L.ByteString -> Either String a)]
 -- pkgs = [S.sd,B.sd,C.sd,F.sd]
 --pkgs :: (B.Binary a,S.Store a,F.Flat a) => [(String,String,a -> L.ByteString,L.ByteString -> Either String a)]
---pkgs = [S.sd,F.sd]
+-- pkgs = [S.sd,F.sd]
 
 pkgs :: (F.Flat a) => [(String,String,a -> L.ByteString,L.ByteString -> Either String a)]
 pkgs = [F.sd]

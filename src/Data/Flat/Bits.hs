@@ -3,7 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables  #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 -- |Utilities to represent and display bit sequences
-module Data.Flat.Bits (Bits, toBools, valueBits, asBytes) where
+module Data.Flat.Bits (Bits, toBools, bits, paddedBits, asBytes) where
 
 import           Data.Bits                      hiding (Bits)
 import qualified Data.ByteString.Lazy           as L
@@ -22,13 +22,18 @@ toBools :: Bits -> [Bool]
 toBools = V.toList
 
 -- |The sequence of bits corresponding to the serialization of the passed value (without any final byte padding)
-valueBits :: forall a. Flat a => a -> Bits
-valueBits v = let lbs = flat v
-                  Right (PostAligned _ f) = unflatRaw lbs :: Decoded (PostAligned a)
-              in takeBits (8 * L.length lbs - fillerLength f) lbs
-  where
-    takeBits :: Int64 -> L.ByteString -> V.Vector Bool
-    takeBits numBits lbs  = V.generate (fromIntegral numBits) (\n -> let (bb,b) = n `divMod` 8 in testBit (L.index lbs (fromIntegral bb)) (7-b))
+bits :: forall a. Flat a => a -> Bits
+bits v = let lbs = flat v
+             Right (PostAligned _ f) = unflatRaw lbs :: Decoded (PostAligned a)
+         in takeBits (8 * L.length lbs - fillerLength f) lbs
+
+-- |The sequence of bits corresponding to the byte-padded serialization of the passed value
+paddedBits :: forall a. Flat a => a -> Bits
+paddedBits v = let lbs = flat v
+               in takeBits (8 * L.length lbs) lbs
+
+takeBits :: Int64 -> L.ByteString -> V.Vector Bool
+takeBits numBits lbs  = V.generate (fromIntegral numBits) (\n -> let (bb,b) = n `divMod` 8 in testBit (L.index lbs (fromIntegral bb)) (7-b))
 
 -- |Convert a sequence of bits to the corresponding list of bytes
 asBytes :: Bits -> [Word8]

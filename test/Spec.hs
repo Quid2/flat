@@ -104,6 +104,7 @@ properties = testGroup "Properties"
 
 instance Flat [Int16]
 instance Flat [Word8]
+instance Flat [Bool]
 
 unitTests = testGroup "De/Serialisation Unit tests" $ concat [
   sz () 0
@@ -131,7 +132,9 @@ unitTests = testGroup "De/Serialisation Unit tests" $ concat [
   ,sz stBS bsSize
   ,sz lzBS bsSize
   ,sz shBS bsSize
-  ,sz tx utf16Size
+  ,sz tx utf8Size
+  ,sz (UTF8Text tx) utf8Size
+  ,sz (UTF16Text tx) utf16Size
   ,errDec (Proxy::Proxy Bool) [] -- no data
   ,errDec (Proxy::Proxy Bool) [128] -- no filler
   ,errDec (Proxy::Proxy Bool) [128+1,1,2,4,8] -- additional bytes
@@ -232,7 +235,7 @@ unitTests = testGroup "De/Serialisation Unit tests" $ concat [
    -- Long LazyStrings can have internal sections shorter than 255
    --,s (L.pack $ csb 600) (bsl s600)
   ,[trip [1..100::Int16]]
-  ,[trip unicodeText]
+  ,[trip unicodeText,trip unicodeTextUTF8T,trip unicodeTextUTF16T]
   ,[trip longBS,trip longLBS,trip longSBS]
   ,[trip longSeq]
   ,[trip mapV]
@@ -255,6 +258,7 @@ unitTests = testGroup "De/Serialisation Unit tests" $ concat [
       s600 = pre s600a
       pre = (1:)
       tx = T.pack "txt"
+      utf8Size = 8+8+3*32+8
       utf16Size = 8+8+3*16+8
       shBS = SBS.toShort stBS
       lzBS = L.pack bs
@@ -307,7 +311,7 @@ des = unflat . L.pack
 
 serRaw :: Flat a => a -> [Word8]
 --serRaw = L.unpack . flatRaw
-serRaw = asBytes . valueBits
+serRaw = asBytes . bits
 
 desRaw :: Flat a => [Word8] -> Decoded a
 desRaw = unflatRaw . L.pack

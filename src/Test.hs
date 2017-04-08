@@ -1,3 +1,4 @@
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE BinaryLiterals    #-}
 {-# LANGUAGE DeriveAnyClass    #-}
 {-# LANGUAGE DeriveGeneric     #-}
@@ -11,7 +12,7 @@ import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.Short.Internal as SBS
 import           Data.Coerce
 import           Data.Flat
-import           Data.Flat.Peeks
+import           Data.Flat.Peek
 import           Data.Flat.Decoder
 import           Data.Flat.Pretty
 import           Data.Int
@@ -29,6 +30,7 @@ instance Flat [Bool]
 instance Flat [Word8]
 instance Flat [(Word64,Word16)]
 instance Flat [ABC]
+
 
 rrr = reverse [3,2,1]
 
