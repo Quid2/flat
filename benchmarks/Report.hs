@@ -36,6 +36,9 @@ toMeasures = M.fromList . map (\r-> let m = toMeasure r in (mTest m,m))
 toMeasure :: Report -> Measure
 toMeasure r = Measure (reportName r) ((1000 *) . estPoint . anMean . reportAnalysis $ r)
 
+deleteMeasures :: FilePath -> IO ()
+deleteMeasures = removeFile . measuresFile
+
 updateMeasures :: FilePath -> IO ()
 updateMeasures = void . updateMeasures_
 

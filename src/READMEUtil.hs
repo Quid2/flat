@@ -2,16 +2,19 @@ module READMEUtil where
 
 import Text.Printf
 
-storeData = Stats (encTime flatData/1.5) (decTime flatData/1.5) 231
-flatData = Stats (1.3) ((5.58-1.3)) 67
+storeData = Stats 3.1 22.6 702728
+flatData = Stats 7 30 114841
+-- storeData = Stats (encTime flatData/1.5) (decTime flatData/1.5) 231
+-- flatData = Stats (1.3) ((5.58-1.3)) 67
 
 -- times in ms, len in bytes
 data Stats = Stats {encTime::Double,decTime::Double,binSize::Int}
 
 compareStoreFlat = table
-  ["Time (mSec)","Store","Flat"]
-  [["Encoding",printDouble $ encTime storeData,printDouble $ encTime flatData]
-  ,["Decoding",printDouble $ decTime storeData,printDouble $ decTime flatData]
+  ["","Store","Flat"]
+  [["Size (bytes)",show $ binSize storeData,show $ binSize flatData]
+  ,["Encoding (mSec)",printDouble $ encTime storeData,printDouble $ encTime flatData]
+  ,["Decoding (mSec)",printDouble $ decTime storeData,printDouble $ decTime flatData]
   ,transLine 1
   ,transLine 10
   ,transLine 100
@@ -28,15 +31,8 @@ x = pkgTransferTime 1 storeData
 
 pkgTotTime megaBytes pkg = encTime pkg + decTime pkg + pkgTransferTime megaBytes pkg
 
--- in us
-pkgTransferTime megaBytes pkg = fromIntegral (binSize pkg) / (megaBytes) -- *1000)
-
-  -- |                       | 1 MegaByte/Sec       | 10 MegaByte/Sec | 100 MegaByte/Sec |
- -- | Store Transfer Time   | ((transferTime storeData 1)) |
- -- | Flat Transfer  Time   |
-
-printDouble :: Double -> String
-printDouble = printf "%5.1f"
+-- in ms
+pkgTransferTime megaBytes pkg = fromIntegral (binSize pkg) / (megaBytes *1000)
 
 table header lines = Verbatim . unlines . map line $ ([header,headerLine header] ++ lines)
 headerLine = map (const "---")
@@ -44,3 +40,10 @@ line headers= concatMap ('|':) headers ++ "|"
 
 data Verbatim = Verbatim String
 instance Show Verbatim where show (Verbatim s) = s
+
+printDouble :: Double -> String
+printDouble = printf "%5.1f"
+
+
+-- printInt :: Int -> String
+-- printInt = splitAt 3 . reverse . show 
