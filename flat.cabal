@@ -1,5 +1,5 @@
 name: flat
-version: 0.19
+version: 0.2
 cabal-version: >=1.10
 build-type: Simple
 license: BSD3
