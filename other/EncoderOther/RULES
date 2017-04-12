@@ -1,0 +1,5 @@
+"encodersS6" forall a1 a2 a3 a4 a5 a6. encodersS [a1,a2,a3,a4,a5,a6] = a1 `mappend` a2 `mappend` a3 `mappend` a4 `mappend` a5 `mappend` a6
+"encodersS5" forall a1 a2 a3 a4 a5. encodersS [a1,a2,a3,a4,a5] = a1 `mappend` a2 `mappend` a3 `mappend` a4 `mappend` a5
+"encodersS4" forall a1 a2 a3 a4. encodersS [a1,a2,a3,a4] = a1 `mappend` a2 `mappend` a3 `mappend` a4
+"encodersS3" forall a1 a2 a3. encodersS [a1,a2,a3] = a1 `mappend` a2 `mappend` a3
+"encodersS2" forall a1 a2. encodersS [a1,a2] = a1 `mappend` a2

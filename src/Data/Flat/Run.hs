@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances         #-}
+-- |Encoding and decoding functions
 module Data.Flat.Run (
     flat,
     flatStrict,

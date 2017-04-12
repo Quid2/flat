@@ -12,16 +12,6 @@ packages:
     commit: 5e2f20c0a2d8fd750f431af9a17ba116a6f31cf0
   extra-dep: true
  
-# 8.0.1
-# resolver: lts-7.20
-# extra-deps:
-# - store-0.4.1
-# - store-core-0.4
-# - binary-0.8.5.1
-# #- binary-0.9.0.0
-# - criterion-1.1.4.0
-# - optparse-applicative-0.13.2.0
-
 # 8.0.2 - doesn't compile heavily mutually recursive data types.
 # low performance on certain tests as encoder RULES are not applied
 resolver: lts-8.5
@@ -29,6 +19,5 @@ extra-deps:
 - store-0.4.1
 - store-core-0.4
 - binary-0.8.5.1
-#- binary-0.9.0.0
 - derive-2.6.2
  

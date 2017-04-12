@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveAnyClass      #-}
 {-# LANGUAGE DeriveGeneric       #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+-- |Pre-value and post-value byte alignments
 module Data.Flat.Filler (
     Filler(..),
     fillerLength,
