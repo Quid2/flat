@@ -1,16 +1,16 @@
 name: flat
-version: 0.2
-cabal-version: >=1.10
-build-type: Simple
+version: 0.2.2
+synopsis: Principled and efficient bit-oriented binary serialization.
+description: See the <http://github.com/tittoassini/flat online tutorial>.
+homepage: http://github.com/tittoassini/flat
+copyright: Copyright: (c) 2016 Pasqualino `Titto` Assini
+author: Pasqualino `Titto` Assini
 license: BSD3
 license-file: LICENSE
-copyright: Copyright: (c) 2016 Pasqualino `Titto` Assini
 maintainer: tittoassini@gmail.com
-homepage: http://github.com/tittoassini/flat
-synopsis: Principled and efficient bit-oriented binary serialization.
-description: See http\://github.com/tittoassini/flat for a tutorial
 category: Data,Parsing,Serialization
-author: Pasqualino `Titto` Assini
+cabal-version: >=1.10
+build-type: Simple
 tested-with: GHC ==7.10.3 GHC ==8.0.2
 extra-source-files:
     stack.yaml
