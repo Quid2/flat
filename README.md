@@ -31,7 +31,7 @@ data Direction = North | South | Center | East | West deriving (Show,Generic,Fla
 data List a = Nil | Cons a (List a) deriving (Show,Generic,Flat)
 ```
 
-For encoding, use 'flat', for decoding, use `unflat` (or equivalently: `flatStrict` and `unflatStrict`):
+For encoding, use `flat`, for decoding, use `unflat` (or equivalently: `flatStrict` and `unflatStrict`):
 
 ```haskell
 unflatStrict . flat $ Cons North (Cons South Nil) :: Decoded (List Direction)

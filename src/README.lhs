@@ -26,7 +26,7 @@ Define a couple of custom data types, deriving Generic and Flat:
 
 > data List a = Nil | Cons a (List a) deriving (Show,Generic,Flat)
 
-For encoding, use 'flat', for decoding, use `unflat` (or equivalently: `flatStrict` and `unflatStrict`):
+For encoding, use `flat`, for decoding, use `unflat` (or equivalently: `flatStrict` and `unflatStrict`):
 
 > d1 = unflatStrict . flat $ Cons North (Cons South Nil) :: Decoded (List Direction)
 
