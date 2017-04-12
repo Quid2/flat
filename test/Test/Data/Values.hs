@@ -287,6 +287,7 @@ cafs = [
        , NF unicodeTextT
        --, NF unicodeTextUTF8T
        --, NF unicodeTextUTF16T
+       , NF couples
        , NF v1T
        , NF v2T
        , NF vfT

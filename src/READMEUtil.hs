@@ -1,6 +1,8 @@
+{-# LANGUAGE CPP #-}
 module READMEUtil where
 
 import Text.Printf
+import qualified Data.Text as T
 
 storeData = Stats 3.1 22.6 702728
 flatData = Stats 7 30 114841
@@ -10,11 +12,11 @@ flatData = Stats 7 30 114841
 -- times in ms, len in bytes
 data Stats = Stats {encTime::Double,decTime::Double,binSize::Int}
 
-compareStoreFlat = table
+compareStoreFlat = T.pack $ table
   ["","Store","Flat"]
-  [["Size (bytes)",show $ binSize storeData,show $ binSize flatData]
-  ,["Encoding (mSec)",printDouble $ encTime storeData,printDouble $ encTime flatData]
+  [["Encoding (mSec)",printDouble $ encTime storeData,printDouble $ encTime flatData]
   ,["Decoding (mSec)",printDouble $ decTime storeData,printDouble $ decTime flatData]
+  ,["Size (bytes)",show $ binSize storeData,show $ binSize flatData]
   ,transLine 1
   ,transLine 10
   ,transLine 100
@@ -23,9 +25,9 @@ compareStoreFlat = table
   ,transferLine 100
   ]
 
-transLine megaBytes = ["Transmission @ "++show (round megaBytes) ++" MegaByte/Sec",printDouble $ pkgTransferTime megaBytes storeData,printDouble $ pkgTransferTime megaBytes flatData]
+transLine megaBytes = ["Transmission (mSec) @ "++show (round megaBytes) ++" MegaByte/Sec",printDouble $ pkgTransferTime megaBytes storeData,printDouble $ pkgTransferTime megaBytes flatData]
 
-transferLine megaBytes = ["Total Transfer @ "++show (round megaBytes) ++" MegaByte/Sec",printDouble $ pkgTotTime megaBytes storeData,printDouble $ pkgTotTime megaBytes flatData]
+transferLine megaBytes = ["Total Transfer (mSec) @ "++show (round megaBytes) ++" MegaByte/Sec",printDouble $ pkgTotTime megaBytes storeData,printDouble $ pkgTotTime megaBytes flatData]
 
 x = pkgTransferTime 1 storeData
 
@@ -34,12 +36,15 @@ pkgTotTime megaBytes pkg = encTime pkg + decTime pkg + pkgTransferTime megaBytes
 -- in ms
 pkgTransferTime megaBytes pkg = fromIntegral (binSize pkg) / (megaBytes *1000)
 
-table header lines = Verbatim . unlines . map line $ ([header,headerLine header] ++ lines)
+table header lines = unlines . map line $ ([header,headerLine header] ++ lines)
 headerLine = map (const "---")
 line headers= concatMap ('|':) headers ++ "|"
 
-data Verbatim = Verbatim String
-instance Show Verbatim where show (Verbatim s) = s
+-- Add Verbatim support
+-- NOT WORKING
+-- #define EXTENSIONS "instance {-# OVERLAPPING #-} IO_ Verbatim where io_  = return . showText"
+-- data Verbatim = Verbatim String
+-- instance Show Verbatim where show (Verbatim s) = s
 
 printDouble :: Double -> String
 printDouble = printf "%5.1f"

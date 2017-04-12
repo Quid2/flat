@@ -2,15 +2,17 @@
 {-# LANGUAGE RankNTypes           #-}
 {-# LANGUAGE ScopedTypeVariables  #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+
 -- |Utilities to represent and display bit sequences
 module Data.Flat.Bits (Bits, toBools, bits, paddedBits, asBytes) where
 
 import           Data.Bits                      hiding (Bits)
-import qualified Data.ByteString.Lazy           as L
+import qualified Data.ByteString           as L
+import           Data.Flat.Decoder
 import           Data.Flat.Class
 import           Data.Flat.Filler
 import           Data.Flat.Run
-import           Data.Int
+-- import           Data.Int
 import qualified Data.Vector.Unboxed            as V
 import           Data.Word
 import           Text.PrettyPrint.HughesPJClass
@@ -32,7 +34,7 @@ paddedBits :: forall a. Flat a => a -> Bits
 paddedBits v = let lbs = flat v
                in takeBits (8 * L.length lbs) lbs
 
-takeBits :: Int64 -> L.ByteString -> V.Vector Bool
+takeBits :: Int -> L.ByteString -> V.Vector Bool
 takeBits numBits lbs  = V.generate (fromIntegral numBits) (\n -> let (bb,b) = n `divMod` 8 in testBit (L.index lbs (fromIntegral bb)) (7-b))
 
 -- |Convert a sequence of bits to the corresponding list of bytes

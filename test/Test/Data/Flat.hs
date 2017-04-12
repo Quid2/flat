@@ -59,13 +59,6 @@ instance Flat D4
 
 instance Flat a => Flat (Phantom a)
 
-instance  {-# OVERLAPPING #-}  Flat (Tree N)
-instance {-# OVERLAPPABLE #-} Flat a => Flat (Tree a)
-instance {-# OVERLAPPING #-} Flat (Tree (N,N,N))
-instance {-# OVERLAPPING #-} Flat [N]
-instance {-# OVERLAPPING #-} Flat (N,N,N)
-instance {-# OVERLAPPING #-} Flat (Word,Word8,Word16,Word32,Word64)
-
 -- Slow to compile
 instance Flat Various
 

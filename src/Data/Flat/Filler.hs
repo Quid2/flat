@@ -1,11 +1,19 @@
-{-# LANGUAGE DeriveGeneric ,DeriveAnyClass #-}
-module Data.Flat.Filler(Filler(..),fillerLength
-                       ,PreAligned(..),preAligned,postAligned,PostAligned(..)
-                       ) where
+{-# LANGUAGE DeriveAnyClass      #-}
+{-# LANGUAGE DeriveGeneric       #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+module Data.Flat.Filler (
+    Filler(..),
+    fillerLength,
+    PreAligned(..),
+    preAligned,
+    PostAligned(..),
+    postAligned,
+    postAlignedDecoder
+    ) where
 
 import           Data.Flat.Class
 import           Data.Flat.Encoder
--- import           Data.Flat.Decoder
+import           Data.Flat.Decoder
 import           Control.DeepSeq
 import           Data.Typeable
 
@@ -31,7 +39,7 @@ data PreAligned a = PreAligned { preFiller :: Filler, preValue :: a }
 
 -- |Length of a filler in bits
 fillerLength :: Num a => Filler -> a
-fillerLength FillerEnd = 1
+fillerLength FillerEnd     = 1
 fillerLength (FillerBit f) = 1 + fillerLength f
 
 -- |Post align a value
@@ -40,5 +48,10 @@ postAligned a = PostAligned a FillerEnd
 
 -- |Pre align a value
 preAligned :: a -> PreAligned a
-preAligned a = PreAligned FillerEnd a
+preAligned = PreAligned FillerEnd
 
+postAlignedDecoder :: Get a -> Get (PostAligned a)
+postAlignedDecoder dec = do
+  v <- dec
+  _::Filler <- decode
+  return (postAligned v)

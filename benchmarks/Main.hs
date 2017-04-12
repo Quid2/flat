@@ -336,9 +336,8 @@ mainBench = do
 --mainBench = defaultMainWith (defaultConfigFilePath {
 mainBench_ jsonReportFile = defaultMainWith (defaultConfig {jsonFile= Just jsonReportFile}) (
   concat [
-   tstDec carT
-   --,tstDec mapT
-   --,tstDec nativeListT
+   --tstDec carT
+   --tstDec nativeListT
    --,tstDec treeNLargeT
    --,tstDec treeNNNLargeT
    --,tstDec wordsT,tstDec words0T
@@ -349,7 +348,8 @@ mainBench_ jsonReportFile = defaultMainWith (defaultConfig {jsonFile= Just jsonR
    -- ,tstDec lN2T
    -- -- --,tstDec lN3T
    -- -- flat fails to complete:
-   -- ,tstDec seqNT
+   --tstDec treeN33LargeT
+   tstDec mapT--,tstDec seqNT
    -- ,tstDec asciiStrT
    --,tstDec unicodeStrT
    --,tstDec unicodeTextT
@@ -632,11 +632,12 @@ pt (n,v) = map (\(_,pkg,s,d) -> Right v == d (s v)) pkgs
 
 -- pkgs :: (C.Serialise a,S.Store a,B.Binary a,F.Flat a) => [(String,String,a -> L.ByteString,L.ByteString -> Either String a)]
 -- pkgs = [S.sd,B.sd,C.sd,F.sd]
---pkgs :: (B.Binary a,S.Store a,F.Flat a) => [(String,String,a -> L.ByteString,L.ByteString -> Either String a)]
--- pkgs = [S.sd,F.sd]
 
-pkgs :: (F.Flat a) => [(String,String,a -> L.ByteString,L.ByteString -> Either String a)]
-pkgs = [F.sd]
+pkgs :: (B.Binary a,S.Store a,F.Flat a) => [(String,String,a -> L.ByteString,L.ByteString -> Either String a)]
+pkgs = [S.sd,F.sd]
+
+-- pkgs :: (F.Flat a) => [(String,String,a -> L.ByteString,L.ByteString -> Either String a)]
+-- pkgs = [F.sd]
 
 
 tstEncodeDeep name k1 k2 = bgroup ("serialize " ++ name) [

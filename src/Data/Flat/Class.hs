@@ -156,6 +156,7 @@ instance (GEncoders a, KnownNat n,KnownNat m) => GEncodeSum n m (C1 c a) where
         numBits = fromInteger (natVal (Proxy :: Proxy n))
         code = fromInteger (natVal (Proxy :: Proxy m))
 
+-- |Calculate number of constructors
 type family NumConstructors (a :: * -> *) :: Nat where
     NumConstructors (C1 c a) = 1
     NumConstructors (x :+: y) = NumConstructors x + NumConstructors y
@@ -226,6 +227,7 @@ instance (NumConstructors (a :+: b) <= 255, GSizeSum 0 (a :+: b)) => GSize (a :+
     gsize !n x = gsizeSum n x (Proxy :: Proxy 0)
     {-# INLINE gsize #-}
 
+-- |Calculate size in bits of constructor
 class KnownNat n => GSizeSum (n :: Nat) (f :: * -> *) where gsizeSum :: NumBits -> f a -> Proxy n -> NumBits
 
 instance (GSizeSum (n + 1) a, GSizeSum (n + 1) b, KnownNat n)

@@ -1,92 +1,58 @@
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances         #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE ScopedTypeVariables       #-}
-{-# LANGUAGE TypeSynonymInstances      #-}
 module Data.Flat.Run (
     flat,
+    flatStrict,
     unflat,
-    unflatRaw,
+    unflatStrict,
     unflatWith,
-    flatRaw,
-    DeserializeFailure,
-    Decoded,
-    Get,
+    unflatRaw,
+    --unflatRawWith,
     ) where
 
-import           Control.Exception
+import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as L
 import           Data.Flat.Class
 import           Data.Flat.Decoder
 import qualified Data.Flat.Encoder    as E
 import           Data.Flat.Filler
--- import           Data.Flat.Types
 
--- |Encode byte-padded value.
-flat :: Flat a => a -> L.ByteString
+-- |Strictly encode padded value.
+flatStrict :: Flat a => a -> B.ByteString
+flatStrict = flat
+
+-- |Encode padded value.
+flat :: (FlatRaw (PostAligned a) c, Flat a) => a -> c
 flat = flatRaw . postAligned
 
--- |Encode value, if values does not end on byte boundary, 0s padding is added.
-flatRaw :: Flat a => a -> L.ByteString
--- flatRaw a = E.encoderLazy (encode a)
-flatRaw a = L.fromStrict $ E.encoderStrict (getSize $ postAligned a) (encode a)
+unflatStrict :: Flat a => B.ByteString -> Decoded a
+unflatStrict = unflat
 
--- |Decode byte-padded value
-unflat :: Flat a => L.ByteString -> Decoded a
-unflat bs = postValue <$> unflatWith decode bs
--- unflat bs = (\(PostAligned v _) -> v) <$> unflatChkWith decode bs
+-- |Decode padded value.
+unflat :: (FlatRaw (PostAligned a) b, Flat a) => b -> Decoded a
+unflat = unflatWith decode
 
-unflatRaw :: Flat a => L.ByteString -> Decoded a
--- unflatRaw = unflatChkWith decode
-unflatRaw bs = (\(v, _, _) -> v) <$> runGetRawLazy decode bs
+-- |Decode padded value, using the provided decoder.
+unflatWith :: FlatRaw (PostAligned a) b => Get (PostAligned a) -> b -> Decoded a
+unflatWith dec bs = postValue <$> unflatRawWith dec bs
 
-unflatWith :: Get a -> L.ByteString -> Decoded a
-unflatWith = runGetLazy
+-- |Decode (unpadded) value.
+unflatRaw :: (FlatRaw a b, Flat a) => b -> Decoded a
+unflatRaw = unflatRawWith decode
 
+class FlatRaw a b where
+  -- |Encode (unpadded) value
+  flatRaw :: Flat a => a -> b
 
-  -- unflatRaw bs = (\(v,_,_) -> v) <$> runGetLazy decode bs
--- unflatChkWith dec bs = case runGetLazy dec bs of
---                          Left e -> Left e
---                          Right (v,bs,n) | L.null bs -> Right v -- && n ==0
---                                         | otherwise -> Left $ unwords $ if n == 0
---                                                                 then ["Partial decoding, left over data:",prettyLBS bs]
---                                                                 else ["Partial decoding, left over data:",prettyLBS bs,"minus",show n,"bits"]
+  -- |Unflat (unpadded) value, using provided decoder
+  unflatRawWith :: Get a -> b -> Decoded a
 
---unflatPartWith :: Get b -> L.ByteString -> Either String (b, L.ByteString, Int)
---unflatPartWith dec bs = runPartialGet dec bs 0
--- unflatPartWith dec bs = runGetLazy dec bs
+instance Flat a => FlatRaw a B.ByteString where
+  flatRaw a = E.strictEncoder (getSize a) (encode a)
 
--- unflatWith :: Get a -> L.ByteString -> Either String a
--- unflatWith dec bs = unflatChkWith (do
---                                       v <- dec
---                                       _::Filler <- decode
---                                       return v) bs
+  unflatRawWith = strictDecoder
 
--- unflatRaw :: Flat a => L.ByteString -> Decoded a
--- unflatRaw = runGetOrFail decode
-
-
---unflatIncremental = Get.runGetIncremental
--- runGet decode
-
--- encoded :: Flat a => a -> Encoded a
--- encoded = Encoded . flat
-
--- -- TODO: detect left over data and give error
--- decoded :: Flat a => Encoded a -> Decoded a
--- decoded = unflat . bytes
-
--- -- |Encoded data, mainly useful to show data in a nicer way
--- newtype Encoded a = Encoded {bytes::L.ByteString} deriving Show
-
--- instance Pretty (Encoded a) where pPrint = text . prettyLBS . bytes
-
--- newtype Bits8 = Bits8 {bits8::Word8}
--- instance Pretty Bits8 where pPrint = text . prettyWord8 . bits8
-
-
-type Decoded a = Either DeserializeFailure a
-
-type DeserializeFailure = String
-
-instance Exception DeserializeFailure
-
+instance Flat a => FlatRaw a L.ByteString where
+  flatRaw = L.fromStrict . flatRaw
+  unflatRawWith dec = unflatRawWith dec . L.toStrict

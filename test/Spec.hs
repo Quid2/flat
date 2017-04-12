@@ -20,6 +20,7 @@ import           Data.Flat
 import           Data.Flat.Bits
 import           Data.Int
 import           Data.List
+import qualified Data.Map              as M
 import           Data.Ord
 import           Data.Proxy
 import qualified Data.Sequence         as Seq
@@ -27,6 +28,7 @@ import qualified Data.Text             as T
 import           Data.Word
 import           Numeric.Natural
 import           System.Arch
+import           System.Endian
 import           System.Exit
 import           Test.Data
 import           Test.Data.Arbitrary
@@ -35,7 +37,6 @@ import           Test.Data.Values
 import           Test.Tasty
 import           Test.Tasty.HUnit
 import           Test.Tasty.QuickCheck as QC
-import System.Endian
 
 main = do
   printInfo
@@ -128,6 +129,7 @@ unitTests = testGroup "De/Serialisation Unit tests" $ concat [
   ,sz "abc" (4+3*8)
   ,sz ((),(),Unit) 0
   ,sz (True,False,One,Five) 7
+  ,sz map1 7
   ,sz bs (4+3*8)
   ,sz stBS bsSize
   ,sz lzBS bsSize
@@ -193,12 +195,22 @@ unitTests = testGroup "De/Serialisation Unit tests" $ concat [
   ,tstI [0::Int32,2,-2,127,-128]
   ,tstI [0::Int64,2,-2,127,-128]
   ,s (-1024::Int64) [255,15]
+  ,s (maxBound::Word64) [255,255,255,255,255,255,255,255,255,1]
+  ,s (minBound::Int64) [255,255,255,255,255,255,255,255,255,1]
+  ,s (maxBound::Int64) [254,255,255,255,255,255,255,255,255,1]
   ,tstI [0::Int,2,-2,127,-128]
   ,tstI [0::Integer,2,-2,127,-128,-256,-512]
   ,s (-1024::Integer) [255,15]
   ,s (-0.15625::Float)  [0b10111110,0b00100000,0,0]
   ,s (-0.15625::Double) [0b10111111,0b11000100,0,0,0,0,0,0]
   ,s (-123.2325E-23::Double) [0b10111011,0b10010111,0b01000111,0b00101000,0b01110101,0b01111011,0b01000111,0b10111010]
+  ,map trip [maxBound::Word16]
+  ,map trip [maxBound::Word32]
+  ,map trip [maxBound::Word64]
+  ,map trip [minBound::Int8,maxBound::Int8]
+  ,map trip [minBound::Int16,maxBound::Int16]
+  ,map trip [minBound::Int32,maxBound::Int32]
+  ,map trip [minBound::Int64,maxBound::Int64]
   ,map trip [0::Float,-0::Float,0/0::Float,1/0::Float]
   ,map trip [0::Double,-0::Double,0/0::Double,1/0::Double]
   ,s '\0' [0]
@@ -229,6 +241,7 @@ unitTests = testGroup "De/Serialisation Unit tests" $ concat [
     --,s (Just $ T.pack "abc") [128+1,3,97,98,99,0]
     --,s (T.pack "abc") (al s3)
     --,s (T.pack $ cs 600) (al s600)
+  ,s map1 [0b10111000]
   ,s (B.pack $ csb 3) (bsl c3)
   ,s (B.pack $ csb 600) (bsl s600)
   ,s (L.pack $ csb 3) (bsl c3)
@@ -239,8 +252,11 @@ unitTests = testGroup "De/Serialisation Unit tests" $ concat [
   ,[trip longBS,trip longLBS,trip longSBS]
   ,[trip longSeq]
   ,[trip mapV]
+  ,[trip map1]
   ]
     where
+      map1 = M.fromList [(False,True),(True,False)]
+
       ns :: [(Word64, Int)]
       ns =  [( (-) (2 ^(i*7)) 1,fromIntegral (8*i)) | i <- [1 .. 10]]
 
@@ -282,8 +298,8 @@ unitTests = testGroup "De/Serialisation Unit tests" $ concat [
 
       sz v e = [testCase (unwords ["size of",sshow v]) $ getSize v @?= e]
 
-      s v e = [testCase (unwords ["flat raw",sshow v]) $ serRaw v @?= e
-              ,testCase (unwords ["unflat raw",sshow v]) $ desRaw e @?= Right v]
+      s v e = [testCase (unwords ["flat raw",sshow v]) $ serRaw v @?= e]
+              --,testCase (unwords ["unflat raw",sshow v]) $ desRaw e @?= Right v]
 
       -- Aligned values unflat to the original value, modulo the added filler.
       a v e = [testCase (unwords ["flat",sshow v]) $ ser v @?= e
@@ -295,7 +311,7 @@ unitTests = testGroup "De/Serialisation Unit tests" $ concat [
       sshow = take 80 . show
 
       trip :: forall a .(Show a,Flat a) => a -> TestTree
-      trip v = testCase (unwords ["roundtrip",sshow v]) $ show (unflat (flat v)::Decoded a) @?= show (Right v::Decoded a) -- we use show to get Right NaN == Right NaN
+      trip v = testCase (unwords ["roundtrip",sshow v]) $ show (unflat (flat v::B.ByteString)::Decoded a) @?= show (Right v::Decoded a) -- we use show to get Right NaN == Right NaN
 
 errDec :: forall a . (Flat a, Eq a, Show a) => Proxy a -> [Word8] -> [TestTree]
 --errDec _ bs = [testCase "bad decode" $ let ev = (des bs::Decoded a) in ev @?= Left ""]
@@ -310,11 +326,12 @@ des :: Flat a => [Word8] -> Decoded a
 des = unflat . L.pack
 
 serRaw :: Flat a => a -> [Word8]
---serRaw = L.unpack . flatRaw
+-- serRaw = B.unpack . flatRaw
+-- serRaw = L.unpack . flatRaw
 serRaw = asBytes . bits
 
-desRaw :: Flat a => [Word8] -> Decoded a
-desRaw = unflatRaw . L.pack
+--desRaw :: Flat a => [Word8] -> Decoded a
+--desRaw = unflatRaw . L.pack
 
 type RT a = a -> Bool
 type RTL a = Large a -> Bool
@@ -325,7 +342,7 @@ prop_Flat_roundtrip = rtrip2
 prop_Flat_Large_roundtrip :: (Eq b, Flat b) => Large b -> Bool
 prop_Flat_Large_roundtrip (Large x) = rtrip2 x
 
-rtrip x = unflat (flat x) == Right x
+rtrip x = unflat (flat x::B.ByteString) == Right x
 rtrip2 x = rtrip x && rtrip (True,x,False)
 
 {-

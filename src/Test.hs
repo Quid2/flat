@@ -1,3 +1,4 @@
+{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE BinaryLiterals    #-}
 {-# LANGUAGE DeriveAnyClass    #-}
@@ -23,6 +24,7 @@ import           Prelude                        hiding (exponent, sign)
 import           System.Endian
 import           Text.Printf
 import Data.Flat.Bits
+import qualified Data.Map as M
 
 instance Flat [Word16]
 instance Flat [Int16]
@@ -31,6 +33,21 @@ instance Flat [Word8]
 instance Flat [(Word64,Word16)]
 instance Flat [ABC]
 
+m1 = M.fromList [(False,True)]
+mmm = (size m1 0,bits m1, unflat $ flat m1 :: Decoded (M.Map Bool Bool))
+
+-- deriving  instance {-# OVERLAPPABLE #-} Flat a => Flat [a]
+-- instance Flat a => Flat [a]
+
+-- instance {-# OVERLAPPING #-} Flat (Bool,Int,Char)
+
+data CCC a b c = CCC (a,(a,b,b),c) deriving (Generic) -- ,Flat)
+
+instance Flat (CCC  Bool Int Char)
+
+data VVV a b = VVV (a,b) [a] deriving (Generic) -- ,Flat)
+
+instance Flat (VVV Bool Int)
 
 rrr = reverse [3,2,1]
 
@@ -187,7 +204,7 @@ pp :: forall a . (Flat a, Show a) => a -> IO ()
 pp v = putStrLn (unwords [show v,"->",show $ getSize v,show $ encode v,"->",show $ L.unpack $ flat v])
 
 -- gg :: Flat a => a -> Vector Bool
-gg = valueBits . flat $ "abc"
+gg = bits . flat $ "abc"
 
 shBS = SBS.toShort stBS
 lzBS = L.pack bs
@@ -247,7 +264,7 @@ q :: Decoded T.Text
 q = unflat $ flat (T.pack "D\226\FStz\GS3]\n8\149sV\243J\181\181\235\214&y\226\231\&2\239\212\174\DC1J'F\129hpsu\199\178")
 
 g = let v = (-1::Int16,255::Word8,False,-1::Int16,1::Word8,0::Word8,False)
-    in (unflat (flat v) == Right v,valueBits v)
+    in (unflat (flat v) == Right v,bits v)
 
 g1 :: Decoded (Bool,Bool,Bool,Bool)
 g1 = unflat $ flat (True,False,True,True)
@@ -264,8 +281,8 @@ g4 = unflat $ flat (False,0::Word8,False)
 g5 :: Decoded (Float,Double,Bool,Float,Double,Bool)
 g5 = unflat $ flat (8.11E-11::Float,8.11E-11::Double,True,8.11E-11::Float,8.11E-11::Double,True)
 
-f0 = valueBits ((False,255::Word8,False,255::Word8))
-f = valueBits (False,0::Word8,False)
+f0 = bits ((False,255::Word8,False,255::Word8))
+f = bits (False,0::Word8,False)
 
 p :: String
 p = printf "%032b" $ floatToWord (-0.15625)
@@ -278,12 +295,12 @@ d = prettyLBS $ flatRaw (3/0::Double)
 
 s = serRaw (True,False,True)
 
-z = valueBits $ (True,False,True)
+z = bits $ (True,False,True)
 zz = L.unpack . flat $ (True,False,True)
 
 serRaw :: Flat a => a -> [Word8]
 --serRaw = L.unpack . flatRaw
-serRaw = asBytes . valueBits
+serRaw = asBytes . bits
 
 y :: Decoded Float
 y = unflat $ flat (-0.15625::Double)

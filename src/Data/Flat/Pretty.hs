@@ -1,6 +1,10 @@
-module Data.Flat.Pretty(Pretty(..),prettyShow
-                       ,prettyLBS,prettyBS
-                       ,prettyWord8) where
+module Data.Flat.Pretty (
+    Pretty(..),
+    prettyShow,
+    prettyLBS,
+    prettyBS,
+    prettyWord8,
+    ) where
 import qualified Data.ByteString                as B
 import qualified Data.ByteString.Lazy           as L
 import           Data.Word

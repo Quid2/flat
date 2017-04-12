@@ -1,38 +1,41 @@
+{-# LANGUAGE BangPatterns #-}
+
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE FlexibleInstances         #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE RankNTypes                #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE UndecidableInstances      #-}
--- |Flat Instances for common, primitive or 'opaque' data types for which instances cannot be automatically derived
-module Data.Flat.Instances () where
+-- |Flat Instances for common, primitive and abstract data types for which instances cannot be automatically derived
+module Data.Flat.Instances (
+    sizeMap,
+    encodeMap,
+    decodeMap,
+    sizeSequence,
+    encodeSequence,
+    decodeSequence,
+    ) where
 
 import qualified Data.ByteString       as B
 import qualified Data.ByteString.Lazy  as L
 import qualified Data.ByteString.Short as SBS
 import           Data.Char
+import           Data.Containers       (ContainerKey, IsMap, MapValue,
+                                        mapFromList, mapToList)
 import           Data.Flat.Class
 import           Data.Flat.Decoder
 import           Data.Flat.Encoder
-import           Data.Flat.Size(arrayBits)
-import Data.Flat.Types
+--import           Data.Flat.Size        (arrayBits)
+import           Data.Flat.Types
 import qualified Data.Foldable         as F
--- import           Data.Int
 import qualified Data.Map              as M
--- import           Data.MonoTraversable
+import           Data.MonoTraversable
 import qualified Data.Sequence         as S
--- import qualified Data.Sequences        as O
+import           Data.Sequences
 import qualified Data.Text             as T
--- import           Data.Word
--- import           Numeric.Natural
 import           Prelude               hiding (mempty)
 
--- import qualified Data.Vector            as V
--- import qualified Data.Vector.Unboxed            as VU
--- import qualified Data.Vector.Storable as VS
-
----------- Common Types
-
+-- Flat instances for common types
 instance Flat () where
   encode _ = mempty
   decode = pure ()
@@ -42,6 +45,10 @@ instance Flat Bool where
   size = sBool
   decode = dBool
 
+instance Flat a => Flat (Maybe a)
+
+instance (Flat a,Flat b) => Flat (Either a b)
+
 instance {-# OVERLAPPABLE #-} (Flat a, Flat b) => Flat (a,b)
 instance {-# OVERLAPPABLE #-} (Flat a, Flat b, Flat c) => Flat (a,b,c)
 instance {-# OVERLAPPABLE #-} (Flat a, Flat b, Flat c, Flat d) => Flat (a,b,c,d)
@@ -49,7 +56,13 @@ instance {-# OVERLAPPABLE #-} (Flat a, Flat b, Flat c, Flat d, Flat e) => Flat (
 instance {-# OVERLAPPABLE #-} (Flat a, Flat b, Flat c, Flat d, Flat e, Flat f) => Flat (a,b,c,d,e,f)
 instance {-# OVERLAPPABLE #-} (Flat a, Flat b, Flat c, Flat d, Flat e, Flat f, Flat g) => Flat (a,b,c,d,e,f,g)
 
--- Primitive types
+-- Do not provide this to 'force' users to declare instances of concrete list types
+instance {-# OVERLAPPABLE #-} Flat a => Flat [a]
+instance {-# OVERLAPPING #-} Flat [Char]
+
+-- instance Flat [Char]
+
+-- Flat instances for primitive/abstract types
 instance Flat B.ByteString where
    encode = eBytes
    size = sBytes
@@ -65,14 +78,10 @@ instance Flat SBS.ShortByteString where
   size = sShortBytes
   decode = dShortByteString
 
-instance Flat a => Flat (Maybe a)
-
-instance (Flat a,Flat b) => Flat (Either a b)
-
--- Do not provide this to 'force' users to declare instances of concrete list types
-instance Flat [Char]
--- instance {-# OVERLAPPABLE #-} Flat a => Flat [a]
---instance {-# OVERLAPPING #-} Flat [Char]
+instance Flat T.Text where
+   size = sUTF8Max
+   encode = eUTF8
+   decode = dUTF8
 
 instance Flat UTF8Text where
   size (UTF8Text t)= sUTF8Max t
@@ -83,11 +92,6 @@ instance Flat UTF16Text where
   size (UTF16Text t)= sUTF16 t
   encode (UTF16Text t) = eUTF16 t
   decode = UTF16Text <$> dUTF16
-
-instance Flat T.Text where
-   size = sUTF8Max
-   encode = eUTF8
-   decode = dUTF8
 
 instance Flat Word8 where
   encode = eWord8
@@ -164,97 +168,46 @@ instance Flat Char where
   encode = eChar
   decode = dChar
 
--- Abstract/Opaque types
-
 instance (Flat a, Flat b,Ord a) => Flat (M.Map a b) where
-  size = sizeList M.toList
-  -- size = sizeList_
-  encode = encodeList M.toList
-  -- encode = encodeList2_
-  -- encode = encodeList_ .  M.toList
-  --decode = M.fromList <$> decodeList_
-  decode = decodeList M.fromList -- <$> decodeList_
-
--- data Array a = Array0 | Array1 a ...
---data Array a = Array [a] deriving (Eq, Ord, Show, NFData, Generic)
-
--- instance {-# OVERLAPPABLE #-} Flat a => Flat (Array a) where
---     encode (Array l) = encodeArray l
---     -- size = arraySize
---     -- size = arraySize
---     decode = Array <$> dArray
-
--- arraySize (Array vs) = 8*(numBlks 255 (length vs) + 1) + sum (map size vs)
--- INEFFICIENT
--- arraySize (Array vs) = 8*(numBlks 255 (length vs) + 1) + sum (map (size 0) vs)
-
--- instance {-# OVERLAPPING #-} Flat (Array Word8) where
---     encode (Array l) = encode $ B.pack l
---     decode = Array . B.unpack <$> decode
+   size = sizeMap
+   encode = encodeMap
+   decode = decodeMap
 
 instance Flat a => Flat (S.Seq a) where
-  size = sizeArray F.foldl' S.length
-  encode = encodeArray F.toList
-  decode = decodeArray S.fromList
+  size = sizeSequence
+  encode = encodeSequence
+  decode = decodeSequence
 
-{-# INLINE sizeList #-}
-sizeList
-  :: (Foldable t, Flat a) => (t1 -> t a) -> t1 -> NumBits -> NumBits
-sizeList toList l = sizeList_ (toList l)
+-- |Calculate size of an instance of IsMap
+{-# INLINE sizeMap #-}
+sizeMap :: (Flat (ContainerKey r), Flat (MapValue r), IsMap r) => Size r
+sizeMap m acc = F.foldl' (\acc (k,v) -> size k (size v (acc + 1))) (acc+1) . mapToList $ m
 
-{-# INLINE sizeList_ #-}
-sizeList_ :: (Foldable t, Flat a) => t a -> NumBits -> NumBits
-sizeList_ l acc = F.foldl' (\acc n -> size n (acc + 1)) (acc+1) l
+{-# INLINE encodeMap #-}
+-- |Encode an instance of IsMap, as a list
+encodeMap :: (Flat (ContainerKey map), Flat (MapValue map), IsMap map) => map -> Encoding
+encodeMap = encodeListWith (\(k,v) -> encode k <> encode v) . mapToList
+-- encodeMap = go . mapToList
+--   where
+--     go []     = eFalse
+--     go ((!x,!y):xs) = eTrue <> encode x <> encode y <> go xs
 
-{-# INLINE encodeList #-}
-encodeList :: Flat a1 => (a -> [a1]) -> a -> Encoding
-encodeList toList = encodeList_ . toList
+{-# INLINE decodeMap #-}
+-- |Decode an instance of IsMap, as a list
+decodeMap :: (Flat (ContainerKey map), Flat (MapValue map), IsMap map) => Get map
+decodeMap = mapFromList <$> decodeListWith ((,) <$> decode <*> decode)
 
-{-# INLINE encodeList_ #-}
-encodeList_ :: Flat a => [a] -> Encoding
-encodeList_ [] = eFalse
-encodeList_ (x:xs) = eTrue <> encode x <> encodeList_ xs
+{-# INLINE sizeSequence #-}
+-- |Calculate size of an instance of IsSequence
+sizeSequence :: (IsSequence mono, Flat (Element mono)) => mono -> NumBits -> NumBits
+sizeSequence s acc = ofoldl' (flip size) acc s + arrayBits (olength s)
 
--- encodeList2_ l = F.foldl' (\e n -> e <> eTrue <> encode n) mempty l <> eFalse 
+{-# INLINE encodeSequence #-}
+-- |Encode an instance of IsSequence, as an array
+encodeSequence :: (Flat (Element mono), IsSequence mono) => mono -> Encoding
+encodeSequence = encodeArrayWith encode . otoList
 
-{-# INLINE decodeList #-}
-decodeList :: Flat a => ([a] -> b) -> Get b
-decodeList fromList = fromList <$> decodeList_
-
-{-# INLINE decodeList_ #-}
-decodeList_ :: Flat a => Get [a]
-decodeList_ = do
-  b <- dBool
-  if b
-    then (:) <$> decode <*> decodeList_
-    else return []
-
-{-# INLINE sizeArray #-}
-sizeArray
-  :: Flat a =>
-     ((NumBits -> a -> NumBits) -> t -> t1 -> NumBits)
-     -> (t1 -> Int) -> t1 -> t -> NumBits
-sizeArray foldl length s acc = foldl (flip size) acc s + arrayBits (length s)
-
-{-# INLINE encodeArray #-}
-encodeArray :: Flat a1 => (a -> [a1]) -> a -> Encoding
-encodeArray toList = eArray encode . toList
-
-{-# INLINE decodeArray #-}
-decodeArray :: Flat a => ([a] -> b) -> Get b
-decodeArray fromList = fromList <$> dArray decode
-
--- {-# INLINE sSequence #-}
--- sSequence
---   :: (MonoFoldable mono, Flat (Element mono)) =>
---      mono -> NumBits -> NumBits
--- sSequence s acc = ofoldl' (flip size) acc s + arrayBits (olength s)
-
--- instance {-# OVERLAPPABLE #-} (MonoFoldable mono, O.IsSequence mono, Flat (Element mono)) => Flat mono where
---   size = sSequence
-
---   {-# INLINE encode #-}
---   encode = eArray encode . otoList
-
---   {-# INLINE decode #-}
---   decode = O.pack <$> dArray decode -- dList -- try with O.replicateM
+{-# INLINE decodeSequence #-}
+-- |Decode an instance of IsSequence, as an array
+decodeSequence :: (Flat (Element b), IsSequence b) => Get b
+decodeSequence = fromList <$> decodeArrayWith decode
