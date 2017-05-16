@@ -55,8 +55,9 @@ module Data.Flat.Encoder (
     sShortBytes,
     sUTF16,
     sFillerMax,
-    sBool
-    ,sUTF8Max,eUTF8
+    sBool,
+    sUTF8Max,
+    eUTF8,
     ) where
 
 import           Data.Flat.Encoder.Prim

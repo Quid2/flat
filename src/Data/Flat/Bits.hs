@@ -4,15 +4,22 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 
 -- |Utilities to represent and display bit sequences
-module Data.Flat.Bits (Bits, toBools, bits, paddedBits, asBytes) where
+module Data.Flat.Bits (
+    Bits,
+    toBools,
+    fromBools,
+    bits,
+    paddedBits,
+    asBytes,
+    asBits,
+    ) where
 
 import           Data.Bits                      hiding (Bits)
-import qualified Data.ByteString           as L
-import           Data.Flat.Decoder
+import qualified Data.ByteString                as B
 import           Data.Flat.Class
+import           Data.Flat.Decoder
 import           Data.Flat.Filler
 import           Data.Flat.Run
--- import           Data.Int
 import qualified Data.Vector.Unboxed            as V
 import           Data.Word
 import           Text.PrettyPrint.HughesPJClass
@@ -23,19 +30,27 @@ type Bits = V.Vector Bool
 toBools :: Bits -> [Bool]
 toBools = V.toList
 
+fromBools :: [Bool] -> Bits
+fromBools = V.fromList
+
 -- |The sequence of bits corresponding to the serialization of the passed value (without any final byte padding)
 bits :: forall a. Flat a => a -> Bits
 bits v = let lbs = flat v
              Right (PostAligned _ f) = unflatRaw lbs :: Decoded (PostAligned a)
-         in takeBits (8 * L.length lbs - fillerLength f) lbs
+         in takeBits (8 * B.length lbs - fillerLength f) lbs
 
 -- |The sequence of bits corresponding to the byte-padded serialization of the passed value
 paddedBits :: forall a. Flat a => a -> Bits
 paddedBits v = let lbs = flat v
-               in takeBits (8 * L.length lbs) lbs
+               in takeBits (8 * B.length lbs) lbs
 
-takeBits :: Int -> L.ByteString -> V.Vector Bool
-takeBits numBits lbs  = V.generate (fromIntegral numBits) (\n -> let (bb,b) = n `divMod` 8 in testBit (L.index lbs (fromIntegral bb)) (7-b))
+takeBits :: Int -> B.ByteString -> Bits
+takeBits numBits lbs  = V.generate (fromIntegral numBits) (\n -> let (bb,b) = n `divMod` 8 in testBit (B.index lbs (fromIntegral bb)) (7-b))
+
+-- | asBits (5::Word8)
+-- | > [False,False,False,False,False,True,False,True]
+asBits :: FiniteBits a => a -> Bits
+asBits w = let s = finiteBitSize w in V.generate s (testBit w . (s-1-))
 
 -- |Convert a sequence of bits to the corresponding list of bytes
 asBytes :: Bits -> [Word8]

@@ -1,59 +1,43 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FlexibleInstances         #-}
 -- |Encoding and decoding functions
 module Data.Flat.Run (
     flat,
-    flatStrict,
+    flatRaw,
     unflat,
-    unflatStrict,
     unflatWith,
     unflatRaw,
-    --unflatRawWith,
+    unflatRawWith,
     ) where
 
-import qualified Data.ByteString as B
-import qualified Data.ByteString.Lazy as L
+import qualified Data.ByteString         as B
+import           Data.ByteString.Convert
 import           Data.Flat.Class
 import           Data.Flat.Decoder
-import qualified Data.Flat.Encoder    as E
+import qualified Data.Flat.Encoder       as E
 import           Data.Flat.Filler
 
--- |Strictly encode padded value.
-flatStrict :: Flat a => a -> B.ByteString
-flatStrict = flat
-
 -- |Encode padded value.
-flat :: (FlatRaw (PostAligned a) c, Flat a) => a -> c
+flat :: Flat a => a -> B.ByteString
 flat = flatRaw . postAligned
 
-unflatStrict :: Flat a => B.ByteString -> Decoded a
-unflatStrict = unflat
-
 -- |Decode padded value.
-unflat :: (FlatRaw (PostAligned a) b, Flat a) => b -> Decoded a
+unflat :: (Flat a,AsByteString b) => b -> Decoded a
 unflat = unflatWith decode
 
--- |Decode padded value, using the provided decoder.
-unflatWith :: FlatRaw (PostAligned a) b => Get (PostAligned a) -> b -> Decoded a
-unflatWith dec bs = postValue <$> unflatRawWith dec bs
+-- |Decode padded value, using the provided unpadded decoder.
+unflatWith :: AsByteString b => Get a -> b -> Decoded a
+unflatWith dec = unflatRawWith (postAlignedDecoder dec)
 
--- |Decode (unpadded) value.
-unflatRaw :: (FlatRaw a b, Flat a) => b -> Decoded a
+-- |Decode unpadded value.
+unflatRaw :: (Flat a,AsByteString b) => b -> Decoded a
 unflatRaw = unflatRawWith decode
 
-class FlatRaw a b where
-  -- |Encode (unpadded) value
-  flatRaw :: Flat a => a -> b
+-- |Unflat unpadded value, using provided decoder
+unflatRawWith :: AsByteString b => Get a -> b -> Decoded a
+unflatRawWith dec = strictDecoder dec . toByteString
 
-  -- |Unflat (unpadded) value, using provided decoder
-  unflatRawWith :: Get a -> b -> Decoded a
-
-instance Flat a => FlatRaw a B.ByteString where
-  flatRaw a = E.strictEncoder (getSize a) (encode a)
-
-  unflatRawWith = strictDecoder
-
-instance Flat a => FlatRaw a L.ByteString where
-  flatRaw = L.fromStrict . flatRaw
-  unflatRawWith dec = unflatRawWith dec . L.toStrict
+-- |Encode unpadded value
+flatRaw :: (Flat a, AsByteString b) => a -> b
+flatRaw a = fromByteString $ E.strictEncoder (getSize a) (encode a)

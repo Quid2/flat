@@ -93,8 +93,8 @@ instance Monad Get where
         runGet (f x') end s'
     {-# INLINE (>>=) #-}
 
-    -- fail = getException
-    -- {-# INLINE fail #-}
+    fail msg = Get $ \end s -> badEncoding end s msg
+    {-# INLINE fail #-}
 
 -- |Decoder state
 data S =
@@ -111,7 +111,7 @@ type Decoded a = Either DecodeException a
 -- |An exception during decoding
 data DecodeException = NotEnoughSpace Env
                      | TooMuchSpace Env
-                     | BadEncoding Env
+                     | BadEncoding Env String
   deriving (Show,Eq,Ord)
 
 type Env = (Ptr Word8,S)
@@ -122,8 +122,8 @@ notEnoughSpace endPtr s = throwIO $ NotEnoughSpace (endPtr,s)
 tooMuchSpace :: Ptr Word8 -> S -> IO a
 tooMuchSpace endPtr s = throwIO $ TooMuchSpace (endPtr,s)
 
-badEncoding :: Ptr Word8 -> S -> IO a
-badEncoding endPtr s = throwIO $ BadEncoding (endPtr,s)
+badEncoding :: Ptr Word8 -> S -> String -> IO a
+badEncoding endPtr s msg = throwIO $ BadEncoding (endPtr,s) msg
 
 instance Exception DecodeException
 

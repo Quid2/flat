@@ -7,24 +7,26 @@
 {-# LANGUAGE FlexibleInstances ,CPP #-}
 {-# LANGUAGE LambdaCase    ,ScopedTypeVariables    #-}
 module Test where
-import           Data.Binary.FloatCast
 import qualified Data.ByteString                as B
 import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.Short.Internal as SBS
 import           Data.Coerce
 import           Data.Flat
-import           Data.Flat.Peek
 import           Data.Flat.Decoder
-import           Data.Flat.Pretty
 import           Data.Int
 import qualified Data.Sequence                  as S
 import qualified Data.Text                      as T
-import           Data.Word
 import           Prelude                        hiding (exponent, sign)
 import           System.Endian
 import           Text.Printf
 import Data.Flat.Bits
 import qualified Data.Map as M
+import Data.FloatCast
+-- import qualified Data.ByteString                as B
+-- import qualified Data.ByteString.Lazy           as L
+import           Data.Word
+import           Text.PrettyPrint.HughesPJClass
+-- import           Text.Printf
 
 instance Flat [Word16]
 instance Flat [Int16]
@@ -33,8 +35,11 @@ instance Flat [Word8]
 instance Flat [(Word64,Word16)]
 instance Flat [ABC]
 
+--u :: B.ByteString
+u = unflatWith (dBEBits8 3) [128+64+32+1::Word8]
+
 m1 = M.fromList [(False,True)]
-mmm = (size m1 0,bits m1, unflat $ flat m1 :: Decoded (M.Map Bool Bool))
+mmm = (size m1 0,bits m1, unflatRaw $ flat m1 :: Decoded (M.Map Bool Bool))
 
 -- deriving  instance {-# OVERLAPPABLE #-} Flat a => Flat [a]
 -- instance Flat a => Flat [a]
@@ -73,7 +78,7 @@ newtype A = A Bool
 newtype B = B Bool
 data C = C Bool
 
-kkk = [[127,1],[128,1,1],[129,1,1],[255,127,1],[128,128,1,1],[129,128,1,1],[255,255,1,1],[128,128,2,1],[129,128,2,1],[255,255,127,1],[128,128,128,1,1],[129,128,128,1,1]] == map (L.unpack . flat) [127::Word32,128,129,16383,16384,16385,32767,32768,32769,2097151,2097152,2097153]
+kkk = [[127,1],[128,1,1],[129,1,1],[255,127,1],[128,128,1,1],[129,128,1,1],[255,255,1,1],[128,128,2,1],[129,128,2,1],[255,255,127,1],[128,128,128,1,1],[129,128,128,1,1]] == map (B.unpack . flat) [127::Word32,128,129,16383,16384,16385,32767,32768,32769,2097151,2097152,2097153]
 
 -- qqq = size N4 0 + size N5 0
 
@@ -145,7 +150,7 @@ n1 = Node (Node (Leaf 11) (Leaf 22)) (Node (Leaf 33) (Leaf 44))
 -- [240,88,90,33,22,96,176,180,66,44,224,176,180,66,44,193,97,104,132,89]
 n2 = Node (Node n1 n1) (Node (Node n1 n1) n1)
 
-u =  pp $ WW 11 22 33 44 True
+u4 =  pp $ WW 11 22 33 44 True
 uu =  pp (11::Word32,22::Word64,33::Word64)
 --o = encodings $ postAligned $ T2 (11::Word32) (22::Word64)
 ww = unflat (flat (0::Word16)) :: Decoded Word16
@@ -201,7 +206,7 @@ y11 =show __GLASGOW_HASKELL__
 pp :: forall a . (Flat a, Show a) => a -> IO ()
 -- pp v = putStrLn (unwords [show v,"->",show (size :: Size a),show $ getSize (postAligned v),show $ encode v,"->",show $ L.unpack $ flat v])
 -- pp v = putStrLn (unwords [show v,"->",show (size :: Size a),show $ getSize v,show $ encode v,"->",show $ L.unpack $ flat v])
-pp v = putStrLn (unwords [show v,"->",show $ getSize v,show $ encode v,"->",show $ L.unpack $ flat v])
+pp v = putStrLn (unwords [show v,"->",show $ getSize v,show $ encode v,"->",show $ flat v])
 
 -- gg :: Flat a => a -> Vector Bool
 gg = bits . flat $ "abc"
@@ -213,7 +218,9 @@ bs = [32,32,32::Word8]
 
 -- px v = putStrLn (unwords [show v,"->",show $ encode v,"->",show $ L.unpack $ flatRaw (T2 v FillerEnd)])
 
-px v = let bs = L.unpack $ flat v in putStrLn (unwords [show v,"->",show $ encode v,"->",show bs,show $ sum bs])
+-- px :: Flat a => a -> IO ()
+px v = let bs = B.unpack $ flat v
+       in putStrLn (unwords [show v,"->",show $ encode v,"->",show bs,show $ sum bs])
 
 pf v = putStrLn (unwords [show v,"->",show $ flat v])
 
@@ -225,9 +232,9 @@ ll = flat [True,False,True]
 
 f3 = doubleToWord 1
 
-f2 =flat (1::Double)
+f2 =flat(1::Double)
 
-kk = flat [(55::Word64,18::Word16),(5599::Word64,1122::Word16)]
+kk = flat[(55::Word64,18::Word16),(5599::Word64,1122::Word16)]
 -- tt = encode [(55::Word64,18::Word16,True,AA)]
 e1 = encode (True,False) -- (AA,BB)
 e2 = encode [AA,BB]
@@ -235,51 +242,51 @@ e3 = encode [True,False]
 e4 = encode $ DD True True
 -- e5 = encode $ ZZ (ZZ (ZZ (DD True True)))
 
-m = runGetStrict getChunksInfo $ B.pack [3,11,22,33,2,11,22,0]
+-- m = runGetStrict getChunksInfo $ B.pack [3,11,22,33,2,11,22,0]
 
-m2 = B.unpack <$> runGetStrict dByteString_ (B.pack [3,11,22,33,2,11,22,0])
-m3 = SBS.unpack <$> runGetStrict dShortByteString_ (B.pack [3,11,22,33,2,11,22,0])
-m4 = unflat (flat (T.pack "abc")) :: Decoded T.Text
+-- m2 = B.unpack <$> runGetStrict dByteString_ (B.pack [3,11,22,33,2,11,22,0])
+-- m3 = SBS.unpack <$> runGetStrict dShortByteString_ (B.pack [3,11,22,33,2,11,22,0])
+-- m4 = unflat (flat(T.pack "abc")) :: Decoded T.Text
 m5 = unflat (flat '经') :: Decoded Char
 
 {-# NOINLINE tup2 #-}
-tup2 a b = flat (a,b)
+tup2 a b = flat(a,b)
 --t = coerce (1::Word32) :: Float
--- b = L.unpack $ flat $ B.pack $ replicate 250 33
-b = L.unpack $ flat $ (11::Word8,SBS.toShort $ B.replicate 400 33) -- [1..255] B.pack bs
+-- b = L.unpack $ flat$ B.pack $ replicate 250 33
+-- b = L.unpack $ flat$ (11::Word8,SBS.toShort $ B.replicate 400 33) -- [1..255] B.pack bs
 
-w = L.unpack $ flat (2::Word16,2::Word32,2::Word64)
+-- w = L.unpack $ flat(2::Word16,2::Word32,2::Word64)
 
-l = L.unpack $ flat [1::Word16,1,1]
+-- l = L.unpack $ flat[1::Word16,1,1]
 
-j = L.unpack $ flat "abc"
+-- j = L.unpack $ flat "abc"
 
-js = L.unpack $ flat (S.fromList "abc")
+-- js = L.unpack $ flat(S.fromList "abc")
 
-jj = L.unpack $ flat $ (11::Word8,T.pack "\x1F600\&000aaa维维aaa")
+-- jj = L.unpack $ flat$ (11::Word8,T.pack "\x1F600\&000aaa维维aaa")
 
-jl = T.length (T.pack "\x1F600\&\x1F600\&")
+-- jl = T.length (T.pack "\x1F600\&\x1F600\&")
 
 q :: Decoded T.Text
-q = unflat $ flat (T.pack "D\226\FStz\GS3]\n8\149sV\243J\181\181\235\214&y\226\231\&2\239\212\174\DC1J'F\129hpsu\199\178")
+q = unflat $ flat(T.pack "D\226\FStz\GS3]\n8\149sV\243J\181\181\235\214&y\226\231\&2\239\212\174\DC1J'F\129hpsu\199\178")
 
 g = let v = (-1::Int16,255::Word8,False,-1::Int16,1::Word8,0::Word8,False)
     in (unflat (flat v) == Right v,bits v)
 
 g1 :: Decoded (Bool,Bool,Bool,Bool)
-g1 = unflat $ flat (True,False,True,True)
+g1 = unflat $ flat(True,False,True,True)
 
 g2 :: Decoded (Bool,Word8,Word8,Bool)
-g2 = unflat $ flat (False,1::Word8,1::Word8,False)
+g2 = unflat $ flat(False,1::Word8,1::Word8,False)
 
 g3 :: Decoded Word8
-g3 = unflat $ flat (0::Word8)
+g3 = unflat $ flat(0::Word8)
 
 g4 :: Decoded (Bool,Word8,Bool)
-g4 = unflat $ flat (False,0::Word8,False)
+g4 = unflat $ flat(False,0::Word8,False)
 
 g5 :: Decoded (Float,Double,Bool,Float,Double,Bool)
-g5 = unflat $ flat (8.11E-11::Float,8.11E-11::Double,True,8.11E-11::Float,8.11E-11::Double,True)
+g5 = unflat $ flat(8.11E-11::Float,8.11E-11::Double,True,8.11E-11::Float,8.11E-11::Double,True)
 
 f0 = bits ((False,255::Word8,False,255::Word8))
 f = bits (False,0::Word8,False)
@@ -296,20 +303,31 @@ d = prettyLBS $ flatRaw (3/0::Double)
 s = serRaw (True,False,True)
 
 z = bits $ (True,False,True)
-zz = L.unpack . flat $ (True,False,True)
+zz = flat (True,False,True)
 
 serRaw :: Flat a => a -> [Word8]
 --serRaw = L.unpack . flatRaw
 serRaw = asBytes . bits
 
 y :: Decoded Float
-y = unflat $ flat (-0.15625::Double)
+y = unflat $ flat(-0.15625::Double)
 
 -- i :: Decoded IEEE_754_binary32
--- i = unflat $ flat (-0.15625::Float)
+-- i = unflat $ flat(-0.15625::Float)
 
 --t = i == Right (IEEE_754_binary32 {sign = V1, exponent = Bits8 V0 V1 V1 V1 V1 V1 V0 V0, fraction = (Bits7 V0 V1 V0 V0 V0 V0 V0,Bits8 V0 V0 V0 V0 V0 V0 V0 V0,Bits8 V0 V0 V0 V0 V0 V0 V0 V0)})
 bb = 0b111
 
 c = (isInfinite (3/0),isNegativeZero (-0::Double),isNaN (0/0::Float),(0/0::Float)==(0/0::Float))
 
+prettyLBS :: L.ByteString -> String
+prettyLBS = render . prettyBL . L.unpack
+
+prettyBS :: B.ByteString -> String
+prettyBS = render . prettyBL . B.unpack
+
+prettyBL :: [Word8] -> Doc
+prettyBL = text . unwords . map prettyWord8
+
+prettyWord8 :: Word8 -> String
+prettyWord8 = printf "%08b"

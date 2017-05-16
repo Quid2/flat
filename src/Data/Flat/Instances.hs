@@ -181,7 +181,7 @@ instance Flat a => Flat (S.Seq a) where
 -- |Calculate size of an instance of IsMap
 {-# INLINE sizeMap #-}
 sizeMap :: (Flat (ContainerKey r), Flat (MapValue r), IsMap r) => Size r
-sizeMap m acc = F.foldl' (\acc (k,v) -> size k (size v (acc + 1))) (acc+1) . mapToList $ m
+sizeMap m acc = F.foldl' (\acc' (k,v) -> size k (size v (acc' + 1))) (acc+1) . mapToList $ m
 
 {-# INLINE encodeMap #-}
 -- |Encode an instance of IsMap, as a list

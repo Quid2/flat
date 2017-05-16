@@ -29,6 +29,15 @@ module Data.Flat.Decoder (
     dInt32,
     dInt64,
     dInt,
+    dBE8,
+    dBE16,
+    dBE32,
+    dBE64,
+    dBEBits8,
+    dBEBits16,
+    dBEBits32,
+    dBEBits64,
+    dropBits,
     ) where
 
 import Data.Flat.Decoder.Prim

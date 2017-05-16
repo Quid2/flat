@@ -1,22 +1,23 @@
 name: flat
-version: 0.2.2
+version: 0.2.3
 synopsis: Principled and efficient bit-oriented binary serialization.
 description: See the <http://github.com/tittoassini/flat online tutorial>.
 homepage: http://github.com/tittoassini/flat
-copyright: Copyright: (c) 2016 Pasqualino `Titto` Assini
-author: Pasqualino `Titto` Assini
-license: BSD3
-license-file: LICENSE
-maintainer: tittoassini@gmail.com
+license:             BSD3
+license-file:        LICENSE
+author:              Pasqualino `Titto` Assini
+maintainer:          tittoassini@gmail.com
+copyright:           Copyright: (c) 2016 Pasqualino `Titto` Assini
 category: Data,Parsing,Serialization
 cabal-version: >=1.10
 build-type: Simple
-tested-with: GHC ==7.10.3 GHC ==8.0.2
+Tested-With: GHC == 7.10.3 GHC == 8.0.1 GHC == 8.0.2
 extra-source-files:
     stack.yaml
     stack801.yaml
     stack802.yaml
     README.md
+    CHANGELOG
 
 source-repository head
     type: git
@@ -24,6 +25,7 @@ source-repository head
 
 library
     exposed-modules:
+        Data.ByteString.Convert
         Data.Flat.Bits
         Data.Flat.Class
         Data.Flat.Decoder

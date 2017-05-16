@@ -17,7 +17,7 @@ Import the Flat library:
 
 > import Data.Flat
 >> import Data.Flat.Bits(bits,paddedBits)
->> import Data.Flat.Pretty(prettyShow)
+>> import Text.PrettyPrint.HughesPJClass(prettyShow)
 >> import READMEUtil
 
 Define a couple of custom data types, deriving Generic and Flat:
@@ -26,9 +26,9 @@ Define a couple of custom data types, deriving Generic and Flat:
 
 > data List a = Nil | Cons a (List a) deriving (Show,Generic,Flat)
 
-For encoding, use `flat`, for decoding, use `unflat` (or equivalently: `flatStrict` and `unflatStrict`):
+For encoding, use `flat`, for decoding, use `unflat`:
 
-> d1 = unflatStrict . flat $ Cons North (Cons South Nil) :: Decoded (List Direction)
+> d1 = unflat . flat $ Cons North (Cons South Nil) :: Decoded (List Direction)
 
 For the decoding to work correctly, you will naturally need to know the type of the serialised data. This is ok for applications that do not require long-term storage and that do not need to communicate across independently evolving agents. For those who do, you will need to supplement `flat` with something like [typed](https://github.com/tittoassini/typed).
 
@@ -82,9 +82,9 @@ Briefly:
  * Encoding: `store` and `flat` are usually faster
  * Decoding: `store`, `cereal` and `flat` are usually faster
 
- One thing that is not shown by the benchmarks is that, if the serialized data is to be transferred over a network, the total total transfer time (encoding time + transmission time + decoding time) is usually dominated by the transmission time and that's where the smaller binaries produced by flat give it a significant advantage.
+ One thing that is not shown by the benchmarks is that, if the serialized data is to be transferred over a network, the total transfer time (encoding time + transmission time + decoding time) is usually dominated by the transmission time and that's where the smaller binaries produced by flat give it a significant advantage.
 
- Consider for example the Cars dataset. As you can see in the following comparison with `store`, the overall top performer for encoding/decoding speed, the total transfer time is actually significantly lower for `flat` for all except the highest transmission speeds.
+ Consider for example the Cars dataset. As you can see in the following comparison with `store`, the overall top performer for encoding/decoding speed, the transfer time is actually significantly lower for `flat` for all except the highest transmission speeds.
 
 >> ccc1 = compareStoreFlat
 

@@ -10,6 +10,7 @@
 -- | Tests for the flat module
 module Main where
 
+import           Data.Bits
 import qualified Data.ByteString       as B
 import qualified Data.ByteString.Lazy  as L
 import qualified Data.ByteString.Short as SBS
@@ -18,6 +19,7 @@ import           Data.DeriveTH
 import           Data.Either
 import           Data.Flat
 import           Data.Flat.Bits
+import           Data.Flat.Decoder
 import           Data.Int
 import           Data.List
 import qualified Data.Map              as M
@@ -204,6 +206,29 @@ unitTests = testGroup "De/Serialisation Unit tests" $ concat [
   ,s (-0.15625::Float)  [0b10111110,0b00100000,0,0]
   ,s (-0.15625::Double) [0b10111111,0b11000100,0,0,0,0,0,0]
   ,s (-123.2325E-23::Double) [0b10111011,0b10010111,0b01000111,0b00101000,0b01110101,0b01111011,0b01000111,0b10111010]
+  ,dec ((,,,) <$> dropBits 13 <*> dBool <*> dBool <*> dBool) [0b10111110,0b10011010] ((),False,True,False)
+  ,dec ((,,,) <$> dropBits 1 <*> dBE16 <*> dBool <*> dropBits 6) [0b11000000
+                                                                 ,0b00000001
+                                                                 ,0b01000000] ((),2^15+2,True,())
+  ,dec ((,,,) <$> dropBits 1 <*> dBE32 <*> dBool <*> dropBits 6) [0b11000000
+                                                                 ,0b00000000
+                                                                 ,0b00000000
+                                                                 ,0b00000001
+                                                                 ,0b01000000] ((),2^31+2,True,())
+  ,dec ((,,,) <$> dropBits 1 <*> dBE64 <*> dBool <*> dropBits 6) [0b11000000
+                                                                 ,0b00000000
+                                                                 ,0b00000000
+                                                                 ,0b00000000
+                                                                 ,0b00000000
+                                                                 ,0b00000000
+                                                                 ,0b00000000
+                                                                 ,0b00000001
+                                                                 ,0b01000000] ((),2^63+2,True,())
+
+  ,decBitsN dBEBits8
+  ,decBitsN dBEBits16
+  ,decBitsN dBEBits32
+  ,decBitsN dBEBits64
   ,map trip [maxBound::Word16]
   ,map trip [maxBound::Word32]
   ,map trip [maxBound::Word64]
@@ -248,7 +273,7 @@ unitTests = testGroup "De/Serialisation Unit tests" $ concat [
    -- Long LazyStrings can have internal sections shorter than 255
    --,s (L.pack $ csb 600) (bsl s600)
   ,[trip [1..100::Int16]]
-  ,[trip unicodeText,trip unicodeTextUTF8T,trip unicodeTextUTF16T]
+  ,[trip asciiStrT,trip "维护和平正",trip (T.pack "abc"),trip unicodeText,trip unicodeTextUTF8T,trip unicodeTextUTF16T]
   ,[trip longBS,trip longLBS,trip longSBS]
   ,[trip longSeq]
   ,[trip mapV]
@@ -301,6 +326,26 @@ unitTests = testGroup "De/Serialisation Unit tests" $ concat [
       s v e = [testCase (unwords ["flat raw",sshow v]) $ serRaw v @?= e]
               --,testCase (unwords ["unflat raw",sshow v]) $ desRaw e @?= Right v]
 
+      dec decOp v e = [testCase (unwords ["decode",sshow v]) $ unflatRawWith decOp (B.pack v) @?= Right e]
+
+      decBitsN :: forall a. (Num a,FiniteBits a,Show a,Flat a) => (Int -> Get a) -> [TestTree]
+      decBitsN dec = let s = finiteBitSize (undefined::a)
+                     in [decBits_ dec v n pre | n <- [0 .. s], v <- [0::a ,1+2^(s - 2)+2^(s - 5) ,fromIntegral $ (2^s::Integer) - 1],pre <- [0,1,7]]
+
+      -- why Flat a?
+      decBits_ :: forall a. (FiniteBits a,Show a,Flat a) => (Int -> Get a) -> a -> Int -> Int -> TestTree
+      decBits_ deco v n pre =
+        let vs = B.pack . asBytes . fromBools $ replicate pre False ++ toBools (asBits v)
+            len = B.length vs
+            s = finiteBitSize (undefined::a)
+            dec = do
+              dropBits pre
+              r <- deco n
+              dropBits (len*8-n-pre)
+              return r
+            e = v `shiftR` (s - n)
+        in testCase (unwords ["take",show n,"bits from",show v,"of size",show s,"with prefix",show pre]) $ unflatRawWith dec vs @?= Right e
+
       -- Aligned values unflat to the original value, modulo the added filler.
       a v e = [testCase (unwords ["flat",sshow v]) $ ser v @?= e
               ,testCase (unwords ["unflat",sshow v]) $ let Right v' = des e in v @?= v']
@@ -320,10 +365,10 @@ errDec _ bs = [testCase "bad decode" $ let ev = (des bs::Decoded a) in isRight e
 uc = map ord "\x4444\x5555\x10001\xD800"
 
 ser :: Flat a => a -> [Word8]
-ser = L.unpack . flat
+ser = B.unpack . flat
 
 des :: Flat a => [Word8] -> Decoded a
-des = unflat . L.pack
+des = unflat
 
 serRaw :: Flat a => a -> [Word8]
 -- serRaw = B.unpack . flatRaw

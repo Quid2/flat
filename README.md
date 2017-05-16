@@ -31,10 +31,10 @@ data Direction = North | South | Center | East | West deriving (Show,Generic,Fla
 data List a = Nil | Cons a (List a) deriving (Show,Generic,Flat)
 ```
 
-For encoding, use `flat`, for decoding, use `unflat` (or equivalently: `flatStrict` and `unflatStrict`):
+For encoding, use `flat`, for decoding, use `unflat`:
 
 ```haskell
-unflatStrict . flat $ Cons North (Cons South Nil) :: Decoded (List Direction)
+unflat . flat $ Cons North (Cons South Nil) :: Decoded (List Direction)
 -> Right (Cons North (Cons South Nil))
 ```
 
@@ -119,9 +119,9 @@ Briefly:
  * Encoding: `store` and `flat` are usually faster
  * Decoding: `store`, `cereal` and `flat` are usually faster
 
- One thing that is not shown by the benchmarks is that, if the serialized data is to be transferred over a network, the total total transfer time (encoding time + transmission time + decoding time) is usually dominated by the transmission time and that's where the smaller binaries produced by flat give it a significant advantage.
+ One thing that is not shown by the benchmarks is that, if the serialized data is to be transferred over a network, the total transfer time (encoding time + transmission time + decoding time) is usually dominated by the transmission time and that's where the smaller binaries produced by flat give it a significant advantage.
 
- Consider for example the Cars dataset. As you can see in the following comparison with `store`, the overall top performer for encoding/decoding speed, the total transfer time is actually significantly lower for `flat` for all except the highest transmission speeds.
+ Consider for example the Cars dataset. As you can see in the following comparison with `store`, the overall top performer for encoding/decoding speed, the transfer time is actually significantly lower for `flat` for all except the highest transmission speeds.
 
 ||Store|Flat|
 |---|---|---|

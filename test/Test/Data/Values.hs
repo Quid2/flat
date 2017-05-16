@@ -179,11 +179,13 @@ unicodeText = T.pack unicodeStr
 
 unicodeStrT = ("unicodeStr",unicodeStr)
 
-unicodeStr = longS uniSS
+unicodeStr = notLongS uniSS
 
 uniSS = "\x1F600\&\x1F600\&\x1F600\&I promessi sposi è un celebre romanzo storico di Alessandro Manzoni, ritenuto il più famoso e il più letto tra quelli scritti in lingua italiana[1].维护和平正义 开创美好未来——习近平主席在纪念中国人民抗日战争暨世界反法西斯战争胜利70周年大会上重要讲话在国际社会引起热烈反响"
 
 longS =  take 1000000 . concat . repeat
+
+notLongS =  take 1000 . concat . repeat
 
 arr0 = ("[Bool]",map (odd . ord) $ unicodeStr :: [Bool])
 

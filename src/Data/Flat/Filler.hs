@@ -51,8 +51,10 @@ postAligned a = PostAligned a FillerEnd
 preAligned :: a -> PreAligned a
 preAligned = PreAligned FillerEnd
 
-postAlignedDecoder :: Get a -> Get (PostAligned a)
+-- postAlignedDecoder :: Get a -> Get (PostAligned a)
+postAlignedDecoder :: Get b -> Get b
 postAlignedDecoder dec = do
   v <- dec
   _::Filler <- decode
-  return (postAligned v)
+  -- return (postAligned v)
+  return v

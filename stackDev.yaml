@@ -1,0 +1,31 @@
+# ghc-7.10.3
+resolver: lts-6.31
+# ghc-8.0.1
+#resolver: lts-7.21
+# ghc-8.0.2
+#resolver: lts-8.13
+
+# pvp-bounds: lower
+
+flags:
+  binary-serialise-cbor:
+    newtime15: true
+extra-package-dbs: []
+packages:
+- '.'
+
+- location:
+    git: https://github.com/well-typed/binary-serialise-cbor
+    commit: 5e2f20c0a2d8fd750f431af9a17ba116a6f31cf0
+  extra-dep: true
+
+extra-deps:
+- mono-traversable-1.0.2
+- store-0.4.1
+- store-core-0.4
+- binary-0.8.5.1
+- cereal-0.5.4.0
+- th-utilities-0.2.0.1
+- criterion-1.1.4.0
+- optparse-applicative-0.13.0.0
+
