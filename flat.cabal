@@ -1,5 +1,5 @@
 name: flat
-version: 0.2.3
+version: 0.3
 synopsis: Principled and efficient bit-oriented binary serialization.
 description: See the <http://github.com/tittoassini/flat online tutorial>.
 homepage: http://github.com/tittoassini/flat
