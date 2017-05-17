@@ -39,7 +39,7 @@ unflat . flat $ Cons North (Cons South Nil) :: Decoded (List Direction)
 ```
 
 
-For the decoding to work correctly, you will naturally need to know the type of the serialised data. This is ok for applications that do not require long-term storage and that do not need to communicate across independently evolving agents. For those who do, you will need to supplement `flat` with something like [typed](https://github.com/tittoassini/typed).
+For the decoding to work correctly, you will naturally need to know the type of the serialised data. This is ok for applications that do not require long-term storage and that do not need to communicate across independently evolving agents. For those who do, you will need to supplement `flat` with something like [zm](https://github.com/tittoassini/zm).
 
 #### Define Instances for Abstract/Primitive types
 
