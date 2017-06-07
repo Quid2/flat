@@ -68,10 +68,10 @@ dBool = Get $ \endPtr s ->
 
 {-# INLINE dBEBits8  #-}
 -- |Return the n most significant bits (up to maximum of 8)
--- The bits are returned right shifted.
 --
--- >>> unflatWith (dBEBits8 3) [128+64+32+1::Word8]
--- Right 7
+-- The bits are returned right shifted:
+--
+-- unflatWith (dBEBits8 3) [128+64+32+1::Word8] == Right 7
 dBEBits8 :: Int -> Get Word8
 dBEBits8 n = Get $ \endPtr s -> do
       ensureBits endPtr s n

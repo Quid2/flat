@@ -1,4 +1,7 @@
-[![Build Status](https://travis-ci.org/tittoassini/flat.svg?branch=master)](https://travis-ci.org/tittoassini/flat) [![Hackage version](https://img.shields.io/hackage/v/flat.svg)](http://hackage.haskell.org/package/flat)
+[![Build Status](https://travis-ci.org/Quid2/flat.svg?branch=master)](https://travis-ci.org/Quid2/flat)
+[![Hackage version](https://img.shields.io/hackage/v/flat.svg)](http://hackage.haskell.org/package/flat)
+[![Stackage Nightly](http://stackage.org/package/flat/badge/nightly)](http://stackage.org/nightly/package/flat)
+[![Stackage LTS](http://stackage.org/package/flat/badge/lts)](http://stackage.org/lts/package/flat)
 
 Haskell implementation of [Flat](http://quid2.org/docs/Flat.pdf), a principled, portable and efficient binary data format ([specs](http://quid2.org)).
 
@@ -30,13 +33,13 @@ For encoding, use `flat`, for decoding, use `unflat`:
 
 > d1 = unflat . flat $ Cons North (Cons South Nil) :: Decoded (List Direction)
 
-For the decoding to work correctly, you will naturally need to know the type of the serialised data. This is ok for applications that do not require long-term storage and that do not need to communicate across independently evolving agents. For those who do, you will need to supplement `flat` with something like [zm](https://github.com/tittoassini/zm).
+For the decoding to work correctly, you will naturally need to know the type of the serialised data. This is ok for applications that do not require long-term storage and that do not need to communicate across independently evolving agents. For those who do, you will need to supplement `flat` with something like [zm](https://github.com/Quid2/zm).
 
  #### Define Instances for Abstract/Primitive types
 
  A set of primitives are available to define `Flat` instances for abstract or primitive types.
 
- Instances for some common, primitive or abstract data types (Bool,Words,Int,String,Text,ByteStrings,Tuples, Lists, Sequences, Maps ..) are already defined in [Data.Flat.Instances](https://github.com/tittoassini/flat/blob/master/src/Data/Flat/Instances.hs).
+ Instances for some common, primitive or abstract data types (Bool,Words,Int,String,Text,ByteStrings,Tuples, Lists, Sequences, Maps ..) are already defined in [Data.Flat.Instances](https://github.com/Quid2/flat/blob/master/src/Data/Flat/Instances.hs).
 
  #### Optimal Bit-Encoding
 
@@ -84,7 +87,7 @@ Briefly:
 
  One thing that is not shown by the benchmarks is that, if the serialized data is to be transferred over a network, the total transfer time (encoding time + transmission time + decoding time) is usually dominated by the transmission time and that's where the smaller binaries produced by flat give it a significant advantage.
 
- Consider for example the Cars dataset. As you can see in the following comparison with `store`, the overall top performer for encoding/decoding speed, the transfer time is actually significantly lower for `flat` for all except the highest transmission speeds.
+ Consider for example the Cars dataset. As you can see in the following comparison with `store`, the overall top performer for encoding/decoding speed, the transfer time is actually significantly lower for `flat` for all except the highest transmission speeds (about 4 times faster at typical ADSL speeds, 2 times faster at 4G-LTE mobile speeds).
 
 >> ccc1 = compareStoreFlat
 
