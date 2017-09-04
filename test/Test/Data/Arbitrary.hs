@@ -8,8 +8,8 @@ import qualified Data.ByteString.Short     as SBS
 -- import           Test.Data
 -- import           Data.DeriveTH
 import           Test.QuickCheck.Instances
--- import           Test.Tasty.QuickCheck
-import           Test.QuickCheck
+import           Test.Tasty.QuickCheck
+-- import           Test.QuickCheck
 
 -- xxx = generate (arbitrary :: Gen (Large (Int)))
 

@@ -18,8 +18,8 @@ import Data.Data
 import qualified Test.Data2 as D2
 import Data.Foldable
 import GHC.Exts hiding (toList)
-import           Test.QuickCheck
--- import           Test.Tasty.QuickCheck
+-- import           Test.QuickCheck
+import           Test.Tasty.QuickCheck
 
 data Void deriving Generic
 
