@@ -1,23 +1,24 @@
+{-# LANGUAGE CPP                       #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 module Test.Data.Values where
 
 import           Control.DeepSeq
 import           Control.Exception
-import qualified Data.ByteString      as B
-import qualified Data.ByteString.Lazy as L
+import qualified Data.ByteString                as B
+import qualified Data.ByteString.Lazy           as L
+import qualified Data.ByteString.Short.Internal as SBS
 import           Data.Char
+import           Data.Flat
+import           Data.Foldable
 import           Data.Int
 import           Data.List
-import qualified Data.Text            as T
+import qualified Data.Map                       as M
+import qualified Data.Sequence                  as Seq
+import qualified Data.Text                      as T
 import           Data.Word
 import           Test.Data
-import qualified Test.Data2           as D2
-import qualified Data.ByteString.Short.Internal as SBS
-import Data.Foldable
-import qualified Data.Sequence as Seq
-import qualified Data.Map as M
-import Data.Flat
+import qualified Test.Data2                     as D2
 
 instance NFData Various
 instance NFData a => NFData (List a)
@@ -181,7 +182,12 @@ unicodeStrT = ("unicodeStr",unicodeStr)
 
 unicodeStr = notLongS uniSS
 
+-- Eta has issues with some unicode chars
+#ifdef ETA_COMPILER
+uniSS = "I promessi sposi è un celebre romanzo storico di Alessandro Manzoni, ritenuto il più famoso e il più letto tra quelli scritti in lingua italiana[1].维护和平正义 开创美好未来——习近平主席在纪念中国人民抗日战争暨世界反法西斯战争胜利70周年大会上重要讲话在国际社会引起热烈反响"
+#else
 uniSS = "\x1F600\&\x1F600\&\x1F600\&I promessi sposi è un celebre romanzo storico di Alessandro Manzoni, ritenuto il più famoso e il più letto tra quelli scritti in lingua italiana[1].维护和平正义 开创美好未来——习近平主席在纪念中国人民抗日战争暨世界反法西斯战争胜利70周年大会上重要讲话在国际社会引起热烈反响"
+#endif
 
 longS =  take 1000000 . concat . repeat
 

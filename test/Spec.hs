@@ -11,54 +11,74 @@
 module Main where
 
 import           Data.Bits
-import qualified Data.ByteString       as B
-import qualified Data.ByteString.Lazy  as L
-import qualified Data.ByteString.Short as SBS
+import qualified Data.ByteString                      as B
+import qualified Data.ByteString.Lazy                 as L
+import qualified Data.ByteString.Short                as SBS
 import           Data.Char
-import           Data.DeriveTH
 import           Data.Either
 import           Data.Flat
 import           Data.Flat.Bits
 import           Data.Flat.Decoder
 import           Data.Int
 import           Data.List
-import qualified Data.Map              as M
+import qualified Data.Map                             as M
 import           Data.Ord
 import           Data.Proxy
-import qualified Data.Sequence         as Seq
-import qualified Data.Text             as T
+import qualified Data.Sequence                        as Seq
+import qualified Data.Text                            as T
 import           Data.Word
 import           Numeric.Natural
-import           System.Arch
-import           System.Endian
 import           System.Exit
 import           Test.Data
 import           Test.Data.Arbitrary
 import           Test.Data.Flat
 import           Test.Data.Values
-import           Test.Tasty
-import           Test.Tasty.HUnit
-import           Test.Tasty.QuickCheck as QC
+import           Test.Framework                       (Test, defaultMain,
+                                                       testGroup)
+import           Test.Framework.Providers.HUnit
+import           Test.Framework.Providers.QuickCheck2 as QC
+import           Test.HUnit                           hiding (Test)
+import           Test.QuickCheck                      hiding (getSize)
+
+-- import           Test.Tasty
+-- import           Test.Tasty.HUnit
+-- import Test.Tasty.QuickCheck as QC hiding (getSize)
+-- import           System.Arch
+-- import           System.Endian
+
+
+--import Test.QuickCheck
+-- import Test.HUnit
 
 main = do
-  printInfo
+  -- printInfo
   mainTest
--- main = mainShow
+  --mainShow
 
-printInfo = do
-  print getSystemArch
-  print getSystemEndianness
+-- printInfo = do
+--   print getSystemArch
+--   print getSystemEndianness
 
 mainShow = do
   mapM_ (\_ -> generate (arbitrary :: Gen Int) >>= print) [1..10]
   exitFailure
 
-mainTest = defaultMain tests
+#ifdef ETA_COMPILER
+mainTest = do
+  -- This works (hunit on its own)
+  -- runTestTT $ test ["eq test" ~: (1 @?= 1)]
 
-tests :: TestTree
-tests = testGroup "Tests" [properties
-                           ,unitTests
-                          ]
+  -- This hangs (test-framework)
+  defaultMain [tests]
+
+#else
+mainTest = defaultMain [tests]
+
+#endif
+
+tests :: Test
+tests = testGroup "Tests" [properties,
+                           unitTests]
 
 properties = testGroup "Properties"
   [  rt "()" (prop_Flat_roundtrip:: RT ())
@@ -102,12 +122,13 @@ properties = testGroup "Properties"
     ,rt "ByteString" (prop_Flat_roundtrip:: RT B.ByteString)
     ,rt "Lazy ByteString" (prop_Flat_roundtrip:: RT L.ByteString)
     ,rt "Short ByteString" (prop_Flat_roundtrip:: RT SBS.ShortByteString)
-  ]
+    ]
    where rt n = QC.testProperty (unwords ["round trip",n])
 
 instance Flat [Int16]
 instance Flat [Word8]
 instance Flat [Bool]
+
 
 unitTests = testGroup "De/Serialisation Unit tests" $ concat [
   sz () 0
@@ -328,12 +349,12 @@ unitTests = testGroup "De/Serialisation Unit tests" $ concat [
 
       dec decOp v e = [testCase (unwords ["decode",sshow v]) $ unflatRawWith decOp (B.pack v) @?= Right e]
 
-      decBitsN :: forall a. (Num a,FiniteBits a,Show a,Flat a) => (Int -> Get a) -> [TestTree]
+      decBitsN :: forall a. (Num a,FiniteBits a,Show a,Flat a) => (Int -> Get a) -> [Test]
       decBitsN dec = let s = finiteBitSize (undefined::a)
                      in [decBits_ dec v n pre | n <- [0 .. s], v <- [0::a ,1+2^(s - 2)+2^(s - 5) ,fromIntegral $ (2^s::Integer) - 1],pre <- [0,1,7]]
 
       -- why Flat a?
-      decBits_ :: forall a. (FiniteBits a,Show a,Flat a) => (Int -> Get a) -> a -> Int -> Int -> TestTree
+      decBits_ :: forall a. (FiniteBits a,Show a,Flat a) => (Int -> Get a) -> a -> Int -> Int -> Test
       decBits_ deco v n pre =
         let vs = B.pack . asBytes . fromBools $ replicate pre False ++ toBools (asBits v)
             len = B.length vs
@@ -355,14 +376,16 @@ unitTests = testGroup "De/Serialisation Unit tests" $ concat [
       csb = map (fromIntegral . ord) . cs
       sshow = take 80 . show
 
-      trip :: forall a .(Show a,Flat a) => a -> TestTree
+      trip :: forall a .(Show a,Flat a) => a -> Test
       trip v = testCase (unwords ["roundtrip",sshow v]) $ show (unflat (flat v::B.ByteString)::Decoded a) @?= show (Right v::Decoded a) -- we use show to get Right NaN == Right NaN
 
-errDec :: forall a . (Flat a, Eq a, Show a) => Proxy a -> [Word8] -> [TestTree]
+
+errDec :: forall a . (Flat a, Eq a, Show a) => Proxy a -> [Word8] -> [Test]
 --errDec _ bs = [testCase "bad decode" $ let ev = (des bs::Decoded a) in ev @?= Left ""]
 errDec _ bs = [testCase "bad decode" $ let ev = (des bs::Decoded a) in isRight ev @?= False]
 
-uc = map ord "\x4444\x5555\x10001\xD800"
+-- This will crash the eta compiler
+-- uc = map ord "\x4444\x5555\x10001\xD800"
 
 ser :: Flat a => a -> [Word8]
 ser = B.unpack . flat

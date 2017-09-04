@@ -5,3 +5,7 @@ Version 0.3:
 	- `unflatWith` now takes a decoder for the unpadded value (previously it expected a padded decoder) and decodes the padded value
 	- Added some decoding primitives
 	- Added Data.ByteString.Convert
+
+Version 0.3.1:
+	- Tested with ghc 8.2.1
+	- Dropped dependencies on the 'cpu', 'derive' and 'tasty' packages to make it compatible with the Eta compiler (https://github.com/typelead/eta)
