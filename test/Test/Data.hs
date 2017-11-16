@@ -1,24 +1,28 @@
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE DeriveTraversable #-}
-{-# LANGUAGE MultiParamTypeClasses ,DeriveGeneric ,DeriveDataTypeable ,ScopedTypeVariables ,GADTs ,NoMonomorphismRestriction ,DeriveGeneric ,DefaultSignatures ,TemplateHaskell ,TypeFamilies ,FlexibleContexts ,FlexibleInstances ,EmptyDataDecls #-}
+{-# LANGUAGE ConstraintKinds           #-}
+{-# LANGUAGE DefaultSignatures         #-}
+{-# LANGUAGE DeriveDataTypeable        #-}
+{-# LANGUAGE DeriveGeneric             #-}
+{-# LANGUAGE DeriveTraversable         #-}
+{-# LANGUAGE EmptyDataDecls            #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TemplateHaskell           #-}
+{-# LANGUAGE TypeFamilies              #-}
 {-
  A collection of data types used for testing.
 -}
 
 module Test.Data where
 
-import Control.Exception
-import           Data.Char
+import           Data.Data
 import           Data.Int
 import           Data.Word
-import           Data.Typeable
-import           Data.Data
 import           GHC.Generics
-import Data.Data
-import qualified Test.Data2 as D2
-import Data.Foldable
-import GHC.Exts hiding (toList)
--- import           Test.QuickCheck
+import qualified Test.Data2            as D2
 import           Test.Tasty.QuickCheck
 
 data Void deriving Generic
@@ -43,17 +47,6 @@ data N = One
        | Four
        | Five
   deriving (Eq, Ord, Read, Show, Typeable, Data, Generic, Enum)
-
--- To generate Arbitrary instances while avoiding a direct dependency on 'derive' (that is not supported by Eta), run in the project directory: derive -a test/Test/Data.hs
-{-!
-deriving instance Arbitrary N
-deriving instance Arbitrary Tree
-deriving instance Arbitrary List
-deriving instance Arbitrary Unit
-deriving instance Arbitrary Un
-deriving instance Arbitrary A
-deriving instance Arbitrary B
-!-}
 
 -- toForestD :: Forest a -> ForestD (Tr2 a)
  -- toForestD (Forest lt) = undefined -- Forest2 (ForestD (map (\t -> let Tr2 tt = treeConv t in tt) . toList $ lt))
@@ -215,6 +208,17 @@ data Engine = Engine {
   ,manufacturerCode :: String
   ,fuel::String -- constant Petrol
   } deriving (Eq, Ord, Read, Show, Typeable, Data, Generic)
+
+-- To generate Arbitrary instances while avoiding a direct dependency on 'derive' (that is not supported by Eta), run in the project directory: derive -a test/Test/Data.hs
+{-!
+deriving instance Arbitrary N
+deriving instance Arbitrary Tree
+deriving instance Arbitrary List
+deriving instance Arbitrary Unit
+deriving instance Arbitrary Un
+deriving instance Arbitrary A
+deriving instance Arbitrary B
+!-}
 
 -- GENERATED START
 
