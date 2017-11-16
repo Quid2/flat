@@ -56,7 +56,7 @@ library
                   deepseq == 1.4.*,
                   dlist >=0.6 && <0.9,
                   ghc-prim,
-                  mono-traversable >=1.0.0 && <1.1,
+                  mono-traversable >=0.10.0.2 && <1.1,
                   pretty >= 1.1.2 && < 1.2,
                   primitive,
                   text,

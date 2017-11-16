@@ -1,4 +1,3 @@
-#sudo: false
 sudo: required
 
 dist: trusty
@@ -21,21 +20,24 @@ matrix:
   - env: BUILD=cabal GHCVER=8.0.2 CABALVER=1.24
     compiler: ": #GHC 8.0.2"
     addons: {apt: {packages: [cabal-install-1.24,happy-1.19.5,ghc-8.0.2], sources: [hvr-ghc]}}
- 
-  #- env: BUILD=stack ARGS="--resolver lts-6"
-  - env: BUILD=stack ARGS="--stack-yaml stack710.yaml"
+
+  # - env: BUILD=stack ARGS="--resolver lts-2"
+  #   compiler: ": #stack 7.8.4"
+  #   addons: {apt: {packages: [ghc-7.8.4], sources: [hvr-ghc]}}
+
+  - env: BUILD=stack ARGS="--resolver lts-6"
     compiler: ": #stack 7.10.3"
     addons: {apt: {packages: [ghc-7.10.3], sources: [hvr-ghc]}}
 
-  - env: BUILD=stack ARGS="--stack-yaml stack801.yaml"
+  - env: BUILD=stack ARGS="--resolver lts-7"
     compiler: ": #stack 8.0.1"
     addons: {apt: {packages: [ghc-8.0.1], sources: [hvr-ghc]}}
 
-  - env: BUILD=stack ARGS="--stack-yaml stack802.yaml"
+  - env: BUILD=stack ARGS="--resolver lts-9"
     compiler: ": #stack 8.0.2"
     addons: {apt: {packages: [ghc-8.0.2], sources: [hvr-ghc]}}
 
-  - env: BUILD=stack ARGS="--stack-yaml stack821.yaml"
+  - env: BUILD=stack ARGS="--resolver nightly"
     compiler: ": #stack 8.2.1"
     addons: {apt: {packages: [ghc-8.2.1], sources: [hvr-ghc]}}
 
@@ -70,13 +72,12 @@ install:
       stack --no-terminal setup
       ;;
     cabal)
-      echo "[cabal preinstall"
       export PATH="$HOME/.cabal/bin:$PATH";
       cabal --version
       travis_retry cabal update
       sed -i 's/^jobs:/-- jobs:/' ${HOME}/.cabal/config
       cabal install hsc2hs
-      cabal install --only-dependencies --enable-tests --force-reinstalls #--enable-benchmarks 
+      cabal install --only-dependencies --enable-tests --enable-benchmarks
       ;;
   esac
 
@@ -91,7 +92,7 @@ script:
     cabal)
       cabal sdist --output-directory=sourcedist && \
       cd sourcedist && \
-      cabal configure --enable-tests -v2 && \ # --enable-benchmarks 
+      cabal configure --enable-tests --enable-benchmarks -v2 && \
       echo "[BUILD" && \
       cabal build && \
       echo "BUILD]" && \

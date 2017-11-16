@@ -1,4 +1,4 @@
 resolver: lts-6.35
 
-extra-deps:
-- mono-traversable-1.0.2
+#extra-deps:
+#- mono-traversable-1.0.2
