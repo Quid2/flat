@@ -14,10 +14,6 @@ build-type: Simple
 Tested-With: GHC == 7.10.3 GHC == 8.0.1 GHC == 8.0.2
 extra-source-files:
     stack.yaml
-    stack710.yaml
-    stack801.yaml
-    stack802.yaml
-    stack821.yaml
     README.md
     CHANGELOG
 
