@@ -33,6 +33,7 @@ import           Data.MonoTraversable
 import qualified Data.Sequence         as S
 import           Data.Sequences
 import qualified Data.Text             as T
+import Data.Functor.Identity (Identity)
 import           Prelude               hiding (mempty)
 
 -- Flat instances for common types
@@ -177,6 +178,8 @@ instance Flat a => Flat (S.Seq a) where
   size = sizeSequence
   encode = encodeSequence
   decode = decodeSequence
+
+instance Flat a => Flat (Identity a)
 
 -- |Calculate size of an instance of IsMap
 {-# INLINE sizeMap #-}
