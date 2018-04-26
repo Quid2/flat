@@ -61,7 +61,8 @@ import qualified Data.ByteString      as B
 import qualified Data.ByteString.Lazy as L
 import           Data.Flat.Pokes
 import           Data.Foldable
-import           Data.Monoid
+import           Data.Monoid hiding ((<>))
+import           Data.Semigroup
 
 -- Strict encoder, calculate max length of encoding then alloc single buffer and encode unsafely.
 type Encoding = Writer
@@ -70,6 +71,9 @@ type Encoding = Writer
 newtype Writer = Writer {runWriter::S-> IO S}
 instance Show Writer where show _ = "Writer"
 
+instance Semigroup Writer where
+  {-# INLINE (<>) #-}
+  (<>) = mappend
 instance Monoid Writer where
   {-# INLINE mempty #-}
   mempty = Writer return

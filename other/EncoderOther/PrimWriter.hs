@@ -3,7 +3,8 @@ module Data.Flat.Prim(Encoding,(<>),(<+>),(<|),Step(..),encodersR,encodersS,memp
 import           Control.Monad
 import qualified Data.ByteString.Lazy as L
 import           Data.Flat.Pokes
-import           Data.Monoid
+import           Data.Monoid hiding ((<>))
+import           Data.Semigroup
 import           Data.Foldable
 import Data.Word
 -- Strict encoder, calculate max length of encoding then alloc single buffer and encode unsafely.
@@ -13,6 +14,9 @@ type Encoding = Writer
 newtype Writer = Writer (S-> IO S)
 instance Show Writer where show _ = "Writer"
 
+instance Semigroup Writer where
+  {-# INLINE (<>) #-}
+  (<>) = mappend
 instance Monoid Writer where
   {-# INLINE mempty #-}
   mempty = Writer return

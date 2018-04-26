@@ -5,7 +5,8 @@ module Data.Flat.Prim(Encoding,(<>),(<+>),(<|),Step(..),wprim,(>=>),chkWriter,en
 import qualified Data.ByteString.Internal as BS
 import qualified Data.ByteString.Lazy     as L
 import           Data.Foldable
-import           Data.Monoid
+import           Data.Monoid hiding ((<>))
+import           Data.Semigroup
 import           Data.Word
 import           Foreign
 import           Foreign.Ptr
@@ -59,6 +60,9 @@ encoder e@(E p s) w = catch (runWriter w e >>= (\(E _ s') -> done s')) (\(RetryE
 newtype Writer = Writer {runWriter::E -> IO E}
 instance Show Writer where show (Writer _) = "Writer"
 
+instance Semigroup Writer where
+  {-# INLINE (<>) #-}
+  (<>) = mappend
 instance Monoid Writer where
   {-# INLINE mempty #-}
   mempty = Writer return
