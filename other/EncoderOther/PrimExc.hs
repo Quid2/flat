@@ -6,7 +6,8 @@ module Data.Flat.Prim(Encoding,(<>),(<+>),(<|),Step(..),(>=>),wprim,encodersR,me
 import qualified Data.ByteString.Internal as BS
 import qualified Data.ByteString.Lazy     as L
 import           Data.Foldable
-import           Data.Monoid
+import           Data.Monoid hiding ((<>))
+import           Data.Semigroup
 import           Data.Word
 import           Foreign
 import           Foreign.Ptr
@@ -37,6 +38,9 @@ instance Show Writer where show (Writer _) = "Writer"
 data NotEnoughSpaceException = NotEnoughSpaceException S Int [[Writer]] deriving Show
 instance Exception NotEnoughSpaceException
 
+instance Semigroup Writer where
+  {-# INLINE (<>) #-}
+  (<>) = mappend
 instance Monoid Writer where
   {-# INLINE mempty #-}
   mempty = Writer return

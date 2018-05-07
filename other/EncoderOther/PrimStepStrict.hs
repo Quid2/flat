@@ -3,12 +3,16 @@ module Data.Flat.Prim(Encoding,(<>),(<+>),(<|),Step(..),encodersR,mempty,bitEnco
 import           Control.Monad
 import qualified Data.ByteString.Lazy as L
 import           Data.Flat.Pokes
-import           Data.Monoid
+import           Data.Monoid hiding ((<>))
+import           Data.Semigroup
 import           Data.Foldable
 -- Strict encoder, calculate max length of encoding then alloc single buffer and encode unsafely.
 -- Faster than Flat on anything but lN3
 type Encoding = Step
 
+instance Semigroup Step where
+  {-# INLINE (<>) #-}
+  (<>) = mappend
 instance Monoid Step where
   {-# INLINE mempty #-}
   mempty = Step 0 return

@@ -3,6 +3,9 @@
 -- Adapted from Data.Sequence.BSeq (sequence package)
 module Data.SeqStd where
 
+import           Data.Monoid hiding ((<>))
+import           Data.Semigroup
+
 infixr 5 <|, :< ,|>
 
 data Seq a = Empty
@@ -72,6 +75,9 @@ viewl (Leaf x)            = x :< Empty
 viewl Empty               = EmptyL
 viewl (Node Empty r)      = viewl r
 
+instance Semigroup (Seq a) where
+  {-# INLINE (<>) #-}
+  (<>) = mappend
 instance Monoid (Seq a) where
   {-# INLINE mempty #-}
   mempty = Empty

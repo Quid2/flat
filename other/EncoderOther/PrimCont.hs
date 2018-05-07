@@ -10,7 +10,8 @@ import           Control.Monad
 import qualified Data.ByteString.Internal as BS
 import qualified Data.ByteString.Lazy     as L
 import           Data.Foldable
-import           Data.Monoid
+import           Data.Monoid hiding ((<>))
+import           Data.Semigroup
 import           Data.Word
 import           Foreign
 import           Foreign.Ptr
@@ -36,6 +37,9 @@ data S = S {nextPtr  :: !(Ptr Word8)
 
 newtype Encoding = Encoding (Step -> Step)
 
+instance Semigroup Encoding where
+  {-# INLINE (<>) #-}
+  (<>) = mappend
 instance Monoid Encoding where
   {-# INLINE mempty #-}
   mempty = Encoding id -- (\k -> (\s -> k s))

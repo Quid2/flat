@@ -10,7 +10,8 @@ import qualified Data.ByteString.Lazy     as L
 import           Data.Flat.Pokes          hiding (eBitsF, eBoolF, eFalseF,
                                            eTrueF, pokeWord)
 import           Data.Foldable
-import           Data.Monoid
+import           Data.Monoid hiding ((<>))
+import           Data.Semigroup
 import           Data.Word
 import           Foreign
 import           Foreign.Ptr
@@ -22,6 +23,8 @@ newtype Encoding = Encoding {enc:: E -> IO (Signal Encoding)}
 
 instance Show Encoding where show _ = "Encoding"
 
+instance Semigroup Encoding where
+  (<>) = mappend
 instance Monoid Encoding where
   mempty = Encoding (done . currState)
 
