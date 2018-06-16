@@ -121,9 +121,9 @@ unitTests = testGroup "De/Serialisation Unit tests" $ concat [
   ,sz '经' 24
   ,sz (0::Word8) 8
   ,sz (1::Word8) 8
-  ,concat $ map (uncurry sz) $ ns
-  ,concat $ map (uncurry sz) $ nsI
-  ,concat $ map (uncurry sz) $ nsII
+  ,concatMap (uncurry sz) ns
+  ,concatMap (uncurry sz) $ nsI
+  ,concatMap (uncurry sz) $ nsII
   ,sz (1.1::Float) 32
   ,sz (1.1::Double) 64
   ,sz "" 1
@@ -361,9 +361,6 @@ errDec :: forall a . (Flat a, Eq a, Show a) => Proxy a -> [Word8] -> [TestTree]
 --errDec _ bs = [testCase "bad decode" $ let ev = (des bs::Decoded a) in ev @?= Left ""]
 errDec _ bs = [testCase "bad decode" $ let ev = (des bs::Decoded a) in isRight ev @?= False]
 
--- This will crash the eta compiler
--- uc = map ord "\x4444\x5555\x10001\xD800"
-
 ser :: Flat a => a -> [Word8]
 ser = B.unpack . flat
 
@@ -407,3 +404,4 @@ prop_common_unsigned n _ = let n2 :: h = fromIntegral n
 -- b1 :: BLOB UTF8
 -- b1 = BLOB UTF8 (preAligned (List255 [97,98,99]))
 -- -- b1 = BLOB (preAligned (UTF8 (List255 [97,98,99])))
+

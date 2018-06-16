@@ -142,9 +142,11 @@ Briefly:
 ### Haskell Compatibility
 
 Tested with:
-  * [ghc](https://www.haskell.org/ghc/) 7.10.3, 8.0.1 and 8.0.2 (x64)
+  * [ghc](https://www.haskell.org/ghc/) 7.10.3, 8.0.2, 8.2.2, 8.4.2 and 8.4.3 (x64)
   * [ghc](https://www.haskell.org/ghc/) 7.10.3/LLVM 3.5.2 (Arm7)
   * [ghcjs](https://github.com/ghcjs/ghcjs)
+
+It also seems to be working with [Eta](https://eta-lang.org/) though the full test suite could not be run due to Eta's issues compiling `quickcheck` and `doctest`.
 
 ### Installation
 

@@ -1,5 +1,4 @@
 {-# LANGUAGE ConstraintKinds           #-}
-{-# LANGUAGE DefaultSignatures         #-}
 {-# LANGUAGE DeriveDataTypeable        #-}
 {-# LANGUAGE DeriveGeneric             #-}
 {-# LANGUAGE DeriveTraversable         #-}
@@ -10,7 +9,6 @@
 {-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
-{-# LANGUAGE TemplateHaskell           #-}
 {-# LANGUAGE TypeFamilies              #-}
 {-
  A collection of data types used for testing.
@@ -22,7 +20,7 @@ import           Data.Data
 import           Data.Int
 import           Data.Word
 import           GHC.Generics
-import qualified Test.Data2            as D2
+import qualified Test.Data2                    as D2
 import           Test.Tasty.QuickCheck
 
 data Void deriving Generic
@@ -240,8 +238,7 @@ instance (Arbitrary a) => Arbitrary (Tree a) where
                    0 -> do x1 <- arbitrary
                            x2 <- arbitrary
                            return (Node x1 x2)
-                   1 -> do x1 <- arbitrary
-                           return (Leaf x1)
+                   1 -> Leaf <$> arbitrary
                    _ -> error "FATAL ERROR: Arbitrary instance, logic bug"
 
 instance (Arbitrary a) => Arbitrary (List a) where
@@ -259,26 +256,20 @@ instance () => Arbitrary Unit where
 
 instance () => Arbitrary Un where
         arbitrary
-          = do x1 <- arbitrary
-               return (Un x1)
-
+          = Un <$> arbitrary
 instance () => Arbitrary A where
         arbitrary
           = do x <- choose (0 :: Int, 1)
                case x of
-                   0 -> do x1 <- arbitrary
-                           return (A x1)
-                   1 -> do x1 <- arbitrary
-                           return (AA x1)
+                   0 -> A <$> arbitrary
+                   1 -> AA <$> arbitrary
                    _ -> error "FATAL ERROR: Arbitrary instance, logic bug"
 
 instance () => Arbitrary B where
         arbitrary
           = do x <- choose (0 :: Int, 1)
                case x of
-                   0 -> do x1 <- arbitrary
-                           return (B x1)
-                   1 -> do x1 <- arbitrary
-                           return (BB x1)
+                   0 -> B <$> arbitrary
+                   1 -> BB <$> arbitrary
                    _ -> error "FATAL ERROR: Arbitrary instance, logic bug"
 -- GENERATED STOP

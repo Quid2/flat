@@ -1,11 +1,13 @@
-{-# LANGUAGE BangPatterns #-}
+-- {-# LANGUAGE BangPatterns #-}
 
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE FlexibleInstances         #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE RankNTypes                #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
-{-# LANGUAGE UndecidableInstances      #-}
+-- {-# LANGUAGE UndecidableInstances    #-}
+-- {-# LANGUAGE IncoherentInstances    #-}
+
 -- |Flat Instances for common, primitive and abstract data types for which instances cannot be automatically derived
 module Data.Flat.Instances (
     sizeMap,

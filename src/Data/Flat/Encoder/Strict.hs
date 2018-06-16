@@ -1,6 +1,7 @@
 {-# LANGUAGE BangPatterns              #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
+
 -- |Strict encoder
 module Data.Flat.Encoder.Strict where
 
@@ -12,8 +13,7 @@ import qualified Data.Flat.Encoder.Size       as S
 import           Data.Flat.Encoder.Types
 import           Data.Flat.Types
 import           Data.Foldable
-import           Data.Monoid hiding ((<>))
-import           Data.Semigroup
+import           Data.Semigroup -- (Semigroup(..))
 
 -- |Strict encoder
 strictEncoder :: NumBits -> Encoding -> B.ByteString
@@ -31,6 +31,7 @@ instance Show Encoding where show _ = "Encoding"
 instance Semigroup Encoding where
   {-# INLINE (<>) #-}
   (<>) = mappend
+
 instance Monoid Encoding where
   {-# INLINE mempty #-}
   mempty = Encoding return

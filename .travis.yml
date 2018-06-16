@@ -37,10 +37,14 @@ matrix:
     compiler: ": #stack 8.2.2"
     addons: {apt: {packages: [ghc-8.2.2], sources: [hvr-ghc]}}
 
-  - env: BUILD=stack ARGS="--resolver nightly"
+  - env: BUILD=stack ARGS="--resolver nightly-2018-05-30"
     compiler: ": #stack 8.4.2"
     addons: {apt: {packages: [ghc-8.4.2], sources: [hvr-ghc]}}
-    
+
+  - env: BUILD=stack ARGS="--resolver nightly-2018-06-16"
+    compiler: ": #stack 8.4.3"
+    addons: {apt: {packages: [ghc-8.4.3], sources: [hvr-ghc]}}    
+
   fast_finish: true
 
 before_install:

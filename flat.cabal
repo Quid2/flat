@@ -1,8 +1,8 @@
 name: flat
 version: 0.3.1
 synopsis: Principled and efficient bit-oriented binary serialization.
-description: See the <http://github.com/tittoassini/flat online tutorial>.
-homepage: http://github.com/tittoassini/flat
+description: See the <http://github.com/Quid2/flat online tutorial>.
+homepage: http://github.com/Quid2/flat
 category: Data,Parsing,Serialization
 license:             BSD3
 license-file:        LICENSE
@@ -11,7 +11,9 @@ maintainer:          tittoassini@gmail.com
 copyright:           Copyright: (c) 2016 Pasqualino `Titto` Assini
 cabal-version: >=1.10
 build-type: Simple
-Tested-With: GHC == 7.10.3 GHC == 8.0.1 GHC == 8.0.2
+-- The library (but not its tests) compiles with ETA == 0.7.2 (see https://eta-lang.org/) 
+Tested-With: GHC == 7.10.3 GHC == 8.0.2 GHC == 8.2.2 GHC == 8.4.2
+
 extra-source-files:
     stack.yaml
     README.md
@@ -19,7 +21,7 @@ extra-source-files:
 
 source-repository head
     type: git
-    location: https://github.com/tittoassini/flat
+    location: https://github.com/Quid2/flat
 
 library
     exposed-modules:
@@ -70,7 +72,7 @@ library
     hs-source-dirs: src
     ghc-options: -O2 -funbox-strict-fields -Wall -fno-warn-orphans -fno-warn-name-shadowing
 
-test-suite flat-test
+test-suite spec
     type: exitcode-stdio-1.0
     main-is: Spec.hs
     build-depends:
@@ -83,7 +85,7 @@ test-suite flat-test
                 , deepseq == 1.4.*
                 , quickcheck-instances>=0.3.12 && <0.4
                 , text
-                , bytestring 
+                , bytestring
                 , flat
 
     default-language: Haskell2010
@@ -99,26 +101,16 @@ test-suite flat-test
     if impl(eta)
        cpp-options: -DETA_COMPILER
 
-test-suite flat-doctest
+test-suite doctest
   default-language:   Haskell2010
   type:               exitcode-stdio-1.0
   main-is:            DocSpec.hs
   build-depends:      base, doctest>=0.11.2 && <0.16,filemanip>=0.3.6.3 && < 0.3.7, flat
   HS-Source-Dirs:     test
 
--- test-suite flat-doctest
---     if impl(ghc)
---        main-is: DocSpec.hs
---     else
---        main-is: Pass.hs
---     type:               exitcode-stdio-1.0
---     default-language:   Haskell2010
---     build-depends:      base >4 && <5, doctest>=0.11.1, filemanip>=0.3.6.3
---     hs-source-dirs:     test
-
--- executable flat-run
+-- executable qtest
 --   default-language:   Haskell2010
---   hs-source-dirs:      test
 --   main-is:             Test.hs
---   build-depends:       base,flat
-
+--   hs-source-dirs:      test
+--   build-depends:      base,  flat, time
+ 
