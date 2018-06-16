@@ -78,8 +78,8 @@ copyByteArrayToAddr arr (I# offset) (Ptr addr) (I# len) =
 -- toByteString sourcePtr sourceLength = BS.unsafeCreate sourceLength $ \destPointer -> BS.memcpy destPointer sourcePtr sourceLength
 
 chunksToByteString :: (Ptr Word8, [Int]) -> BS.ByteString
-chunksToByteString (sourcePtr, lens) =
-  BS.unsafeCreate (sum lens) $ \destPtr -> void $ foldM
+chunksToByteString (sourcePtr0, lens) =
+  BS.unsafeCreate (sum lens) $ \destPtr0 -> void $ foldM
     (\(destPtr, sourcePtr) sourceLength ->
       BS.memcpy destPtr sourcePtr sourceLength
         >> return
@@ -87,11 +87,11 @@ chunksToByteString (sourcePtr, lens) =
              , sourcePtr `plusPtr` (sourceLength + 1)
              )
     )
-    (destPtr, sourcePtr)
+    (destPtr0, sourcePtr0)
     lens
 
 chunksToByteArray :: (Ptr Word8, [Int]) -> (ByteArray, Int)
-chunksToByteArray (sourcePtr, lens) = unsafePerformIO $ do
+chunksToByteArray (sourcePtr0, lens) = unsafePerformIO $ do
   let len = sum lens
   arr <- newByteArray len
   foldM_
@@ -99,7 +99,7 @@ chunksToByteArray (sourcePtr, lens) = unsafePerformIO $ do
       copyAddrToByteArray sourcePtr arr destOff sourceLength >> return
         (destOff + sourceLength, sourcePtr `plusPtr` (sourceLength + 1))
     )
-    (0, sourcePtr)
+    (0, sourcePtr0)
     lens
   farr <- unsafeFreezeByteArray arr
   return (farr, len)

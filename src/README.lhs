@@ -106,7 +106,7 @@ Get the latest stable version from [hackage](https://hackage.haskell.org/package
 
  ### Acknowledgements
 
- `flat` reuses ideas and readapts code from various packages, mainly: `store`, `binary-bits` and `binary`.
+ `flat` reuses ideas and readapts code from various packages, mainly: `store`, `binary-bits` and `binary` and includes contributions from Justus Sagemüller.
 
  ### Known Bugs and Infelicities
 
