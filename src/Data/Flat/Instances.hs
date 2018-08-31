@@ -13,6 +13,9 @@ module Data.Flat.Instances (
     sizeMap,
     encodeMap,
     decodeMap,
+    sizeSet,
+    encodeSet,
+    decodeSet,
     sizeSequence,
     encodeSequence,
     decodeSequence,
@@ -22,18 +25,22 @@ import qualified Data.ByteString       as B
 import qualified Data.ByteString.Lazy  as L
 import qualified Data.ByteString.Short as SBS
 import           Data.Char
-import           Data.Containers       (ContainerKey, IsMap, MapValue,
-                                        mapFromList, mapToList)
+import           Data.Containers       (ContainerKey, IsMap, IsSet, MapValue,
+                                        mapFromList, mapToList, setFromList,
+                                        setToList)
 import           Data.Flat.Class
 import           Data.Flat.Decoder
 import           Data.Flat.Encoder
 --import           Data.Flat.Size        (arrayBits)
 import           Data.Flat.Types
 import qualified Data.Foldable         as F
-import qualified Data.Map              as M
+import           Data.IntMap           (IntMap)
+import           Data.IntSet           (IntSet)
+import           Data.Map              (Map)
 import           Data.MonoTraversable
-import qualified Data.Sequence         as S
+import           Data.Sequence         (Seq)
 import           Data.Sequences
+import           Data.Set              (Set)
 import qualified Data.Text             as T
 import           Prelude               hiding (mempty)
 
@@ -170,15 +177,30 @@ instance Flat Char where
   encode = eChar
   decode = dChar
 
-instance (Flat a, Flat b,Ord a) => Flat (M.Map a b) where
-   size = sizeMap
-   encode = encodeMap
-   decode = decodeMap
+instance Flat a => Flat (IntMap a) where
+  size = sizeMap
+  encode = encodeMap
+  decode = decodeMap
 
-instance Flat a => Flat (S.Seq a) where
+instance Flat IntSet where
+  size = sizeSet
+  encode = encodeSet
+  decode = decodeSet
+
+instance (Ord a, Flat a, Flat b) => Flat (Map a b) where
+  size = sizeMap
+  encode = encodeMap
+  decode = decodeMap
+
+instance Flat a => Flat (Seq a) where
   size = sizeSequence
   encode = encodeSequence
   decode = decodeSequence
+
+instance (Ord a, Flat a) => Flat (Set a) where
+  size = sizeSet
+  encode = encodeSet
+  decode = decodeSet
 
 -- |Calculate size of an instance of IsMap
 {-# INLINE sizeMap #-}
@@ -198,6 +220,21 @@ encodeMap = encodeListWith (\(k,v) -> encode k <> encode v) . mapToList
 -- |Decode an instance of IsMap, as a list
 decodeMap :: (Flat (ContainerKey map), Flat (MapValue map), IsMap map) => Get map
 decodeMap = mapFromList <$> decodeListWith ((,) <$> decode <*> decode)
+
+{-# INLINE sizeSet #-}
+-- |Calculate size of an instance of IsSet
+sizeSet :: (Flat (ContainerKey r), IsSet r) => Size r
+sizeSet m acc = F.foldl' (\acc' k -> size k (acc' + 1)) (acc + 1) . setToList $ m
+
+{-# INLINE encodeSet #-}
+-- |Encode an instance of IsSet, as a list
+encodeSet :: (Flat (ContainerKey set), IsSet set) => set -> Encoding
+encodeSet = encodeListWith encode . setToList
+
+{-# INLINE decodeSet #-}
+-- |Decode an instance of IsSet, as a list
+decodeSet :: (Flat (ContainerKey set), IsSet set) => Get set
+decodeSet = setFromList <$> decodeListWith decode
 
 {-# INLINE sizeSequence #-}
 -- |Calculate size of an instance of IsSequence
