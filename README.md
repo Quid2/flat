@@ -121,23 +121,7 @@ Briefly:
  * Size: `flat` produces significantly smaller binaries than all other libraries (3/4 times usually)
  * Encoding: `store` and `flat` are usually faster
  * Decoding: `store`, `cereal` and `flat` are usually faster
-
- One thing that is not shown by the benchmarks is that, if the serialized data is to be transferred over a network, the total transfer time (encoding time + transmission time + decoding time) is usually dominated by the transmission time and that's where the smaller binaries produced by flat give it a significant advantage.
-
- Consider for example the Cars dataset. As you can see in the following comparison with `store`, the overall top performer for encoding/decoding speed, the transfer time is actually significantly lower for `flat` for all except the highest transmission speeds (about 4 times faster at typical ADSL speeds, 2 times faster at 4G-LTE mobile speeds).
-
-||Store|Flat|
-|---|---|---|
-|Encoding (mSec)|  3.1|  7.0|
-|Decoding (mSec)| 22.6| 30.0|
-|Size (bytes)|702728|114841|
-|Transmission (mSec) @ 1 MegaByte/Sec|702.7|114.8|
-|Transmission (mSec) @ 10 MegaByte/Sec| 70.3| 11.5|
-|Transmission (mSec) @ 100 MegaByte/Sec|  7.0|  1.1|
-|Total Transfer (mSec) @ 1 MegaByte/Sec|728.4|151.8|
-|Total Transfer (mSec) @ 10 MegaByte/Sec| 96.0| 48.5|
-|Total Transfer (mSec) @ 100 MegaByte/Sec| 32.7| 38.1|
-
+ * Transfer time (serialisation time + transport time on the network + deserialisation at the receiving end): `flat` is usually faster for all but the highest network speeds
 
 ### Haskell Compatibility
 
@@ -159,8 +143,8 @@ Get the latest stable version from [hackage](https://hackage.haskell.org/package
 
 ### Known Bugs and Infelicities
 
-* Longish compilation times for generated Flat instances
+* Long compilation times for generated Flat instances
 
-* 256 limit on enumerations
+* Data types with more than 256 constructors are unsupported
 
 See also the [full list of open issues](https://github.com/Quid2/flat/issues).
