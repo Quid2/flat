@@ -119,8 +119,8 @@ For some hard data, see this [comparison of the major haskell serialisation libr
 
 Briefly:
  * Size: `flat` produces significantly smaller binaries than all other libraries (3/4 times usually)
- * Encoding: `store` and `flat` are usually faster
- * Decoding: `store`, `cereal` and `flat` are usually faster
+ * Encoding: `store` is usually faster
+ * Decoding: `store`, `flat` and `cereal` are usually faster
  * Transfer time (serialisation time + transport time on the network + deserialisation at the receiving end): `flat` is usually faster for all but the highest network speeds
 
 ### Haskell Compatibility
