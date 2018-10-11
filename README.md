@@ -148,6 +148,7 @@ Tested with:
 
 It also seems to be working with [Eta](https://eta-lang.org/) though the full test suite could not be run due to Eta's issues compiling `quickcheck` and `doctest`.
 
+
 ### Installation
 
 Get the latest stable version from [hackage](https://hackage.haskell.org/package/flat).
@@ -158,7 +159,8 @@ Get the latest stable version from [hackage](https://hackage.haskell.org/package
 
 ### Known Bugs and Infelicities
 
-* A performance issue with GHC 8.0.2 for some data types
-
 * Longish compilation times for generated Flat instances
 
+* 256 limit on enumerations
+
+See also the [full list of open issues](https://github.com/Quid2/flat/issues).
