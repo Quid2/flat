@@ -292,7 +292,6 @@ flatTests = testGroup "De/Serialisation Unit tests" $ concat [
   ,decBitsN dBEBits32
   ,decBitsN dBEBits64
 
-
   -- System.Endian tests (to run, need to modify imports and cabal file)
   -- ,conv toBE16 (2^10 + 3)  (2^9+2^8+4)
   -- ,conv toBE32 (2^18 + 3)  50332672
