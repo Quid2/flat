@@ -1,7 +1,9 @@
 #resolver: lts-9.21
 #resolver: lts-11.22
 resolver: lts-12.13
-# resolver: nightly-2018-10-02
+
+# FAILS
+# resolver: nightly-2018-10-25
 
 
 extra-deps:

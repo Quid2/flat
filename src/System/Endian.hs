@@ -13,11 +13,11 @@ import Data.Word
 
 isBigEndian :: Bool
 isBigEndian = 
-    #ifdef WORDS_BIGENDIAN
+#ifdef WORDS_BIGENDIAN
     True
-    #else
+#else
     False
-    #endif
+#endif
 
 -- | Convert a 64 bit value in cpu endianess to big endian
 toBE64 :: Word64 -> Word64

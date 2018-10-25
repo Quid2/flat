@@ -119,6 +119,7 @@ genericEncode = genkode . from
 
 -- genericEncode = undefined
 
+
 -- |Generic Encoder
 class GEncode f where
   gencode :: f t -> Encoding

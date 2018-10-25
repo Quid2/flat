@@ -58,7 +58,7 @@ dBool = Get $ \endPtr s ->
     then notEnoughSpace endPtr s
     else do
       !w <- peek (currPtr s)
-      let !b = 0 /= (w .&. (128 `unsafeShiftR` usedBits s))
+      let !b = 0 /= (w .&. (128 `shR` usedBits s))
       -- let b = testBit w (7-usedBits s)
       let !s' = if usedBits s == 7
                   then s { currPtr = currPtr s `plusPtr` 1, usedBits = 0 }
@@ -109,12 +109,12 @@ dBEBits64 n = Get $ \endPtr s -> do
 --   | n <= 8 - usedBits s = do
 --       w <- peek (currPtr s)
 --       let (bytes,bits) = (n+usedBits s) `divMod` 8
---       return $ GetResult (S {currPtr=currPtr s `plusPtr` bytes,usedBits=bits}) ((w `unsafeShiftL` usedBits s) `unsafeShiftR` (8 - n))
+--       return $ GetResult (S {currPtr=currPtr s `plusPtr` bytes,usedBits=bits}) ((w `unsafeShiftL` usedBits s) `shR` (8 - n))
 
 --   -- two different bytes
 --   | n <= 8 = do
 --       w::Word16 <- toBE16 <$> peek (castPtr $ currPtr s)
---       return $ GetResult (S {currPtr=currPtr s `plusPtr` 1,usedBits=(usedBits s + n) `mod` 8}) (fromIntegral $ (w `unsafeShiftL` usedBits s) `unsafeShiftR` (16 - n))
+--       return $ GetResult (S {currPtr=currPtr s `plusPtr` 1,usedBits=(usedBits s + n) `mod` 8}) (fromIntegral $ (w `unsafeShiftL` usedBits s) `shR` (16 - n))
 
 --   | otherwise = error $ unwords ["take8: cannot take",show n,"bits"]
 
@@ -128,10 +128,10 @@ read8 s n | n >=0 && n <=8 =
             if n <= 8 - usedBits s
             then do  -- all bits in the same byte
               w <- peek (currPtr s)
-              return $ (w `unsafeShiftL` usedBits s) `unsafeShiftR` (8 - n)
+              return $ (w `unsafeShiftL` usedBits s) `shR` (8 - n)
             else do -- two different bytes
               w::Word16 <- toBE16 <$> peek (castPtr $ currPtr s)
-              return $ fromIntegral $ (w `unsafeShiftL` usedBits s) `unsafeShiftR` (16 - n)
+              return $ fromIntegral $ (w `unsafeShiftL` usedBits s) `shR` (16 - n)
           | otherwise = error $ unwords ["read8: cannot read",show n,"bits"]
 
 {-# INLINE takeN #-}
@@ -150,10 +150,10 @@ takeN n s = read s 0 (n - (n `min` 8)) n
 --   r <- case bytes of
 --     0 -> do
 --       w <- peek (currPtr s)
---       return . fromIntegral $ ((w `unsafeShiftL` usedBits s) `unsafeShiftR` (8 - n))
+--       return . fromIntegral $ ((w `unsafeShiftL` usedBits s) `shR` (8 - n))
 --     1 -> do
 --       w::Word16 <- toBE16 <$> peek (castPtr $ currPtr s)
---       return $ fromIntegral $ (w `unsafeShiftL` usedBits s) `unsafeShiftR` (16 - n)
+--       return $ fromIntegral $ (w `unsafeShiftL` usedBits s) `shR` (16 - n)
 --     2 -> do
 --       let r = 0
 --       w1 <- fromIntegral <$> r8 s
@@ -178,7 +178,7 @@ dBE8 = Get $ \endPtr s -> do
             then return w1
             else do
                    !w2 <- peek (currPtr s `plusPtr` 1)
-                   return $ (w1 `unsafeShiftL` usedBits s) .|. (w2 `unsafeShiftR` (8-usedBits s))
+                   return $ (w1 `unsafeShiftL` usedBits s) .|. (w2 `shR` (8-usedBits s))
       return $ GetResult (s {currPtr=currPtr s `plusPtr` 1}) w
 
 {-# INLINE dBE16 #-}
@@ -191,7 +191,7 @@ dBE16 = Get $ \endPtr s -> do
         then return w1
         else do
            !(w2::Word8) <- peek (currPtr s `plusPtr` 2)
-           return $ w1 `unsafeShiftL` usedBits s  .|. fromIntegral (w2 `unsafeShiftR` (8-usedBits s))
+           return $ w1 `unsafeShiftL` usedBits s  .|. fromIntegral (w2 `shR` (8-usedBits s))
   return $ GetResult (s {currPtr=currPtr s `plusPtr` 2}) w
 
 {-# INLINE dBE32 #-}
@@ -204,7 +204,7 @@ dBE32 = Get $ \endPtr s -> do
         then return w1
         else do
            !(w2::Word8) <- peek (currPtr s `plusPtr` 4)
-           return $ w1 `unsafeShiftL` usedBits s  .|. fromIntegral (w2 `unsafeShiftR` (8-usedBits s))
+           return $ w1 `unsafeShiftL` usedBits s  .|. fromIntegral (w2 `shR` (8-usedBits s))
   return $ GetResult (s {currPtr=currPtr s `plusPtr` 4}) w
 
 {-# INLINE dBE64 #-}
@@ -218,7 +218,7 @@ dBE64 = Get $ \endPtr s -> do
         then return w1
         else do
            !(w2::Word8) <- peek (currPtr s `plusPtr` 8)
-           return $ w1 `unsafeShiftL` usedBits s  .|. fromIntegral (w2 `unsafeShiftR` (8-usedBits s))
+           return $ w1 `unsafeShiftL` usedBits s  .|. fromIntegral (w2 `shR` (8-usedBits s))
   return $ GetResult (s {currPtr=currPtr s `plusPtr` 8}) w
 
 {-# INLINE peek64 #-}
@@ -269,12 +269,13 @@ getChunksInfo = Get $ \endPtr s -> do
    (currPtr',ns) <- getChunks (currPtr s) id
    return $ GetResult (s {currPtr=currPtr'}) (currPtr s `plusPtr` 1,ns)
 
--- {-# INLINE unsafeShiftR #-}
--- #ifdef ghcjs_HOST_OS
--- unsafeShiftR val 0 = val
--- unsafeShiftR val n = shift val (-n)
+{-# INLINE shR #-}
+shR :: Bits a => a -> Int -> a
+#ifdef ghcjs_HOST_OS
+shR val 0 = val
+shR val n = shift val (-n)
 
--- -- unsafeShiftR = unsafeShiftR
--- #else
--- unsafeShiftR = unsafeShiftR  
--- #endif      
+-- shR = unsafeShiftR
+#else
+shR = unsafeShiftR  
+#endif      
