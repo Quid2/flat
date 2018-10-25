@@ -4,11 +4,19 @@ module System.Endian
     toBE32
     , toBE64
     , toBE16
+    , isBigEndian
     ) where
 
 #include "MachDeps.h"
 
 import Data.Word
+
+isBigEndian = 
+    #ifdef WORDS_BIGENDIAN
+    True
+    #else
+    False
+    #endif
 
 -- | Convert a 64 bit value in cpu endianess to big endian
 toBE64 :: Word64 -> Word64

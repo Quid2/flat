@@ -41,6 +41,7 @@ instance Exception NotEnoughSpaceException
 instance Semigroup Writer where
   {-# INLINE (<>) #-}
   (<>) = mappend
+  
 instance Monoid Writer where
   {-# INLINE mempty #-}
   mempty = Writer return

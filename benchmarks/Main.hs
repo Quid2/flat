@@ -22,13 +22,13 @@ bitEncoder numBits (Writer op) = L.fromStrict $ bitEncoderStrict numBits op
 able-profiling -p;/Users/titto/workspace/quid2/.cabal-sandbox/bin/benchsmall +RTS -ph -sstderr;cat benchsmall.prof;hp2ps -c benchsmall;profiteur benchsmall.prof;open file:///Users/titto/workspace/quid2/benchsmall.prof.eUnsigned64 :: Word64 -> Encodinghtml 
 
 Benchmarking
-cd /Users/titto/workspace/quid[133eBits ,197,164,33]2;cabal install;/Users/titto/workspace/quid2/.cabal-sandbo# - store-0.4.1
+cd /Users/titto/workspace/quid2;cabal install;/Users/titto/workspace/quid2/.cabal-sandbo# - store-0.4.1
 # - store-core-0.4
 x/bin/benchsmall
 
 Benchmarking using cbor test suite, see LEGGIMI
 
-Profi(Leaf (Step n2 s2))ling using eventlog:
+Profiling using eventlog:
 cd /Users/titto/workspace/quid2;cabal install;time /Users/titto/workspace/quid2/.cabal-sandbox/bin/benchs-- mall +RTS -l;ghc-event-- let v = [1::Word64 .. 4000000]
   -- evaluate $ force' (NF v)
   -- putStrLn . commas . length $ v

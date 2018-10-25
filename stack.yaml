@@ -1,3 +1,11 @@
-resolver: lts-9.21
-#resolver: lts-11.13
-#resolver: nightly-2018-06-16
+#resolver: lts-9.21
+#resolver: lts-11.22
+resolver: lts-12.13
+# resolver: nightly-2018-10-02
+
+
+extra-deps:
+- QuickCheck-2.8.2
+# - statistics-0.13.3.0
+# - cereal-0.5.4.0
+# - store-0.4.1

@@ -34,6 +34,8 @@ module Data.Flat.Encoder.Prim (
     eFalseF,
     varWordF,
     w7l,
+    -- Exported for testing only
+    eWord32BEF,eWord64BEF,eWord32E,eWord64E
     ) where
 
 import           Control.Monad
@@ -153,12 +155,23 @@ eWord8F t s@(S op _ o) | o==0 = pokeWord op t
 {-# INLINE eWord32E #-}
 eWord32E :: (Word32 -> Word32) -> Word32 -> Prim
 eWord32E conv t (S op w o) | o==0 = pokeW conv op t >> skipBytes op 4
-                           | otherwise = pokeW conv op (fromIntegral w `shiftL` 24 .|. t `shiftR` o) >> return (S (plusPtr op 4) (fromIntegral t `shiftL` (8-o)) o)
+                           | otherwise = pokeW conv op (asWord32 w `shiftL` 24 .|. t `shiftR` o) >> return (S (plusPtr op 4) (asWord8 t `shiftL` (8-o)) o)
 
 {-# INLINE eWord64E #-}
 eWord64E :: (Word64 -> Word64) -> Word64 -> Prim
-eWord64E conv t (S op w o) | o==0 = pokeW conv op t >> skipBytes op 8
-                           | otherwise = pokeW conv op (fromIntegral w `shiftL` 56 .|. t `shiftR` o) >> return (S (plusPtr op 8) (fromIntegral t `shiftL` (8-o)) o)
+-- #ifdef ghcjs_HOST_OS
+-- eWord64E conv t (S op w o) | o==0 = pokeW (conv . (`rotateR` 32)) op t >> skipBytes op 8
+--                            | otherwise = pokeW (conv . (`rotateR` 32)) op (asWord64 w `shiftL` 56 .|. t `shiftR` o) >> return (S (plusPtr op 8) (asWord8 t `shiftL` (8-o)) o)
+
+-- -- eWord64E conv t (S op w o) | o==0 = pokeW conv op t >> skipBytes op 8
+-- --                            | otherwise = pokeW conv op (asWord64 w `shiftL` 56 .|. t `shiftR` o) >> return (S (plusPtr op 8) (asWord8 t `shiftL` (8-o)) o)
+-- #else
+-- eWord64E conv t (S op w o) | o==0 = pokeW conv op t >> skipBytes op 8
+--                            | otherwise = pokeW conv op (asWord64 w `shiftL` 56 .|. t `shiftR` o) >> return (S (plusPtr op 8) (asWord8 t `shiftL` (8-o)) o)
+-- #endif
+
+eWord64E conv t (S op w o) | o==0 = poke64 conv op t >> skipBytes op 8
+                           | otherwise = poke64 conv op (asWord64 w `shiftL` 56 .|. t `shiftR` o) >> return (S (plusPtr op 8) (asWord8 t `shiftL` (8-o)) o)
 
 {-# INLINE eWord16F #-}
 eWord16F :: Word16 -> Prim
@@ -340,6 +353,14 @@ pokeWord' op w = poke op w >> return (plusPtr op 1)
 pokeW :: Storable a => (t -> a) -> Ptr a1 -> t -> IO ()
 pokeW conv op t = poke (castPtr op) (conv t)
 
+{-# INLINE poke64 #-}
+poke64 :: (t -> Word64) -> Ptr a -> t -> IO ()
+#ifdef ghcjs_HOST_OS
+poke64 conv op t = poke (castPtr op) ((`rotateR` 32) . conv $ t)
+#else
+poke64 conv op t = poke (castPtr op) (conv t)
+#endif
+
 {-# INLINE skipByte #-}
 skipByte :: Monad m => Ptr a -> m S
 skipByte op = return (S (plusPtr op 1) 0 0)
@@ -369,3 +390,15 @@ writeBS bs op -- @(BS.PS foreignPointer sourceOffset sourceLength) op
     --                           op' <- pokeWord' op (fromIntegral l)
     --                           BS.memcpy op' off l
     --                           go (op' `plusPtr` l) (off `plusPtr` l) (len-l)
+
+{-# INLINE asWord64 #-}
+asWord64 :: Integral a => a -> Word64
+asWord64 = fromIntegral
+
+{-# INLINE asWord32 #-}
+asWord32 :: Integral a => a -> Word32
+asWord32 = fromIntegral
+
+{-# INLINE asWord8 #-}
+asWord8 :: Integral a => a -> Word8
+asWord8 = fromIntegral

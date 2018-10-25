@@ -41,7 +41,7 @@ import           Test.Tasty
 import           Test.Tasty.HUnit
 import           Test.Tasty.QuickCheck as QC hiding (getSize)
 -- import           System.Arch
-import           System.Endian
+-- import           System.Endian
 import Data.FloatCast
 
 main = do
@@ -292,9 +292,10 @@ flatTests = testGroup "De/Serialisation Unit tests" $ concat [
   ,decBitsN dBEBits32
   ,decBitsN dBEBits64
 
-  ,conv toBE16 (2^10 + 3)  (2^9+2^8+4)
-  ,conv toBE32 (2^18 + 3)  50332672
-  ,conv toBE64 (2^34 + 3)  216172782180892672
+  -- System.Endian tests 
+  -- ,conv toBE16 (2^10 + 3)  (2^9+2^8+4)
+  -- ,conv toBE32 (2^18 + 3)  50332672
+  -- ,conv toBE64 (2^34 + 3)  216172782180892672
 
   ,conv floatToWord -0.15625 3189768192
   ,conv wordToFloat 3189768192 -0.15625 

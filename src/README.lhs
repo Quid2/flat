@@ -82,14 +82,9 @@ For some hard data, see this [comparison of the major haskell serialisation libr
 
 Briefly:
  * Size: `flat` produces significantly smaller binaries than all other libraries (3/4 times usually)
- * Encoding: `store` and `flat` are usually faster
- * Decoding: `store`, `cereal` and `flat` are usually faster
-
- One thing that is not shown by the benchmarks is that, if the serialized data is to be transferred over a network, the total transfer time (encoding time + transmission time + decoding time) is usually dominated by the transmission time and that's where the smaller binaries produced by flat give it a significant advantage.
-
- Consider for example the Cars dataset. As you can see in the following comparison with `store`, the overall top performer for encoding/decoding speed, the transfer time is actually significantly lower for `flat` for all except the highest transmission speeds (about 4 times faster at typical ADSL speeds, 2 times faster at 4G-LTE mobile speeds).
-
->> ccc1 = compareStoreFlat
+ * Encoding: `store` is usually faster
+ * Decoding: `store`, `flat` and `cereal` are usually faster
+ * Transfer time (serialisation time + transport time on the network + deserialisation at the receiving end): `flat` is usually faster for all but the highest network speeds
 
 ### Haskell Compatibility
 
@@ -99,6 +94,7 @@ Tested with:
   * [ghcjs](https://github.com/ghcjs/ghcjs)
 
 It also seems to be working with [Eta](https://eta-lang.org/) though the full test suite could not be run due to Eta's issues compiling `quickcheck` and `doctest`.
+
 
  ### Installation
 
@@ -110,8 +106,9 @@ Get the latest stable version from [hackage](https://hackage.haskell.org/package
 
  ### Known Bugs and Infelicities
 
-* A performance issue with GHC 8.0.2 for some data types
+* Long compilation times for generated Flat instances
 
-* Longish compilation times for generated Flat instances
+* Data types with more than 256 constructors are unsupported
 
+See also the [full list of open issues](https://github.com/Quid2/flat/issues).
 

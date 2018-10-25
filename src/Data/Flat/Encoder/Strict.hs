@@ -5,11 +5,11 @@
 -- |Strict encoder
 module Data.Flat.Encoder.Strict where
 
-import qualified Data.ByteString      as B
-import qualified Data.ByteString.Lazy as L
+import qualified Data.ByteString               as B
+import qualified Data.ByteString.Lazy          as L
 import           Data.Flat.Memory
 import           Data.Flat.Encoder.Prim
-import qualified Data.Flat.Encoder.Size       as S
+import qualified Data.Flat.Encoder.Size        as S
 import           Data.Flat.Encoder.Types
 import           Data.Flat.Types
 import           Data.Foldable
@@ -19,10 +19,9 @@ import           Data.Semigroup -- (Semigroup(..))
 strictEncoder :: NumBits -> Encoding -> B.ByteString
 strictEncoder numBits (Encoding op) =
   let bufSize = S.bitsToBytes numBits
-  in fst $ unsafeCreateUptoN' bufSize $
-        \ptr -> do
-          (S ptr' 0 0) <- op (S ptr 0 0)
-          return (ptr' `minusPtr` ptr,())
+  in  fst $ unsafeCreateUptoN' bufSize $ \ptr -> do
+        (S ptr' 0 0) <- op (S ptr 0 0)
+        return (ptr' `minusPtr` ptr, ())
 
 newtype Encoding = Encoding { run :: Prim }
 
@@ -55,16 +54,16 @@ instance Monoid Encoding where
 {-# NOINLINE encodersS #-}
 encodersS :: [Encoding] -> Encoding
 -- without the explicit parameter the rules won't fire
-encodersS ws =  foldl' mappend mempty ws
+encodersS ws = foldl' mappend mempty ws
 -- encodersS ws = error $ unwords ["encodersS CALLED",show ws]
 
 {-# INLINE encodeListWith #-}
 -- |Encode as a List
 encodeListWith :: (t -> Encoding) -> [t] -> Encoding
 encodeListWith enc = go
-  where
-    go []     = eFalse
-    go (x:xs) = eTrue <> enc x <> go xs
+ where
+  go []       = eFalse
+  go (x : xs) = eTrue <> enc x <> go xs
 
 -- {-# INLINE encodeList #-}
 -- encodeList :: (Foldable t, Flat a) => t a -> Encoding
@@ -79,18 +78,16 @@ encodeListWith enc = go
 encodeArrayWith :: (t -> Encoding) -> [t] -> Encoding
 encodeArrayWith _ [] = eWord8 0
 encodeArrayWith f ws = Encoding $ go ws
-  where
-    go l s = do
-      s' <- eWord8F 0 s
-      (n,s'',l) <- gol l 0 s'
-      _ <- eWord8F n s
-      if null l
-        then eWord8F 0 s''
-        else go l s''
+ where
+  go l s = do
+    s'          <- eWord8F 0 s
+    (n, s'', l) <- gol l 0 s'
+    _           <- eWord8F n s
+    if null l then eWord8F 0 s'' else go l s''
 
-    gol []       !n !s  = return (n,s,[])
-    gol l@(x:xs) !n !s | n == 255 = return (255,s,l)
-                       | otherwise = run (f x) s >>= gol xs (n+1)
+  gol [] !n !s = return (n, s, [])
+  gol l@(x : xs) !n !s | n == 255  = return (255, s, l)
+                       | otherwise = run (f x) s >>= gol xs (n + 1)
 
 -- Encoding primitives
 {-# INLINE eChar #-}
@@ -127,31 +124,31 @@ eBytes = Encoding . eBytesF
 eLazyBytes :: L.ByteString -> Encoding
 eLazyBytes = Encoding . eLazyBytesF
 eShortBytes :: ShortByteString -> Encoding
-eShortBytes = Encoding. eShortBytesF
+eShortBytes = Encoding . eShortBytesF
 eNatural :: Natural -> Encoding
-eNatural = Encoding. eNaturalF
+eNatural = Encoding . eNaturalF
 eFloat :: Float -> Encoding
 eFloat = Encoding . eFloatF
 eDouble :: Double -> Encoding
 eDouble = Encoding . eDoubleF
 eInteger :: Integer -> Encoding
-eInteger = Encoding. eIntegerF
+eInteger = Encoding . eIntegerF
 eInt64 :: Int64 -> Encoding
-eInt64 = Encoding. eInt64F
+eInt64 = Encoding . eInt64F
 eInt32 :: Int32 -> Encoding
-eInt32 = Encoding. eInt32F
+eInt32 = Encoding . eInt32F
 eInt16 :: Int16 -> Encoding
-eInt16 = Encoding. eInt16F
+eInt16 = Encoding . eInt16F
 eInt8 :: Int8 -> Encoding
 eInt8 = Encoding . eInt8F
 eInt :: Int -> Encoding
 eInt = Encoding . eIntF
 eWord64 :: Word64 -> Encoding
-eWord64 = Encoding. eWord64F
+eWord64 = Encoding . eWord64F
 eWord32 :: Word32 -> Encoding
-eWord32 = Encoding. eWord32F
+eWord32 = Encoding . eWord32F
 eWord16 :: Word16 -> Encoding
-eWord16 = Encoding. eWord16F
+eWord16 = Encoding . eWord16F
 eWord8 :: Word8 -> Encoding
 eWord8 = Encoding . eWord8F
 eWord :: Word -> Encoding
@@ -177,7 +174,7 @@ vsize !f !t !n = f t + n
 -- Constant size
 {-# INLINE csize #-}
 csize :: NumBits -> t -> NumBits -> NumBits
-csize !n _ !s = n+s
+csize !n _ !s = n + s
 
 sChar :: Size Char
 sChar = vsize S.sChar

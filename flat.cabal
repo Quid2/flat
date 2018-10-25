@@ -1,7 +1,7 @@
 name: flat
-version: 0.3.2
+version: 0.3.3
 synopsis: Principled and efficient bit-oriented binary serialization.
-description: See the <http://github.com/Quid2/flat online tutorial>.
+description: Principled and efficient bit-oriented binary serialization, check the <http://github.com/Quid2/flat online tutorial>.
 homepage: http://github.com/Quid2/flat
 category: Data,Parsing,Serialization
 license:             BSD3
@@ -11,8 +11,8 @@ maintainer:          tittoassini@gmail.com
 copyright:           Copyright: (c) 2016 Pasqualino `Titto` Assini
 cabal-version: >=1.10
 build-type: Simple
--- The library (but not its tests) compiles with ETA == 0.7.2 (see https://eta-lang.org/) 
-Tested-With: GHC == 7.10.3 GHC == 8.0.2 GHC == 8.2.2 GHC == 8.4.2
+-- The library (but not its tests) compiles with ETA >= 0.7.2 (see https://eta-lang.org/) 
+Tested-With: GHC == 7.10.3 GHC == 8.0.2 GHC == 8.2.2 GHC == 8.4.3
 
 extra-source-files:
     stack.yaml
@@ -45,7 +45,8 @@ library
         Data.Flat
         Data.FloatCast
         Data.ZigZag
-    other-modules: System.Endian                  
+        System.Endian                  
+    --other-modules: System.Endian                  
     build-depends:
                   array >= 0.5.1.0 && <0.6,
                   base >=4.8 && <5,
@@ -70,20 +71,20 @@ library
                       OverloadedStrings PolyKinds ScopedTypeVariables TupleSections
                       TypeFamilies TypeOperators UndecidableInstances
     hs-source-dirs: src
-    ghc-options: -O2 -funbox-strict-fields -Wall -fno-warn-orphans -fno-warn-name-shadowing
+    ghc-options: -Wall -O2 -funbox-strict-fields -fno-warn-orphans -fno-warn-name-shadowing
 
 test-suite spec
     type: exitcode-stdio-1.0
     main-is: Spec.hs
     build-depends:
-                  base >=4.8 && <5
+                  base
                 , ghc-prim
-                , tasty >= 0.11
+                , tasty >= 1
                 , tasty-hunit >= 0.8
-                , tasty-quickcheck >=0.8.1
+                , tasty-quickcheck >=0.10 
                 , containers == 0.5.*
                 , deepseq == 1.4.*
-                , quickcheck-instances>=0.3.12
+                -- , quickcheck-instances>=0.3.12
                 , text
                 , bytestring
                 , flat
@@ -94,19 +95,121 @@ test-suite spec
     other-modules:
         Test.Data
         Test.Data2
+        Test.E
         Test.Data.Arbitrary
         Test.Data.Flat
         Test.Data2.Flat
         Test.Data.Values
-    if impl(eta)
-       cpp-options: -DETA_COMPILER
+    -- if impl(eta)
+    --    cpp-options: -DETA_COMPILER
 
 test-suite docs
   default-language:   Haskell2010
   type:               exitcode-stdio-1.0
   main-is:            DocSpec.hs
-  build-depends:      base, doctest>=0.11.2 && <0.16,filemanip>=0.3.6.3 && < 0.3.7
+  build-depends:      base, doctest>=0.11.2 && <0.17,filemanip>=0.3.6.3 && < 0.3.7
   HS-Source-Dirs:     test
+
+test-suite testy
+    main-is: Testy.hs
+    type: exitcode-stdio-1.0
+    default-language: Haskell2010
+    hs-source-dirs: test
+    ghc-options: -O0
+    other-modules: Test.E,Test.E.Flat
+    build-depends:
+                  base
+                , bytestring
+                , deepseq
+                , microspec
+                , flat
+
+
+test-suite compy
+    main-is: Compy.hs
+    type: exitcode-stdio-1.0
+    default-language: Haskell2010
+    hs-source-dirs: test
+    ghc-options: -O2
+    build-depends:
+                  base
+                , bytestring
+                , deepseq
+                , flat
+                , inspection-testing
+    other-modules:
+        Test.E,Test.E.Flat
+
+
+benchmark sbench
+    main-is: Simple.hs
+    type: exitcode-stdio-1.0
+    default-language:   Haskell2010
+    build-depends:
+        base
+        , deepseq
+        ,criterion
+        ,bytestring,text,containers,process,filepath,statistics,directory,timeit
+        ,flat
+    hs-source-dirs: benchmarks test
+    ghc-options: -O2 -dumpdir /tmp/dump -ddump-to-file -dsuppress-all -ddump-simpl -ddump-simpl-stats -ddump-rule-rewrites
+    other-modules:
+        Test.E,Test.Data,Test.Data.Flat,Test.Data.Values,Test.Data2,Test.Data2.Flat,Test.E.Flat,Report
+
+-- benchmark flat-benchmark
+--     type: exitcode-stdio-1.0
+--     main-is: Main.hs
+--     build-depends:
+--         QuickCheck >=2.8.2,
+--         aeson >=0.11.3.0,
+--         array >=0.5.1.0,
+--         base >=4.8.2.0,
+--         binary ==0.8.5.1,
+--         cereal ==0.5.4.0,
+--         store ==0.4.1,
+--         binary-serialise-cbor >=0.1.1.0,
+--         bits >=0.4,
+--         blaze-html >=0.8.0.2,
+--         bytestring >=0.10.6.0,
+--         containers >=0.4,
+--         criterion >=1.1.4.0,
+--         statistics >=0.13,
+--         deepseq >=1.4.1.1,
+--         dlist >=0.7.1.2,
+--         filepath >=1.3,
+--         ghc-prim >=0.2,
+--         mime-types >=0.1.0.6,
+--         pretty ==1.1.*,
+--         syb >=0.6,
+--         tar >=0.5.0.3,
+--         text >=1.2.2.1,
+--         zlib >=0.5 && <0.7,
+--         directory >=1.2.2.0,
+--         vector >=0.11.0.0,
+--         process >=1.2.3.0,
+--         flat,
+--         weigh >=0.0.3
+--     cpp-options: -DENC_8 -DOP_ENCDEC -DPKG_QUID2 -DLIST_BYTE
+--     default-language: Haskell2010
+--     default-extensions: CPP NoMonomorphismRestriction
+--     other-extensions: StandaloneDeriving DeriveDataTypeable
+--                       DeriveGeneric CPP
+--     hs-source-dirs: benchmarks test
+--     other-modules:
+--         PkgBinary
+--         PkgStore
+--         PkgCBOR
+--         PkgCereal
+--         PkgFlat
+--         Test.Data
+--         Test.Data.Values
+--         Test.Data2
+--         Test.Data.Arbitrary
+--         Test.Data.Flat
+--         Test.Data2.Flat
+--         Data
+--     ghc-options: -O2 -dumpdir /tmp/dump -ddump-to-file -dsuppress-all -ddump-simpl -ddump-simpl-stats -ddump-rule-rewrites
+
 
 -- executable qtest
 --   default-language:   Haskell2010
