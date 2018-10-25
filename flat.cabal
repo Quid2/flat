@@ -45,8 +45,8 @@ library
         Data.Flat
         Data.FloatCast
         Data.ZigZag
-        System.Endian                  
-    --other-modules: System.Endian                  
+        -- System.Endian                  
+    other-modules: System.Endian                  
     build-depends:
                   array >= 0.5.1.0 && <0.6,
                   base >=4.8 && <5,
@@ -110,51 +110,51 @@ test-suite docs
   build-depends:      base, doctest>=0.11.2 && <0.17,filemanip>=0.3.6.3 && < 0.3.7
   HS-Source-Dirs:     test
 
-test-suite testy
-    main-is: Testy.hs
-    type: exitcode-stdio-1.0
-    default-language: Haskell2010
-    hs-source-dirs: test
-    ghc-options: -O0
-    other-modules: Test.E,Test.E.Flat
-    build-depends:
-                  base
-                , bytestring
-                , deepseq
-                , microspec
-                , flat
+-- test-suite testy
+--     main-is: Testy.hs
+--     type: exitcode-stdio-1.0
+--     default-language: Haskell2010
+--     hs-source-dirs: test
+--     ghc-options: -O0
+--     other-modules: Test.E,Test.E.Flat
+--     build-depends:
+--                   base
+--                 , bytestring
+--                 , deepseq
+--                 , microspec
+--                 , flat
 
 
-test-suite compy
-    main-is: Compy.hs
-    type: exitcode-stdio-1.0
-    default-language: Haskell2010
-    hs-source-dirs: test
-    ghc-options: -O2
-    build-depends:
-                  base
-                , bytestring
-                , deepseq
-                , flat
-                , inspection-testing
-    other-modules:
-        Test.E,Test.E.Flat
+-- test-suite compy
+--     main-is: Compy.hs
+--     type: exitcode-stdio-1.0
+--     default-language: Haskell2010
+--     hs-source-dirs: test
+--     ghc-options: -O2
+--     build-depends:
+--                   base
+--                 , bytestring
+--                 , deepseq
+--                 , flat
+--                 , inspection-testing
+--     other-modules:
+--         Test.E,Test.E.Flat
 
 
-benchmark sbench
-    main-is: Simple.hs
-    type: exitcode-stdio-1.0
-    default-language:   Haskell2010
-    build-depends:
-        base
-        , deepseq
-        ,criterion
-        ,bytestring,text,containers,process,filepath,statistics,directory,timeit
-        ,flat
-    hs-source-dirs: benchmarks test
-    ghc-options: -O2 -dumpdir /tmp/dump -ddump-to-file -dsuppress-all -ddump-simpl -ddump-simpl-stats -ddump-rule-rewrites
-    other-modules:
-        Test.E,Test.Data,Test.Data.Flat,Test.Data.Values,Test.Data2,Test.Data2.Flat,Test.E.Flat,Report
+-- benchmark sbench
+--     main-is: Simple.hs
+--     type: exitcode-stdio-1.0
+--     default-language:   Haskell2010
+--     build-depends:
+--         base
+--         , deepseq
+--         ,criterion
+--         ,bytestring,text,containers,process,filepath,statistics,directory,timeit
+--         ,flat
+--     hs-source-dirs: benchmarks test
+--     ghc-options: -O2 -dumpdir /tmp/dump -ddump-to-file -dsuppress-all -ddump-simpl -ddump-simpl-stats -ddump-rule-rewrites
+--     other-modules:
+--         Test.E,Test.Data,Test.Data.Flat,Test.Data.Values,Test.Data2,Test.Data2.Flat,Test.E.Flat,Report
 
 -- benchmark flat-benchmark
 --     type: exitcode-stdio-1.0
