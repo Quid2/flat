@@ -51,7 +51,7 @@ library
                   array >= 0.5.1.0 && <0.6,
                   base >=4.8 && <5,
                   bytestring>=0.10.6.0 && < 0.11,
-                  containers == 0.5.*,
+                  containers,
                   deepseq == 1.4.*,
                   dlist >=0.6 && <0.9,
                   ghc-prim,
