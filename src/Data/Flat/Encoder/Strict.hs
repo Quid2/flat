@@ -13,7 +13,7 @@ import qualified Data.Flat.Encoder.Size        as S
 import           Data.Flat.Encoder.Types
 import           Data.Flat.Types
 import           Data.Foldable
-import           Data.Semigroup() -- (Semigroup(..))
+import           Data.Semigroup(Semigroup(..))
 
 -- |Strict encoder
 strictEncoder :: NumBits -> Encoding -> B.ByteString
