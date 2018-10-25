@@ -1,0 +1,35 @@
+name:                flat-test-ghcjs
+version:             0.1.0.0
+synopsis:            test flat under ghcjs
+license:             BSD3
+author:              Pasqualino `Titto` Assini
+maintainer:          tittoassini@gmail.com
+copyright:           Copyright: (c) 2018 Pasqualino `Titto` Assini
+build-type:          Simple
+cabal-version:       >=1.10
+
+-- We use an executable, as a test would be run under ghc and not ghcjs 
+executable test
+  hs-source-dirs:  test
+  main-is:     Spec.hs
+  default-language:    Haskell2010
+  build-depends: ghcjs-base
+  build-depends:
+                  base
+                , tasty > 1
+                , tasty-hunit >= 0.8
+                , tasty-quickcheck >=0.8.1
+                , containers == 0.5.*
+                , deepseq == 1.4.*
+                -- , quickcheck-instances>=0.3.12 -- required old-time
+                , text
+                , bytestring
+                , flat
+  other-modules:
+        Test.Data
+        Test.Data2
+        Test.E
+        Test.Data.Arbitrary
+        Test.Data.Flat
+        Test.Data2.Flat
+        Test.Data.Values

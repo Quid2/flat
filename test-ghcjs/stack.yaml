@@ -1,0 +1,48 @@
+packages:
+- '.'
+
+- location: ..
+  extra-dep: true
+
+
+extra-deps:
+- happy-1.19.5 # required to avoid a stack bug
+- validation-0.6.1
+
+# for test
+- tasty-1.1.0.4
+- optparse-applicative-0.14.3.0
+
+flags:
+   tasty:
+    clock: false
+
+resolver: lts-7.19
+compiler: ghcjs-0.2.1.9007019_ghc-8.0.1
+compiler-check: match-exact
+setup-info:
+  ghcjs:
+    source:
+      ghcjs-0.2.1.9007019_ghc-8.0.1:
+           url: http://ghcjs.tolysz.org/ghc-8.0-2017-02-05-lts-7.19-9007019.tar.gz
+           sha1: d2cfc25f9cda32a25a87d9af68891b2186ee52f9
+
+
+# fails to build
+# resolver: lts-8.11
+# compiler: ghcjs-0.2.1.9008011_ghc-8.0.2
+# compiler-check: match-exact
+# setup-info:
+#   ghcjs:
+#     source:
+#       ghcjs-0.2.1.9008011_ghc-8.0.2:
+#         url: https://github.com/matchwood/ghcjs-stack-dist/raw/master/ghcjs-0.2.1.9008011.tar.gz
+#         sha1: a72a5181124baf64bcd0e68a8726e65914473b3b           
+
+# fails to build
+# compiler: ghcjs-0.2.0.9011009_ghc-8.4.1
+# setup-info:
+#   ghcjs:
+#     source:
+#       ghcjs-0.2.0.9011009_ghc-8.4.1:
+#           url: https://github.com/alexanderkjeldaas/ghcjs/releases/download/fghcjs-8.4.1/ghcjs.tar.gz
