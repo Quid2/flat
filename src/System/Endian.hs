@@ -11,6 +11,7 @@ module System.Endian
 
 import Data.Word
 
+isBigEndian :: Bool
 isBigEndian = 
     #ifdef WORDS_BIGENDIAN
     True

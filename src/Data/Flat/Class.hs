@@ -114,11 +114,10 @@ instance (GDecode a, GDecode b) => GDecode (a :+: b) where
 -- genericEncode :: (GEncode (Rep a), Generic a) => a -> Encoding
 -- genericEncode = gencode . from
 
--- genericEncode :: (GEnkode (Rep a), Generic a) => a -> Encoding
+genericEncode :: (GEnkode (Rep a), Generic a) => a -> Encoding
 genericEncode = genkode . from
 
 -- genericEncode = undefined
-
 
 -- |Generic Encoder
 class GEncode f where
@@ -206,7 +205,7 @@ instance {-# OVERLAPPING #-} GEnkode a => GEnkode (D1 i (C1 c a)) where
 
   -- Type without constructors
 instance GEnkode V1 where
-      genkode x = unused
+      genkode = unused
       {-# INLINE genkode #-}
 
   -- Constructor without arguments
