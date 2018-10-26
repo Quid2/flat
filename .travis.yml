@@ -7,41 +7,41 @@ language: c
 cache:
   directories:
   - $HOME/.ghc
-  #- $HOME/.ghcjs
+  - $HOME/.ghcjs
   - $HOME/.cabal
   - $HOME/.stack
 
 matrix:
   include:
 
-  # - env: BUILD=cabal GHCVER=7.10.3 CABALVER=1.22
-  #   compiler: ": #GHC 7.10.3"
-  #   addons: {apt: {packages: [cabal-install-1.22,happy-1.19.5,ghc-7.10.3], sources: [hvr-ghc]}}
+  - env: BUILD=cabal GHCVER=7.10.3 CABALVER=1.22
+    compiler: ": #GHC 7.10.3"
+    addons: {apt: {packages: [cabal-install-1.22,happy-1.19.5,ghc-7.10.3], sources: [hvr-ghc]}}
 
-  # - env: BUILD=cabal GHCVER=8.0.2 CABALVER=1.24
-  #   compiler: ": #GHC 8.0.2"
-  #   addons: {apt: {packages: [cabal-install-1.24,happy-1.19.5,ghc-8.0.2], sources: [hvr-ghc]}}
+  - env: BUILD=cabal GHCVER=8.0.2 CABALVER=1.24
+    compiler: ": #GHC 8.0.2"
+    addons: {apt: {packages: [cabal-install-1.24,happy-1.19.5,ghc-8.0.2], sources: [hvr-ghc]}}
 
-  # - env: BUILD=cabal GHCVER=8.4.2 CABALVER=2.2
-  #   compiler: ": #GHC 8.4.2"
-  #   addons: {apt: {packages: [cabal-install-2.2,happy-1.19.5,ghc-8.4.2], sources: [hvr-ghc]}}
+  - env: BUILD=cabal GHCVER=8.4.2 CABALVER=2.2
+    compiler: ": #GHC 8.4.2"
+    addons: {apt: {packages: [cabal-install-2.2,happy-1.19.5,ghc-8.4.2], sources: [hvr-ghc]}}
 
 
-  # - env: BUILD=stack ARGS="--resolver lts-6"
-  #   compiler: ": #stack 7.10.3"
-  #   addons: {apt: {packages: [ghc-7.10.3], sources: [hvr-ghc]}}
+  - env: BUILD=stack ARGS="--resolver lts-6"
+    compiler: ": #stack 7.10.3"
+    addons: {apt: {packages: [ghc-7.10.3], sources: [hvr-ghc]}}
 
-  # - env: BUILD=stack ARGS="--resolver lts-9"
-  #   compiler: ": #stack 8.0.2"
-  #   addons: {apt: {packages: [ghc-8.0.2], sources: [hvr-ghc]}}
+  - env: BUILD=stack ARGS="--resolver lts-9"
+    compiler: ": #stack 8.0.2"
+    addons: {apt: {packages: [ghc-8.0.2], sources: [hvr-ghc]}}
 
-  # - env: BUILD=stack ARGS="--resolver lts-11"
-  #   compiler: ": #stack 8.2.2"
-  #   addons: {apt: {packages: [ghc-8.2.2], sources: [hvr-ghc]}}
+  - env: BUILD=stack ARGS="--resolver lts-11"
+    compiler: ": #stack 8.2.2"
+    addons: {apt: {packages: [ghc-8.2.2], sources: [hvr-ghc]}}
 
-  # - env: BUILD=stack ARGS="--resolver lts-12"
-  #   compiler: ": #stack 8.4.3"
-  #   addons: {apt: {packages: [ghc-8.4.3], sources: [hvr-ghc]}}
+  - env: BUILD=stack ARGS="--resolver lts-12"
+    compiler: ": #stack 8.4.3"
+    addons: {apt: {packages: [ghc-8.4.3], sources: [hvr-ghc]}}
 
   - env: BUILD=stack ARGS="--resolver nightly"
     compiler: ": #stack 8.6.1"
@@ -96,11 +96,10 @@ script:
     stack)
       ulimit -n 4096
       
-      # stack --no-terminal $ARGS test
+      stack --no-terminal $ARGS test
       
-      #make jstest
-      
-      cd test-ghcjs;stack --no-terminal setup;stack --no-terminal build :test;ls -LR .stack-work | grep jsexe;node $(shell stack --verbosity none path --local-install-root)/bin/test.jsexe/all.js
+      # takes too long
+      #cd test-ghcjs;stack --no-terminal setup;stack --no-terminal build :test;ls -LR .stack-work | grep jsexe;node $(shell stack --verbosity none path --local-install-root)/bin/test.jsexe/all.js
 
       # > tst # --haddock --no-haddock-deps --ghc-options="-O0 -Wall -fno-warn-unused-do-bind -Werror"
       ;;
