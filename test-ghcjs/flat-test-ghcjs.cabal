@@ -19,7 +19,7 @@ executable test
                 , tasty > 1
                 , tasty-hunit >= 0.8
                 , tasty-quickcheck >=0.8.1
-                , containers == 0.5.*
+                , containers
                 , deepseq == 1.4.*
                 -- , quickcheck-instances>=0.3.12 -- required old-time
                 , QuickCheck >= 2.10
