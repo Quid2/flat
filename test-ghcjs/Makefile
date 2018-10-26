@@ -11,7 +11,13 @@
 EXE := $(shell stack --verbosity none path --local-install-root)/bin/test.jsexe/all.js
 
 tst:
-	stack build :test;ls -LR .stack-work | grep jsexe;node $(EXE)
+	stack setup
+	stack build :test
+	ls -LR .stack-work | grep jsexe
+	node $(EXE)
 
 dev:
 	stack build :test --fast --file-watch --exec 'node $(EXE)'
+
+sdev:
+	stack build :test --file-watch --exec 'node $(EXE)'
