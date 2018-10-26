@@ -36,13 +36,17 @@ import           System.Exit
 import           Test.Data
 import           Test.Data.Arbitrary
 import           Test.Data.Flat
-import           Test.Data.Values
+import           Test.Data.Values hiding (lbs,ns)
 import           Test.Tasty
 import           Test.Tasty.HUnit
 import           Test.Tasty.QuickCheck as QC hiding (getSize)
 -- import           System.Arch
--- import           System.Endian
+import           System.Endian
 import Data.FloatCast
+
+instance Flat [Int16]
+instance Flat [Word8]
+instance Flat [Bool]
 
 main = do
   -- printInfoqqq
@@ -65,10 +69,195 @@ mainShow = do
 mainTest = defaultMain tests
 
 tests :: TestTree
-tests = testGroup "Tests" [basicTests,flatTests,properties
-                          ]
+tests = testGroup "Tests" [
+  testPrimitives
 
-properties = testGroup "Properties"
+  ,testEncDec
+  
+  ,testFlat
+ ]
+
+testPrimitives = testGroup "conversion/memory primitives" [
+   testEndian
+  ,testFloatingConvert
+  --,testShifts
+  ]
+
+testEncDec = testGroup "encode/decode primitives" [
+   testEncodingPrim
+  ,testDecodingPrim
+  ,testDecBits
+  ]
+
+testFlat = testGroup "flat/unflat" [
+   testSize
+  ,flatTests
+  ,flatUnflatRT
+  ]
+
+   
+
+-- System.Endian tests (to run, need to modify imports and cabal file)
+testEndian = testGroup "Endian" [
+   conv toBE16 (2^10 + 3)  (2^9+2^8+4)
+  ,conv toBE32 (2^18 + 3)  50332672
+  ,conv toBE64 (2^34 + 3)  216172782180892672
+  ,conv toBE16 (0x1234) 0x3412
+  ,conv toBE32 (0x11223344) 0x44332211
+  ,conv toBE64 (0x0123456789ABCDEF) 0xEFCDAB8967452301
+  ]
+
+testFloatingConvert = testGroup "Floating conversions" [
+   conv floatToWord -0.15625 3189768192
+  ,conv wordToFloat 3189768192 -0.15625 
+  ,conv doubleToWord -0.15625 13818169556679524352
+  ,conv wordToDouble 13818169556679524352 -0.15625 
+  ,rt "floatToWord" (prop_float_conv :: RT Float)
+  ,rt "doubleToWord" (prop_double_conv :: RT Double)
+ ]
+
+-- ghcjs bug on shiftR 0, see: https://github.com/ghcjs/ghcjs/issues/706
+testShifts = testGroup "Shifts" $ map tst [0..33] 
+   where 
+ tst n = testCase ("shiftR " ++ show n) $ 
+  let val = 4294967295::Word32
+      s = val `shift` (-n)
+      r = val `shiftR` n
+  in r @?= s
+
+-- shR = shiftR
+-- shR = unsafeShiftR
+shR val 0 = val
+shR val n = shift val (-n)
+
+testEncodingPrim = testGroup "Encoding Primitives" [
+   encRawWith 1 E.eTrueF [0b10000001]
+  ,encRawWith 3 (E.eTrueF >=> E.eFalseF >=> E.eTrueF) [0b10100001]
+  
+  ,encRawWith 32 (E.eWord32E id $ 2^18 + 3) [3,0,4,0,1]
+  ,encRawWith 32 (E.eWord32BEF  $ 2^18 + 3) [0,4,0,3,1]
+
+  ,encRawWith 64 (E.eWord64E id $ 0x1122334455667788) [0x88,0x77,0x66,0x55,0x44,0x33,0x22,0x11,1]
+  ,encRawWith 64 (E.eWord64BEF  $ 2^34 + 3) [0,0,0,4,0,0,0,3,1]
+  ,encRawWith 65 (E.eTrueF >=> E.eWord64E id (2^34 + 3)) [1,0,0,0,2,0,0,128,129]
+  ,encRawWith 65 (E.eTrueF >=> E.eWord64BEF (2^34 + 3)) [128,0,0,2,0,0,0,1,129]
+  ,encRawWith 65 (E.eFalseF >=> E.eWord64E id (2^34 + 3)) [1,0,0,0,2,0,0,0,129]
+  ,encRawWith 65 (E.eFalseF >=> E.eWord64BEF (2^34 + 3))  [0,0,0,2,0,0,0,1,129]
+  ]
+  where 
+    encRawWith sz enc exp = testCase (unwords ["encode raw with size",show sz]) $ flatRawWith sz enc @?= exp
+    
+
+conv f v e = testCase (unwords ["conv",sshow v,showB . flat $ v,"to",sshow e]) $ f v @?= e
+
+testDecodingPrim = testGroup "Decoding Primitives" [
+   dec ((,,,) <$> dropBits 13 <*> dBool <*> dBool <*> dBool) [0b10111110,0b10011010] ((),False,True,False)
+  ,dec ((,,,) <$> dropBits 1 <*> dBE16 <*> dBool <*> dropBits 6) [0b11000000
+                                                                 ,0b00000001
+                                                                 ,0b01000000] ((),2^15+2,True,())
+  ,dec ((,,,) <$> dropBits 1 <*> dBE32 <*> dBool <*> dropBits 6) [0b11000000
+                                                                 ,0b00000000
+                                                                 ,0b00000000
+                                                                 ,0b00000001
+                                                                 ,0b01000000] ((),2^31+2,True,())
+  ,dec (dBE64) [0b10000000
+                                                                 ,0b00000000
+                                                                 ,0b00000000
+                                                                 ,0b00000000
+                                                                 ,0b00000000
+                                                                 ,0b00000000
+                                                                 ,0b00000000
+                                                                 ,0b00000010
+                                                                 ] (2^63+2)
+
+  ,dec ((,,,) <$> dropBits 1 <*> dBE64 <*> dBool <*> dropBits 6) [0b11000000
+                                                                 ,0b00000000
+                                                                 ,0b00000000
+                                                                 ,0b00000000
+                                                                 ,0b00000000
+                                                                 ,0b00000000
+                                                                 ,0b00000000
+                                                                 ,0b00000001
+                                                                 ,0b01000000] ((),2^63+2,True,())
+
+  ]
+    where
+      dec decOp v e = testCase (unwords ["decode",sshow v]) $ unflatRawWith decOp (B.pack v) @?= Right e
+
+testDecBits = testGroup "Decode Bits" $ concat [
+   decBitsN dBEBits8
+  ,decBitsN dBEBits16
+  ,decBitsN dBEBits32
+  ,decBitsN dBEBits64
+ ]
+  where
+          -- Test dBEBits8/16/32/64, extraction of up to 8/16/32/bits from various positions
+          decBitsN :: forall a. (Num a,FiniteBits a,Show a,Flat a) => (Int -> Get a) -> [TestTree]
+          decBitsN dec = let s = finiteBitSize (undefined::a)
+                         in [decBits_ dec val numBitsToTake pre | numBitsToTake <- [0 .. s], val <- [0::a ,1+2^(s - 2)+2^(s - 5) ,fromIntegral $ (2^s::Integer) - 1],pre <- [0,1,7]]
+    
+          decBits_ :: forall a. (FiniteBits a,Show a,Flat a) => (Int -> Get a) -> a -> Int -> Int -> TestTree
+          decBits_ deco val numBitsToTake pre =
+            -- a sequence composed by pre zero bits followed by the val and zero bits till the next byte boundary
+            let vs = B.pack . asBytes . fromBools $ replicate pre False ++ toBools (asBits val)
+                len = B.length vs
+                sz = finiteBitSize (undefined::a)
+                dec :: Get a
+                dec = do
+                  dropBits pre
+                  r <- deco numBitsToTake
+                  dropBits (len*8-numBitsToTake-pre)
+                  return r
+                -- we expect the first numBitsToTake bits of the value
+                expectedD@(Right expected) :: Decoded a = Right $ val `shR` (sz - numBitsToTake) -- ghcjs: shiftR fails, see: https://github.com/ghcjs/ghcjs/issues/706
+                actualD@(Right actual) :: Decoded a = unflatRawWith dec vs
+            in testCase (unwords ["take",show numBitsToTake,"bits from",show val,"of size",show sz,"with prefix",show pre,"sequence",showB vs,show expected,show actual,show $ val == actual,show $ expected == actual,show $ expected /= actual,show $ show expected == show actual,show $ flat expected == flat actual]) 
+                $ actualD @?= expectedD
+    
+
+testSize = testGroup "Size" $ concat [
+  sz () 0
+  ,sz True 1
+  ,sz One 2
+  ,sz Two 2
+  ,sz Three 2
+  ,sz Four 3
+  ,sz Five 3
+  ,sz 'a' 8
+  ,sz 'à' 16
+  ,sz '经' 24
+  ,sz (0::Word8) 8
+  ,sz (1::Word8) 8
+  ,concatMap (uncurry sz) ns
+  ,concatMap (uncurry sz) nsI
+  ,concatMap (uncurry sz) nsII
+  ,sz (1.1::Float) 32
+  ,sz (1.1::Double) 64
+  ,sz "" 1
+  ,sz "abc" (4+3*8)
+  ,sz ((),(),Unit) 0
+  ,sz (True,False,One,Five) 7
+  ,sz map1 7
+  ,sz bs (4+3*8)
+  ,sz stBS bsSize
+  ,sz lzBS bsSize
+#ifndef ghcjs_HOST_OS
+  ,sz shBS bsSize
+#endif      
+  ,sz tx utf8Size
+  ,sz (UTF8Text tx) utf8Size
+  ,sz (UTF16Text tx) utf16Size
+ ]
+   where
+    sz v e = [testCase (unwords ["size of",sshow v]) $ getSize v @?= e]
+    tx = T.pack "txt"
+    utf8Size = 8+8+3*32+8
+    utf16Size = 8+8+3*16+8
+    bsSize = 8+8+3*8+8
+
+
+
+flatUnflatRT = testGroup "unflat (flat v) == v"
   [  rt "()" (prop_Flat_roundtrip:: RT ())
     ,rt "Bool" (prop_Flat_roundtrip::RT Bool)
     ,rt "Word8" (prop_Flat_Large_roundtrip:: RTL Word8)
@@ -107,66 +296,14 @@ properties = testGroup "Properties"
 #ifndef ghcjs_HOST_OS
     ,rt "Short ByteString" (prop_Flat_roundtrip:: RT SBS.ShortByteString)
 #endif
-    ,rt "floatToWord" (prop_float_conv :: RT Float)
-    ,rt "doubleToWord" (prop_double_conv :: RT Double)
     ]
-   where rt n = QC.testProperty (unwords ["round trip",n])
 
-instance Flat [Int16]
-instance Flat [Word8]
-instance Flat [Bool]
+rt n = QC.testProperty (unwords ["round trip",n])
 
-basicTests = testGroup "Basic tests" [] -- testShifts
-
--- see: https://github.com/ghcjs/ghcjs/issues/706
-testShifts = map tst [0..33] 
-  where 
-   tst n = testCase ("shiftR " ++ show n) $ 
-    let val = 4294967295::Word32
-        s = val `shift` (-n)
-        r = val `shiftR` n
-    in r @?= s
-
--- shR = shiftR
--- shR = unsafeShiftR
-shR val 0 = val
-shR val n = shift val (-n)
-
-flatTests = testGroup "De/Serialisation Unit tests" $ concat [
-  sz () 0
-  ,sz True 1
-  ,sz One 2
-  ,sz Two 2
-  ,sz Three 2
-  ,sz Four 3
-  ,sz Five 3
-  ,sz 'a' 8
-  ,sz 'à' 16
-  ,sz '经' 24
-  ,sz (0::Word8) 8
-  ,sz (1::Word8) 8
-  ,concatMap (uncurry sz) ns
-  ,concatMap (uncurry sz) nsI
-  ,concatMap (uncurry sz) nsII
-  ,sz (1.1::Float) 32
-  ,sz (1.1::Double) 64
-  ,sz "" 1
-  ,sz "abc" (4+3*8)
-  ,sz ((),(),Unit) 0
-  ,sz (True,False,One,Five) 7
-  ,sz map1 7
-  ,sz bs (4+3*8)
-  ,sz stBS bsSize
-  ,sz lzBS bsSize
-#ifndef ghcjs_HOST_OS
-  ,sz shBS bsSize
-#endif      
-  ,sz tx utf8Size
-  ,sz (UTF8Text tx) utf8Size
-  ,sz (UTF16Text tx) utf16Size
+flatTests = testGroup "flat/unflat Unit tests" $ concat [
 
   -- Expected errors
-  ,errDec (Proxy::Proxy Bool) [] -- no data
+   errDec (Proxy::Proxy Bool) [] -- no data
   ,errDec (Proxy::Proxy Bool) [128] -- no filler
   ,errDec (Proxy::Proxy Bool) [128+1,1,2,4,8] -- additional bytes
 
@@ -258,62 +395,8 @@ flatTests = testGroup "De/Serialisation Unit tests" $ concat [
   ,encRaw (Right (-2.1234E15 , 1.1234E-22) :: Either Bool (Double, Double)) [0b11100001,143,22,113,45,110,160,0,29,176,124,248,188,109,252,215,0]
   ,encRaw (Left True:: Either Bool Direction) [0b01000000]
   ,encRaw (Right West :: Either Bool Direction) [0b11110000]
-  ,dec ((,,,) <$> dropBits 13 <*> dBool <*> dBool <*> dBool) [0b10111110,0b10011010] ((),False,True,False)
-  ,dec ((,,,) <$> dropBits 1 <*> dBE16 <*> dBool <*> dropBits 6) [0b11000000
-                                                                 ,0b00000001
-                                                                 ,0b01000000] ((),2^15+2,True,())
-  ,dec ((,,,) <$> dropBits 1 <*> dBE32 <*> dBool <*> dropBits 6) [0b11000000
-                                                                 ,0b00000000
-                                                                 ,0b00000000
-                                                                 ,0b00000001
-                                                                 ,0b01000000] ((),2^31+2,True,())
-  ,dec (dBE64) [0b10000000
-                                                                 ,0b00000000
-                                                                 ,0b00000000
-                                                                 ,0b00000000
-                                                                 ,0b00000000
-                                                                 ,0b00000000
-                                                                 ,0b00000000
-                                                                 ,0b00000010
-                                                                 ] (2^63+2)
-
-  ,dec ((,,,) <$> dropBits 1 <*> dBE64 <*> dBool <*> dropBits 6) [0b11000000
-                                                                 ,0b00000000
-                                                                 ,0b00000000
-                                                                 ,0b00000000
-                                                                 ,0b00000000
-                                                                 ,0b00000000
-                                                                 ,0b00000000
-                                                                 ,0b00000001
-                                                                 ,0b01000000] ((),2^63+2,True,())
-
-  ,decBitsN dBEBits8
-  ,decBitsN dBEBits16
-  ,decBitsN dBEBits32
-  ,decBitsN dBEBits64
-
-  -- System.Endian tests (to run, need to modify imports and cabal file)
-  -- ,conv toBE16 (2^10 + 3)  (2^9+2^8+4)
-  -- ,conv toBE32 (2^18 + 3)  50332672
-  -- ,conv toBE64 (2^34 + 3)  216172782180892672
-
-  ,conv floatToWord -0.15625 3189768192
-  ,conv wordToFloat 3189768192 -0.15625 
-  ,conv doubleToWord -0.15625 13818169556679524352
-  ,conv wordToDouble 13818169556679524352 -0.15625 
-
-  ,encRawWith 1 E.eTrueF [0b10000001]
-  ,encRawWith 3 (E.eTrueF >=> E.eFalseF >=> E.eTrueF) [0b10100001]
+ 
   
-  ,encRawWith 32 (E.eWord32E id $ 2^18 + 3) [3,0,4,0,1]
-  ,encRawWith 32 (E.eWord32BEF  $ 2^18 + 3) [0,4,0,3,1]
-
-  ,encRawWith 64 (E.eWord64E id $ 2^34 + 3) [3,0,0,0,4,0,0,0,1]
-  ,encRawWith 64 (E.eWord64BEF  $ 2^34 + 3) [0,0,0,4,0,0,0,3,1]
-  ,encRawWith 65 (E.eTrueF >=> E.eWord64E id (2^34 + 3)) [1,0,0,0,2,0,0,128,129]
-  ,encRawWith 65 (E.eTrueF >=> E.eWord64BEF (2^34 + 3)) [128,0,0,2,0,0,0,1,129]
-  ,encRawWith 65 (E.eFalseF >=> E.eWord64E id (2^34 + 3)) [1,0,0,0,2,0,0,0,129]
-  ,encRawWith 65 (E.eFalseF >=> E.eWord64BEF (2^34 + 3))  [0,0,0,2,0,0,0,1,129]
 
   ,map trip [minBound,maxBound::Word8]
   ,map trip [minBound,maxBound::Word16]
@@ -371,42 +454,10 @@ flatTests = testGroup "De/Serialisation Unit tests" $ concat [
   ,[trip map1]
   ]
     where
-      map1 = M.fromList [(False,True),(True,False)]
-
-      ns :: [(Word64, Int)]
-      ns =  [( (-) (2 ^(i*7)) 1,fromIntegral (8*i)) | i <- [1 .. 10]]
-
-      nsI :: [(Int64, Int)]
-      nsI = nsI_
-      nsII :: [(Integer, Int)]
-      nsII = nsI_
-      nsI_ =  [( (-) (2 ^(((-) i 1)*7)) 1,fromIntegral (8*i)) | i <- [1 .. 10]]
 
       --al = (1:) -- prealign
       bsl = id -- noalign
-      s3 = [3,97,98,99,0]
-      c3a = [3,99,99,99,0] -- Array Word8
-      c3 = pre c3a
-      s600 = pre s600a
-      pre = (1:)
-      tx = T.pack "txt"
-      utf8Size = 8+8+3*32+8
-      utf16Size = 8+8+3*16+8
-      lzBS = L.pack bs
-      stBS = B.pack bs
-      bs = [32,32,32::Word8]
-      bsSize = 8+8+3*8+8
-      s600a = concat [[255],csb 255,[255],csb 255,[90],csb 90,[0]]
-      s600B = concat [[55],csb 55,[255],csb 255,[90],csb 90,[200],csb 200,[0]]
-      longSeq :: Seq.Seq Word8
-      longSeq = Seq.fromList lbs
-      longBS = B.pack lbs
-      longLBS = L.concat $ concat $ replicate 10 [L.pack lbs]
-#ifndef ghcjs_HOST_OS      
-      shBS = SBS.toShort stBS
-      longSBS = SBS.toShort longBS
-#endif      
-      lbs = concat $ replicate 100 [234,123,255,0]
+
       tstI = map ti
 
       ti v | v >= 0    = testCase (unwords ["Int",show v]) $ teq v (2 * fromIntegral v ::Word64)
@@ -414,54 +465,58 @@ flatTests = testGroup "De/Serialisation Unit tests" $ concat [
 
       teq a b = ser a @?= ser b
 
-      sz v e = [testCase (unwords ["size of",sshow v]) $ getSize v @?= e]
-
-      conv f v e = [testCase (unwords ["conv",sshow v,showB . flat $ v,"to",sshow e]) $ f v @?= e]
-
       encRaw :: forall a. (Show a, Flat a) => a -> [Word8] -> [TestTree]
       encRaw v e = [testCase (unwords ["flat raw",sshow v,show . B.unpack . flat $ v]) $ serRaw v @?= e]
               --,testCase (unwords ["unflat raw",sshow v]) $ desRaw e @?= Right v]
-
-      encRawWith sz enc exp = [testCase (unwords ["encode raw with size",show sz]) $ flatRawWith sz enc @?= exp] 
-
-      dec decOp v e = [testCase (unwords ["decode",sshow v]) $ unflatRawWith decOp (B.pack v) @?= Right e]
-
-      -- Test dBEBits8/16/32/64, extraction of up to 8/16/32/bits from various positions
-      decBitsN :: forall a. (Num a,FiniteBits a,Show a,Flat a) => (Int -> Get a) -> [TestTree]
-      decBitsN dec = let s = finiteBitSize (undefined::a)
-                     in [decBits_ dec val numBitsToTake pre | numBitsToTake <- [0 .. s], val <- [0::a ,1+2^(s - 2)+2^(s - 5) ,fromIntegral $ (2^s::Integer) - 1],pre <- [0,1,7]]
-
-      decBits_ :: forall a. (FiniteBits a,Show a,Flat a) => (Int -> Get a) -> a -> Int -> Int -> TestTree
-      decBits_ deco val numBitsToTake pre =
-        -- a sequence composed by pre zero bits followed by the val and zero bits till the next byte boundary
-        let vs = B.pack . asBytes . fromBools $ replicate pre False ++ toBools (asBits val)
-            len = B.length vs
-            sz = finiteBitSize (undefined::a)
-            dec :: Get a
-            dec = do
-              dropBits pre
-              r <- deco numBitsToTake
-              dropBits (len*8-numBitsToTake-pre)
-              return r
-            -- we expect the first numBitsToTake bits of the value
-            expectedD@(Right expected) :: Decoded a = Right $ val `shR` (sz - numBitsToTake) -- ghcjs: shiftR fails, see: https://github.com/ghcjs/ghcjs/issues/706
-            actualD@(Right actual) :: Decoded a = unflatRawWith dec vs
-        in testCase (unwords ["take",show numBitsToTake,"bits from",show val,"of size",show sz,"with prefix",show pre,"sequence",showB vs,show expected,show actual,show $ val == actual,show $ expected == actual,show $ expected /= actual,show $ show expected == show actual,show $ flat expected == flat actual]) 
-            $ actualD @?= expectedD
 
       -- Aligned values unflat to the original value, modulo the added filler.
       a v e = [testCase (unwords ["flat",sshow v]) $ ser v @?= e
               ,testCase (unwords ["unflat",sshow v]) $ let Right v' = des e in v @?= v']
       -- a v e = [testCase (unwords ["flat postAligned",show v]) $ ser (postAligned v) @?= e
       --         ,testCase (unwords ["unflat postAligned",show v]) $ let Right (PostAligned v' _) = des e in v @?= v']
-      cs n = replicate n 'c' -- take n $ cycle ['a'..'z']
-      csb = map (fromIntegral . ord) . cs
-      sshow = take 80 . show
        
       trip :: forall a .(Show a,Flat a) => a -> TestTree
       trip v = testCase (unwords ["roundtrip",sshow v]) $
         -- we use show to get Right NaN == Right NaN 
         show (unflat (flat v::B.ByteString)::Decoded a) @?= show (Right v::Decoded a)
+
+-- Test Data
+lzBS = L.pack bs
+stBS = B.pack bs
+bs = [32,32,32::Word8]
+s3 = [3,97,98,99,0]
+c3a = [3,99,99,99,0] -- Array Word8
+c3 = pre c3a
+s600 = pre s600a
+pre = (1:)
+s600a = concat [[255],csb 255,[255],csb 255,[90],csb 90,[0]]
+s600B = concat [[55],csb 55,[255],csb 255,[90],csb 90,[200],csb 200,[0]]
+longSeq :: Seq.Seq Word8
+longSeq = Seq.fromList lbs
+longBS = B.pack lbs
+longLBS = L.concat $ concat $ replicate 10 [L.pack lbs]
+lbs = concat $ replicate 100 [234,123,255,0]
+cs n = replicate n 'c' -- take n $ cycle ['a'..'z']
+csb = map (fromIntegral . ord) . cs
+map1 = M.fromList [(False,True),(True,False)]
+
+ns :: [(Word64, Int)]
+ns =  [( (-) (2 ^(i*7)) 1,fromIntegral (8*i)) | i <- [1 .. 10]]
+
+nsI :: [(Int64, Int)]
+nsI = nsI_
+nsII :: [(Integer, Int)]
+nsII = nsI_
+nsI_ =  [( (-) (2 ^(((-) i 1)*7)) 1,fromIntegral (8*i)) | i <- [1 .. 10]]
+
+
+
+#ifndef ghcjs_HOST_OS      
+shBS = SBS.toShort stBS
+longSBS = SBS.toShort longBS
+#endif      
+
+sshow = take 80 . show
 
 showB = show . B.unpack 
 

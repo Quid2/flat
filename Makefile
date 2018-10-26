@@ -1,3 +1,6 @@
+dev: 
+	stack test :spec --file-watch --fast
+
 clean:
 	 find . -name "*.dump*" -exec rm -- {} +
 	 cd src;find . -name "*.o" -delete;find . -name "*.hi" -delete

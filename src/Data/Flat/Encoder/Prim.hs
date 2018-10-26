@@ -357,6 +357,7 @@ pokeW conv op t = poke (castPtr op) (conv t)
 poke64 :: (t -> Word64) -> Ptr a -> t -> IO ()
 #ifdef ghcjs_HOST_OS
 poke64 conv op t = poke (castPtr op) ((`rotateR` 32) . conv $ t)
+-- poke64 conv op t = poke (castPtr op) (conv t)
 #else
 poke64 conv op t = poke (castPtr op) (conv t)
 #endif
