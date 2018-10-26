@@ -27,14 +27,13 @@ import           Data.Flat.Decoder              ( Get
                                                 , dBool
                                                 )
 import           Data.Flat.Encoder
-import           Data.Proxy
 import           GHC.Generics
 import           GHC.TypeLits
 import           Prelude                 hiding ( mempty )
 -- import Data.Flat.Generic.Decode(genericDecode)
 import           Data.Word
 import           Data.Bits
-
+-- import           Data.Proxy
 -- import GHC.Magic(inline)
 
 -- |Class of types that can be encoded/decoded
@@ -120,78 +119,78 @@ genericEncode = genkode . from
 -- genericEncode = undefined
 
 
--- |Generic Encoder
-class GEncode f where
-  gencode :: f t -> Encoding
+-- -- |Generic Encoder
+-- class GEncode f where
+--   gencode :: f t -> Encoding
 
--- Metadata (constructor name, etc)
-instance {-# OVERLAPPABLE #-} GEncode a => GEncode (M1 i c a) where
-  gencode = gencode . unM1
-  {-# INLINE  gencode #-}
+-- -- Metadata (constructor name, etc)
+-- instance {-# OVERLAPPABLE #-} GEncode a => GEncode (M1 i c a) where
+--   gencode = gencode . unM1
+--   {-# INLINE  gencode #-}
 
--- Special case, single constructor datatype
-instance {-# OVERLAPPING #-} (GEncoders a) => GEncode (D1 i (C1 c a)) where
-  gencode !x = encodersS $ gencoders x id []
-  {-# INLINE  gencode #-}
+-- -- Special case, single constructor datatype
+-- instance {-# OVERLAPPING #-} (GEncoders a) => GEncode (D1 i (C1 c a)) where
+--   gencode !x = encodersS $ gencoders x id []
+--   {-# INLINE  gencode #-}
 
--- Type without constructors
-instance GEncode V1 where
-  gencode _ = unused
-  {-# INLINE  gencode #-}
+-- -- Type without constructors
+-- instance GEncode V1 where
+--   gencode _ = unused
+--   {-# INLINE  gencode #-}
 
--- Constructor without arguments
-instance GEncode U1 where
-  gencode U1 = mempty
-  {-# INLINE  gencode #-}
+-- -- Constructor without arguments
+-- instance GEncode U1 where
+--   gencode U1 = mempty
+--   {-# INLINE  gencode #-}
 
--- Product: constructor with parameters
-instance GEncode (a :*: b) where
-  gencode _ = unused
-  {-# INLINE gencode #-}
+-- -- Product: constructor with parameters
+-- instance GEncode (a :*: b) where
+--   gencode _ = unused
+--   {-# INLINE gencode #-}
 
--- Constants, additional parameters, and rank-1 recursion
-instance Flat a => GEncode (K1 i a) where
-  --gencode = inline encode . unK1
-  gencode = encode . unK1
-  {-# INLINE gencode #-}
+-- -- Constants, additional parameters, and rank-1 recursion
+-- instance Flat a => GEncode (K1 i a) where
+--   --gencode = inline encode . unK1
+--   gencode = encode . unK1
+--   {-# INLINE gencode #-}
 
--- Build constructor representation as single tag
-instance (NumConstructors (a :+: b) <= 256, GEncodeSum 0 0 (a :+: b)) => GEncode (a :+: b) where
-  gencode x = gencodeSum x (Proxy :: Proxy 0) (Proxy :: Proxy 0)
-  {-# INLINE gencode #-}
+-- -- Build constructor representation as single tag
+-- instance (NumConstructors (a :+: b) <= 256, GEncodeSum 0 0 (a :+: b)) => GEncode (a :+: b) where
+--   gencode x = gencodeSum x (Proxy :: Proxy 0) (Proxy :: Proxy 0)
+--   {-# INLINE gencode #-}
 
 
-class GEncoders f where
-  -- |Determine the list of encoders corresponding to a type
-  gencoders :: f t -> ([Encoding] -> [Encoding]) -> ([Encoding] -> [Encoding])
+-- class GEncoders f where
+--   -- |Determine the list of encoders corresponding to a type
+--   gencoders :: f t -> ([Encoding] -> [Encoding]) -> ([Encoding] -> [Encoding])
 
-instance {-# OVERLAPPABLE #-} GEncoders a => GEncoders (M1 i c a) where
-    gencoders m !l = gencoders (unM1 m) l
-    {-# INLINE gencoders #-}
+-- instance {-# OVERLAPPABLE #-} GEncoders a => GEncoders (M1 i c a) where
+--     gencoders m !l = gencoders (unM1 m) l
+--     {-# INLINE gencoders #-}
 
--- Special case, single constructor datatype
-instance {-# OVERLAPPING #-} GEncoders a => GEncoders (D1 i (C1 c a)) where
-    gencoders x !l = gencoders (unM1 . unM1 $ x) l
-    {-# INLINE gencoders #-}
+-- -- Special case, single constructor datatype
+-- instance {-# OVERLAPPING #-} GEncoders a => GEncoders (D1 i (C1 c a)) where
+--     gencoders x !l = gencoders (unM1 . unM1 $ x) l
+--     {-# INLINE gencoders #-}
 
--- Type without constructors
-instance GEncoders V1 where
-    gencoders _ _ = unused
+-- -- Type without constructors
+-- instance GEncoders V1 where
+--     gencoders _ _ = unused
 
--- Constructor without arguments
-instance GEncoders U1 where
-    gencoders U1 !l = l
-    {-# INLINE gencoders #-}
+-- -- Constructor without arguments
+-- instance GEncoders U1 where
+--     gencoders U1 !l = l
+--     {-# INLINE gencoders #-}
 
--- Constants, additional parameters, and rank-1 recursion
-instance Flat a => GEncoders (K1 i a) where
-  gencoders k !l = l . (gencode k :)
-  {-# INLINE gencoders #-}
+-- -- Constants, additional parameters, and rank-1 recursion
+-- instance Flat a => GEncoders (K1 i a) where
+--   gencoders k !l = l . (gencode k :)
+--   {-# INLINE gencoders #-}
 
--- Product: constructor with parameters
-instance (GEncoders a, GEncoders b) => GEncoders (a :*: b) where
-  gencoders (x :*: y) !l = gencoders y (gencoders x l)
-  {-# INLINE gencoders #-}
+-- -- Product: constructor with parameters
+-- instance (GEncoders a, GEncoders b) => GEncoders (a :*: b) where
+--   gencoders (x :*: y) !l = gencoders y (gencoders x l)
+--   {-# INLINE gencoders #-}
 
 class GEnkode f where genkode :: f a -> Encoding
 
@@ -279,23 +278,23 @@ instance GEnkode a => GEnkodeSum (C1 c a) where
 
 
 -- |Encode sum
-class (KnownNat code, KnownNat numBits) =>
-      GEncodeSum (numBits:: Nat) (code :: Nat) (f :: * -> *) where
-  gencodeSum :: f a -> Proxy numBits -> Proxy code -> Encoding
+-- class (KnownNat code, KnownNat numBits) =>
+--       GEncodeSum (numBits:: Nat) (code :: Nat) (f :: * -> *) where
+--   gencodeSum :: f a -> Proxy numBits -> Proxy code -> Encoding
 
-instance (GEncodeSum (n+1) (m*2) a,GEncodeSum (n+1) (m*2+1) b, KnownNat n,KnownNat m)
-         => GEncodeSum n m (a :+: b) where
-    gencodeSum !x _ _ = case x of
-                         L1 l -> gencodeSum l (Proxy :: Proxy (n+1)) (Proxy :: Proxy (m*2))
-                         R1 r -> gencodeSum r (Proxy :: Proxy (n+1)) (Proxy :: Proxy (m*2+1))
-    {-# INLINE gencodeSum #-}
+-- instance (GEncodeSum (n+1) (m*2) a,GEncodeSum (n+1) (m*2+1) b, KnownNat n,KnownNat m)
+--          => GEncodeSum n m (a :+: b) where
+--     gencodeSum !x _ _ = case x of
+--                          L1 l -> gencodeSum l (Proxy :: Proxy (n+1)) (Proxy :: Proxy (m*2))
+--                          R1 r -> gencodeSum r (Proxy :: Proxy (n+1)) (Proxy :: Proxy (m*2+1))
+--     {-# INLINE gencodeSum #-}
 
-instance (GEncoders a, KnownNat n,KnownNat m) => GEncodeSum n m (C1 c a) where
-    {-# INLINE gencodeSum #-}
-    gencodeSum !x _ _  = encodersS $ gencoders x (eBits numBits code:) []
-      where
-        numBits = fromInteger (natVal (Proxy :: Proxy n))
-        code = fromInteger (natVal (Proxy :: Proxy m))
+-- instance (GEncoders a, KnownNat n,KnownNat m) => GEncodeSum n m (C1 c a) where
+--     {-# INLINE gencodeSum #-}
+--     gencodeSum !x _ _  = encodersS $ gencoders x (eBits numBits code:) []
+--       where
+--         numBits = fromInteger (natVal (Proxy :: Proxy n))
+--         code = fromInteger (natVal (Proxy :: Proxy m))
 
 
 -- |Calculate number of constructors
@@ -303,16 +302,16 @@ type family NumConstructors (a :: * -> *) :: Nat where
     NumConstructors (C1 c a) = 1
     NumConstructors (x :+: y) = NumConstructors x + NumConstructors y
 
-type family ConsSize (a :: * -> *) :: Nat where
-      ConsSize (C1 c a) = 0
-      ConsSize (x :+: y) = 1 + Max (ConsSize x) (ConsSize y)
+-- type family ConsSize (a :: * -> *) :: Nat where
+--       ConsSize (C1 c a) = 0
+--       ConsSize (x :+: y) = 1 + Max (ConsSize x) (ConsSize y)
 
-type family Max (n :: Nat) (m :: Nat) :: Nat where
-   Max n m  = If (n <=? m) m n
+-- type family Max (n :: Nat) (m :: Nat) :: Nat where
+--    Max n m  = If (n <=? m) m n
 
-type family If c (t::Nat) (e::Nat) where
-    If 'True  t e = t
-    If 'False t e = e
+-- type family If c (t::Nat) (e::Nat) where
+--     If 'True  t e = t
+--     If 'False t e = e
 
 -- Proxy :: Proxy (ConsSize ). from 
 
