@@ -6,8 +6,8 @@ resolver: lts-12.13
 # resolver: nightly-2018-10-25
 
 
-extra-deps:
-- QuickCheck-2.8.2
+#extra-deps:
+#- QuickCheck-2.11
 # - statistics-0.13.3.0
 # - cereal-0.5.4.0
 # - store-0.4.1

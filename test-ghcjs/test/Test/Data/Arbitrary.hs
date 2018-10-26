@@ -10,15 +10,14 @@ import qualified Data.Text.Lazy as TL
 import Test.Tasty.QuickCheck
 import           Test.Data
 -- import           Data.DeriveTH
--- import Numeric.Natural (Natural)
 
--- instance Arbitrary Natural where
---   arbitrary = arbitrarySizedNatural
---   shrink    = shrinkIntegral
+import Numeric.Natural (Natural)
 
+instance Arbitrary Natural where
+  arbitrary = arbitrarySizedNatural
+  shrink    = shrinkIntegral
 
--- Copied from quickcheck-instances (not used as it requires old-time that is incompatible with ghcjs)
-
+-- Copied from quickcheck-instances (not used directly as it requires old-time that is incompatible with ghcjs)
 
 instance Arbitrary BS.ByteString where
   arbitrary = BS.pack <$> arbitrary

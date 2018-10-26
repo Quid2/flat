@@ -4,10 +4,16 @@ packages:
 - location: ..
   extra-dep: true
 
+# - location:
+#      git: https://github.com/Quid2/flat
+#      commit: c155d565d44d2713fbf60fea8a4bd27a433c3388
+#   extra-dep: true
 
 extra-deps:
+- QuickCheck-2.12.6.1
+
 - happy-1.19.5 # required to avoid a stack bug
-- validation-0.6.1
+#- validation-0.6.1
 
 # for test
 - tasty-1.1.0.4
