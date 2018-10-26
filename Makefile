@@ -16,3 +16,6 @@ cspeed:
 
 rspeed: 
 	stack bench :sbench
+
+jstest:
+	cd test-ghcjs;make tst
