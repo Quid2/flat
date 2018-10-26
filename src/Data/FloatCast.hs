@@ -13,16 +13,22 @@ module Data.FloatCast
   , wordToFloat
   , doubleToWord
   , wordToDouble
-  ) where
+  )
+where
 
-import Data.Word (Word32, Word64)
-import Data.Array.ST (newArray, readArray, MArray, STUArray)
-import Data.Array.Unsafe (castSTUArray)
-import GHC.ST (runST, ST)
-
-#ifdef ghcjs_HOST_OS
-import Data.Bits
-#endif
+import           Data.Word                      ( Word32
+                                                , Word64
+                                                )
+import           Data.Array.ST                  ( newArray
+                                                , readArray
+                                                , MArray
+                                                , STUArray
+                                                )
+import           Data.Array.Unsafe              ( castSTUArray )
+import           GHC.ST                         ( runST
+                                                , ST
+                                                )
+import           System.Endian
 
 -- | Reinterpret-casts a `Float` to a `Word32`.
 floatToWord :: Float -> Word32
@@ -35,11 +41,14 @@ floatToWord x = runST (cast x)
 13818169556679524352
 -}
 doubleToWord :: Double -> Word64
-#ifdef ghcjs_HOST_OS
-doubleToWord x = (`rotateR` 32) $ runST (cast x)
-#else
-doubleToWord x = runST (cast x)
-#endif
+doubleToWord x = fix64 $ runST (cast x)
+
+-- #ifdef ghcjs_HOST_OS
+-- doubleToWord x = (`rotateR` 32) $ runST (cast x)
+-- #else
+-- doubleToWord x = runST (cast x)
+-- #endif
+
 {-# INLINE doubleToWord #-}
 
 -- | Reinterpret-casts a `Word32` to a `Float`.
@@ -48,15 +57,17 @@ wordToFloat x = runST (cast x)
 {-# INLINE wordToFloat #-}
 
 -- | Reinterpret-casts a `Word64` to a `Double`.
-wordToDouble :: Word64 -> Double
-#ifdef ghcjs_HOST_OS
-wordToDouble x = runST (cast $ x `rotateR` 32) 
-#else
-wordToDouble x = runST (cast x) 
-#endif
 {-# INLINE wordToDouble #-}
+wordToDouble :: Word64 -> Double
+wordToDouble x = runST (cast $ fix64 x)
 
-cast :: (MArray (STUArray s) a (ST s),
-         MArray (STUArray s) b (ST s)) => a -> ST s b
+-- #ifdef ghcjs_HOST_OS
+-- wordToDouble x = runST (cast $ x `rotateR` 32) 
+-- #else
+-- wordToDouble x = runST (cast x) 
+-- #endif
+
+cast
+  :: (MArray (STUArray s) a (ST s), MArray (STUArray s) b (ST s)) => a -> ST s b
 cast x = newArray (0 :: Int, 0) x >>= castSTUArray >>= flip readArray 0
 {-# INLINE cast #-}

@@ -5,11 +5,16 @@ module System.Endian
     , toBE64
     , toBE16
     , isBigEndian
+    , fix64
     ) where
 
 #include "MachDeps.h"
 
 import Data.Word
+
+#ifdef ghcjs_HOST_OS
+import Data.Bits
+#endif
 
 isBigEndian :: Bool
 isBigEndian = 
@@ -41,4 +46,13 @@ toBE16 :: Word16 -> Word16
 toBE16 = id
 #else
 toBE16 = byteSwap16
+#endif
+
+fix64 :: Word64 -> Word64
+#ifdef ghcjs_HOST_OS
+fix64 = (`rotateR` 32)
+{-# NOINLINE fix64 #-}
+#else
+fix64 = id
+{-# INLINE fix64 #-}
 #endif

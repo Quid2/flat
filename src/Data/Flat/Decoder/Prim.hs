@@ -223,11 +223,13 @@ dBE64 = Get $ \endPtr s -> do
 
 {-# INLINE peek64 #-}
 peek64 :: Ptr Word64 -> IO Word64
-#ifdef ghcjs_HOST_OS
-peek64 ptr = (`rotateR` 32) <$> peek ptr 
-#else
-peek64 = peek
-#endif
+peek64 ptr = fix64 <$> peek ptr 
+
+-- #ifdef ghcjs_HOST_OS
+-- peek64 ptr = (`rotateR` 32) <$> peek ptr 
+-- #else
+-- peek64 = peek
+-- #endif
 
 {-# INLINE dFloat #-}
 -- |Decode a Float
