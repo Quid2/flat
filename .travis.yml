@@ -99,7 +99,7 @@ script:
     stack)
       ulimit -n 4096
       
-      stack --no-terminal $ARGS test
+      # stack --no-terminal $ARGS test
       
       make jstest 
       
