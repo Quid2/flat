@@ -76,7 +76,7 @@ install:
     stack)
       ulimit -n 4096
       # stack --no-terminal config set system-ghc --global true
-      stack --no-terminal --install-ghc $ARGS install hsc2hs
+      # stack --no-terminal --install-ghc $ARGS install hsc2hs
       # stack --no-terminal $ARGS setup
       #stack --no-terminal install hsc2hs
       #stack --no-terminal --install-ghc $ARGS install hsc2hs
