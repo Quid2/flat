@@ -49,7 +49,12 @@ instance Flat [Word8]
 instance Flat [Bool]
 
 main = do
-  -- printInfoqqq
+-- #ifdef ghcjs_HOST_OS
+--   print "GHCJS"
+-- #endif  
+
+  -- printInfo
+
   mainTest
   -- print $ flatRaw 18446744073709551615::Word64
   -- print $ B.unpack . flat $ (True,0::Word64,18446744073709551615::Word64)
@@ -94,7 +99,6 @@ testFlat = testGroup "flat/unflat" [
   ,flatTests
   ,flatUnflatRT
   ]
-
    
 
 -- System.Endian tests (to run, need to modify imports and cabal file)
