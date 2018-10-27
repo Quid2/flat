@@ -137,7 +137,7 @@ Should also work with (not recently tested):
 
 Versions prior to 0.33 (so all versions currently on hackage) encode `Double` values incorrectly when they are not aligned with a byte boundary.
 
-The version in github has been fixed and it passes all tests in the `flat` testsuite, except for those relative to short bytestrings (`Data.ByteString.Short() that are unsupported by `ghcjs`.
+The version in github has been fixed and it passes all tests in the `flat` testsuite, except for those relative to short bytestrings (Data.ByteString.Short) that are unsupported by `ghcjs`.
 
 A new hackage release is on its way.
 
