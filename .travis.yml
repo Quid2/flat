@@ -56,6 +56,10 @@ matrix:
   #   compiler: ": #stack 7.10.3 LTS 6"
   #   addons: {apt: {packages: [ghc-7.10.3], sources: [hvr-ghc]}}
 
+  - env: BUILD=stack ARGS="--resolver lts-12"
+    compiler: ": #stack 8.4.3"
+    addons: {apt: {packages: [ghc-8.4.3], sources: [hvr-ghc]}}
+
   # # Nightly builds are allowed to fail
   # - env: BUILD=stack ARGS="--resolver nightly"
   #   compiler: ": #stack nightly"
