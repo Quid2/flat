@@ -64,7 +64,7 @@ matrix:
   # GHCJS build via stack
   - env: BUILD=ghcjs ARGS="--stack-yaml=stack-ghcjs.yaml"
     compiler: ": #stack GHCJS"
-    addons: {apt: {packages: [ghc-8.4.3], sources: [hvr-ghc]}}  
+    addons: {apt: {packages: [], sources: [hvr-ghc]}}  
 
   # # Build on OS X in addition to Linux
   # - env: BUILD=stack ARGS="--resolver lts-6"
