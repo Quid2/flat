@@ -123,19 +123,44 @@ Briefly:
  * Decoding: `store`, `flat` and `cereal` are usually faster
  * Transfer time (serialisation time + transport time on the network + deserialisation at the receiving end): `flat` is usually faster for all but the highest network speeds
 
-### Haskell Compatibility
+### Compatibility
+
+#### [GHC](https://www.haskell.org/ghc/) 
 
 Tested with:
   * [ghc](https://www.haskell.org/ghc/) 7.10.3, 8.0.2, 8.2.2, 8.4.2 and 8.4.3 (x64)
+
+Should also work with (not recently tested):
   * [ghc](https://www.haskell.org/ghc/) 7.10.3/LLVM 3.5.2 (Arm7)
-  * [ghcjs](https://github.com/ghcjs/ghcjs)
 
-It also seems to be working with [Eta](https://eta-lang.org/) though the full test suite could not be run due to Eta's issues compiling `quickcheck` and `doctest`.
+####  [GHCJS](https://github.com/ghcjs/ghcjs)
 
+Versions prior to 0.33 (so all versions currently on hackage) encode `Double` values incorrectly when they are not aligned with a byte boundary.
 
-### Installation
+The version in github has been fixed and it passes all tests in the `flat` testsuite, except for those relative to short bytestrings (`Data.ByteString.Short() that are unsupported by `ghcjs`.
+
+A new hackage release is on its way.
+
+You can build and test `flat` under `ghcjs` with:
+
+`stack test --stack-yaml=stack-ghcjs.yaml`
+
+#### [ETA](https://eta-lang.org/)
+
+It compiles and seems to be working, though the full test suite could not be run due to Eta's issues compiling `quickcheck`.
+
+ ### Installation
 
 Get the latest stable version from [hackage](https://hackage.haskell.org/package/flat).
+
+If you use ghcjs, use the github version, adding in your stack.yaml:
+
+```
+- location:
+     git: https://github.com/Quid2/flat
+     commit: 4795b519e2bd58127044d54b69dc371018607366
+  extra-dep: true
+```
 
 ### Acknowledgements
 
