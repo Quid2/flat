@@ -16,9 +16,8 @@ cspeed:
 	touch test/Test/E/Binary.hs
 	cd test;time ghc -i../src -O$(opt) Test.E;time ghc -i../src -O$(opt) Test.E.Binary;time ghc -i../src -O$(opt) Test.E.Flat
 
-
 rspeed: 
 	stack bench :sbench
 
 jstest:
-	cd test-ghcjs;make tst
+	stack test --fast --file-watch --stack-yaml=stack-ghcjs.yaml
