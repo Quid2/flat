@@ -104,12 +104,12 @@ test-suite spec
     -- if impl(eta)
     --    cpp-options: -DETA_COMPILER
 
-test-suite docs
-  default-language:   Haskell2010
-  type:               exitcode-stdio-1.0
-  main-is:            DocSpec.hs
-  build-depends:      base, doctest>=0.11.2 && <0.17,filemanip>=0.3.6.3 && < 0.3.7
-  HS-Source-Dirs:     test
+-- test-suite docs
+--   default-language:   Haskell2010
+--   type:               exitcode-stdio-1.0
+--   main-is:            DocSpec.hs
+--   build-depends:      base, doctest>=0.11.2 && <0.17,filemanip>=0.3.6.3 && < 0.3.7
+--   HS-Source-Dirs:     test
 
 -- test-suite core
 --     main-is: Core.hs
