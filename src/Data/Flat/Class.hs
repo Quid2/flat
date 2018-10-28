@@ -13,6 +13,7 @@
 {-# LANGUAGE TypeSynonymInstances      #-}
 {-# LANGUAGE UndecidableInstances      #-}
 
+
 -- |Generics-based generation of Flat instances
 module Data.Flat.Class
   (
@@ -35,6 +36,10 @@ import           Data.Word
 import           Data.Bits
 -- import           Data.Proxy
 -- import GHC.Magic(inline)
+
+-- $setup
+-- >>> {-# LANGUAGE DataKinds                 #-}
+-- >>> import           Data.Proxy
 
 -- |Class of types that can be encoded/decoded
 class Flat a where
@@ -222,11 +227,42 @@ instance (GEnkode a, GEnkode b) => GEnkode (a :*: b) where
       genkode (x :*: y) = genkode x <> genkode y
       {-# INLINE genkode #-}
 
-instance (NumConstructors (a :+: b) <= 256, GEnkodeSum (a :+: b)) => GEnkode (a :+: b) where
---      genkode x = genkodeSum x (Proxy :: Proxy 0) (Proxy :: Proxy 0)
-      genkode x = genkodeSum 0 0 x
-      -- genkode x = genkodeSum x 0 0
+-- instance (NumConstructors (a :+: b) <= 256, GEnkodeSum (a :+: b)) => GEnkode (a :+: b) where
+-- --      genkode x = genkodeSum x (Proxy :: Proxy 0) (Proxy :: Proxy 0)
+--       genkode x = genkodeSum 0 0 x
+--       -- genkode x = genkodeSum x 0 0
+--       {-# INLINE genkode #-}
+
+instance (GEnkodeSumBit (a :+: b)) => GEnkode (a :+: b) where
+      genkode x = genkodeSumBit x
       {-# INLINE genkode #-}
+
+class GEnkodeSum f where
+  genkodeSum :: Word8 -> NumBits -> f a -> Encoding
+
+instance (GEnkodeSum a, GEnkodeSum b) => GEnkodeSum (a :+: b) where
+  genkodeSum !code !numBits s = case s of
+                           L1 !x -> genkodeSum ((code `unsafeShiftL` 1)) (numBits+1) x
+                           R1 !x -> genkodeSum ((code `unsafeShiftL` 1) .|. 1) (numBits+1) x
+  {-# INLINE  genkodeSum #-}
+
+instance GEnkode a => GEnkodeSum (C1 c a) where
+  genkodeSum !code !numBits x = eBits numBits code <> genkode x
+  {-# INLINE  genkodeSum #-}
+
+
+class GEnkodeSumBit f where
+  genkodeSumBit :: f a -> Encoding
+
+instance (GEnkodeSumBit a, GEnkodeSumBit b) => GEnkodeSumBit (a :+: b) where
+  genkodeSumBit s = case s of
+                           L1 !x -> eFalse <> genkodeSumBit x
+                           R1 !x -> eTrue <> genkodeSumBit x
+  {-# INLINE  genkodeSumBit #-}
+
+instance GEnkode a => GEnkodeSumBit (C1 c a) where
+  genkodeSumBit x = genkode x
+  {-# INLINE  genkodeSumBit #-}
 
 
 -- |Encode sum (VERY SLOW AT COMPILATION TIME)
@@ -246,19 +282,6 @@ instance (NumConstructors (a :+: b) <= 256, GEnkodeSum (a :+: b)) => GEnkode (a 
 --        where
 --         numBits = fromInteger (natVal (Proxy :: Proxy n))
 --         code = fromInteger (natVal (Proxy :: Proxy m))
-
-class GEnkodeSum f where
-  genkodeSum :: Word8 -> NumBits -> f a -> Encoding
-
-instance (GEnkodeSum a, GEnkodeSum b) => GEnkodeSum (a :+: b) where
-  genkodeSum !code !numBits s = case s of
-                           L1 !x -> genkodeSum ((code `unsafeShiftL` 1)) (numBits+1) x
-                           R1 !x -> genkodeSum ((code `unsafeShiftL` 1) .|. 1) (numBits+1) x
-  {-# INLINE  genkodeSum #-}
-
-instance GEnkode a => GEnkodeSum (C1 c a) where
-  genkodeSum !code !numBits x = eBits numBits code <> genkode x
-  {-# INLINE  genkodeSum #-}
 
 
 
@@ -297,8 +320,15 @@ instance GEnkode a => GEnkodeSum (C1 c a) where
 --         code = fromInteger (natVal (Proxy :: Proxy m))
 
 
--- |Calculate number of constructors
-type family NumConstructors (a :: * -> *) :: Nat where
+{- |Calculate number of constructors
+
+>>> natVal (Proxy :: Proxy (NumConstructors (Rep Bool)))
+4
+-}
+
+-- one = natVal (Proxy :: Proxy  1)
+
+type family NumConstructors (a :: * -> *) :: Nat where  
     NumConstructors (C1 c a) = 1
     NumConstructors (x :+: y) = NumConstructors x + NumConstructors y
 
