@@ -1,8 +1,11 @@
 
 [![Build Status](https://travis-ci.org/Quid2/flat.svg?branch=master)](https://travis-ci.org/Quid2/flat)
 [![Hackage version](https://img.shields.io/hackage/v/flat.svg)](http://hackage.haskell.org/package/flat)
+[![Stackage LTS 6](http://stackage.org/package/flat/badge/lts-6)](http://stackage.org/lts/package/flat)
+[![Stackage LTS 9](http://stackage.org/package/flat/badge/lts-9)](http://stackage.org/lts/package/flat)
+[![Stackage LTS 11](http://stackage.org/package/flat/badge/lts-11)](http://stackage.org/lts/package/flat)
+[![Stackage LTS 12](http://stackage.org/package/flat/badge/lts-12)](http://stackage.org/lts/package/flat)
 [![Stackage Nightly](http://stackage.org/package/flat/badge/nightly)](http://stackage.org/nightly/package/flat)
-[![Stackage LTS](http://stackage.org/package/flat/badge/lts)](http://stackage.org/lts/package/flat)
 
 Haskell implementation of [Flat](http://quid2.org/docs/Flat.pdf), a principled, portable and efficient binary data format ([specs](http://quid2.org)).
 
@@ -128,7 +131,7 @@ Briefly:
 #### [GHC](https://www.haskell.org/ghc/) 
 
 Tested with:
-  * [ghc](https://www.haskell.org/ghc/) 7.10.3, 8.0.2, 8.2.2, 8.4.2 and 8.4.3 (x64)
+  * [ghc](https://www.haskell.org/ghc/) 7.10.3, 8.0.2, 8.2.2, 8.4.4 and 8.6.1 (x64)
 
 Should also work with (not recently tested):
   * [ghc](https://www.haskell.org/ghc/) 7.10.3/LLVM 3.5.2 (Arm7)
@@ -149,7 +152,7 @@ You can build and test `flat` under `ghcjs` with:
 
 It compiles and seems to be working, though the full test suite could not be run due to Eta's issues compiling `quickcheck`.
 
- ### Installation
+### Installation
 
 Get the latest stable version from [hackage](https://hackage.haskell.org/package/flat).
 
@@ -169,6 +172,8 @@ If you use ghcjs, use the github version, adding in your stack.yaml:
 ### Known Bugs and Infelicities
 
 * Long compilation times for generated Flat instances
+
+During development, it's a good idea to turn optimisations off (`stack --fast` or `-O0` in the cabal file), this will completely eliminate the compilation time overhead.
 
 * Data types with more than 256 constructors are unsupported
 
