@@ -280,8 +280,8 @@ testLargeEnum = testGroup "test enum with more than 256 constructors" $ concat
 
     , map trip [E258_1,E258_256,E258_257,E258_258]
     , map trip [E256_1,E256_134,E256_256]
-    #endif
-    ]
+#endif
+  ]
 
 flatUnflatRT = testGroup "unflat (flat v) == v"
   [  rt "()" (prop_Flat_roundtrip:: RT ())
