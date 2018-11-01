@@ -153,6 +153,8 @@ eWord8 :: Word8 -> Encoding
 eWord8 = Encoding . eWord8F
 eWord :: Word -> Encoding
 eWord = Encoding . eWordF
+eBits16 :: NumBits -> Word16 -> Encoding
+eBits16 n f = Encoding $ eBits16F n f
 eBits :: NumBits -> Word8 -> Encoding
 eBits n f = Encoding $ eBitsF n f
 eFiller :: Encoding

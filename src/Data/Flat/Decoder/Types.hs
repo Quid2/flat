@@ -14,6 +14,7 @@ module Data.Flat.Decoder.Types (
     notEnoughSpace,
     tooMuchSpace,
     badEncoding,
+    -- Env
     ) where
 
 import           Control.DeepSeq
@@ -59,7 +60,13 @@ newtype Get a = Get {runGet ::
                         Ptr Word8 -- End Ptr
                         -> S
                         -> IO (GetResult a)
-                    } deriving (Functor)
+                    } -- deriving (Functor)
+
+instance Functor Get where
+    fmap f g = Get $ \end s -> do
+        GetResult s' a <- runGet g end s
+        return $ GetResult s' (f a) 
+    {-# INLINE  fmap #-}
 
 -- Is this correct?
 instance NFData (Get a) where rnf !_ = ()

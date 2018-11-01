@@ -39,7 +39,7 @@ module Data.Flat.Decoder (
     dBEBits64,
     dropBits,
 
-    ConsState(..),consOpen,consClose,consBool,Env,consBits
+    ConsState(..),consOpen,consClose,consBool,consBits
     ) where
 
 import Data.Flat.Decoder.Prim
