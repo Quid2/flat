@@ -7,6 +7,7 @@
 {-# LANGUAGE UnboxedTuples       #-}
 -- |Encoding Primitives
 module Data.Flat.Encoder.Prim (
+    eBits16F,
     eBitsF,
     eFloatF,
     eDoubleF,
@@ -130,7 +131,7 @@ eIntegralF t = let vs = w7l t
 
 w7l :: (Bits t, Integral t) => t -> [Word8]
 w7l t = let l  = low7 t
-            t' = t `shiftR` 7
+            t' = t `unsafeShiftR` 7
         in if t' == 0
            then [l]
            else w7 l : w7l t'
@@ -155,23 +156,23 @@ eWord8F t s@(S op _ o) | o==0 = pokeWord op t
 {-# INLINE eWord32E #-}
 eWord32E :: (Word32 -> Word32) -> Word32 -> Prim
 eWord32E conv t (S op w o) | o==0 = pokeW conv op t >> skipBytes op 4
-                           | otherwise = pokeW conv op (asWord32 w `shiftL` 24 .|. t `shiftR` o) >> return (S (plusPtr op 4) (asWord8 t `shiftL` (8-o)) o)
+                           | otherwise = pokeW conv op (asWord32 w `unsafeShiftL` 24 .|. t `unsafeShiftR` o) >> return (S (plusPtr op 4) (asWord8 t `unsafeShiftL` (8-o)) o)
 
 {-# INLINE eWord64E #-}
 eWord64E :: (Word64 -> Word64) -> Word64 -> Prim
 -- #ifdef ghcjs_HOST_OS
 -- eWord64E conv t (S op w o) | o==0 = pokeW (conv . (`rotateR` 32)) op t >> skipBytes op 8
---                            | otherwise = pokeW (conv . (`rotateR` 32)) op (asWord64 w `shiftL` 56 .|. t `shiftR` o) >> return (S (plusPtr op 8) (asWord8 t `shiftL` (8-o)) o)
+--                            | otherwise = pokeW (conv . (`rotateR` 32)) op (asWord64 w `unsafeShiftL` 56 .|. t `unsafeShiftR` o) >> return (S (plusPtr op 8) (asWord8 t `unsafeShiftL` (8-o)) o)
 
 -- -- eWord64E conv t (S op w o) | o==0 = pokeW conv op t >> skipBytes op 8
--- --                            | otherwise = pokeW conv op (asWord64 w `shiftL` 56 .|. t `shiftR` o) >> return (S (plusPtr op 8) (asWord8 t `shiftL` (8-o)) o)
+-- --                            | otherwise = pokeW conv op (asWord64 w `unsafeShiftL` 56 .|. t `unsafeShiftR` o) >> return (S (plusPtr op 8) (asWord8 t `unsafeShiftL` (8-o)) o)
 -- #else
 -- eWord64E conv t (S op w o) | o==0 = pokeW conv op t >> skipBytes op 8
---                            | otherwise = pokeW conv op (asWord64 w `shiftL` 56 .|. t `shiftR` o) >> return (S (plusPtr op 8) (asWord8 t `shiftL` (8-o)) o)
+--                            | otherwise = pokeW conv op (asWord64 w `unsafeShiftL` 56 .|. t `unsafeShiftR` o) >> return (S (plusPtr op 8) (asWord8 t `unsafeShiftL` (8-o)) o)
 -- #endif
 
 eWord64E conv t (S op w o) | o==0 = poke64 conv op t >> skipBytes op 8
-                           | otherwise = poke64 conv op (asWord64 w `shiftL` 56 .|. t `shiftR` o) >> return (S (plusPtr op 8) (asWord8 t `shiftL` (8-o)) o)
+                           | otherwise = poke64 conv op (asWord64 w `unsafeShiftL` 56 .|. t `unsafeShiftR` o) >> return (S (plusPtr op 8) (asWord8 t `unsafeShiftL` (8-o)) o)
 
 {-# INLINE eWord16F #-}
 eWord16F :: Word16 -> Prim
@@ -200,10 +201,10 @@ varWord writeByte t s
     where
       {-# INLINE varWord2_ #-}
       -- TODO: optimise, using a single Write16?
-      varWord2_ writeByte t s = writeByte (fromIntegral t .|. 0x80) s >>= writeByte (fromIntegral (t `shiftR` 7) .&. 0x7F)
+      varWord2_ writeByte t s = writeByte (fromIntegral t .|. 0x80) s >>= writeByte (fromIntegral (t `unsafeShiftR` 7) .&. 0x7F)
 
       {-# INLINE varWord3_ #-}
-      varWord3_ writeByte t s = writeByte (fromIntegral t .|. 0x80) s >>= writeByte (fromIntegral (t `shiftR` 7) .|. 0x80) >>= writeByte (fromIntegral (t `shiftR` 14) .&. 0x7F)
+      varWord3_ writeByte t s = writeByte (fromIntegral t .|. 0x80) s >>= writeByte (fromIntegral (t `unsafeShiftR` 7) .|. 0x80) >>= writeByte (fromIntegral (t `unsafeShiftR` 14) .&. 0x7F)
 
 -- {-# INLINE varWordN #-}
 varWordN_ :: (Bits t, Integral t) => (Word8 -> Prim) -> t -> Prim
@@ -211,7 +212,7 @@ varWordN_ writeByte = go
   where
     go !v !st =
       let !l  = low7 v
-          !v' = v `shiftR` 7
+          !v' = v `unsafeShiftR` 7
       in if v' == 0
       then writeByte l st
       else writeByte (l .|. 0x80) st >>= go v'
@@ -267,6 +268,25 @@ eBytesF bs = eFillerF >=> eBytesF_
       pokeWord op' 0
 
 
+-- |Encode up to 16 bits.
+{-# INLINE  eBits16F #-}
+eBits16F :: NumBits -> Word16 -> Prim
+--eBits16F numBits code | numBits >8 = eBitsF (numBits-8) (fromIntegral $ code `unsafeShiftR` 8) >=> eBitsF 8 (fromIntegral code)
+-- eBits16F _ _ = eFalseF
+eBits16F       9 code = eBitsF 1 (fromIntegral $ code `unsafeShiftR` 8) >=> eBitsF_ 8 (fromIntegral code)
+eBits16F numBits code = eBitsF numBits (fromIntegral code)
+
+-- |Encode up to 8 bits.
+{-# INLINE eBitsF #-}
+eBitsF :: NumBits -> Word8 -> Prim
+eBitsF 1 0 = eFalseF
+eBitsF 1 1 = eTrueF
+eBitsF 2 0 = eFalseF >=> eFalseF
+eBitsF 2 1 = eFalseF >=> eTrueF
+eBitsF 2 2 = eTrueF >=> eFalseF
+eBitsF 2 3 = eTrueF >=> eTrueF
+eBitsF n t = eBitsF_ n t 
+
 {-
 eBits Example:
 Before:
@@ -291,23 +311,15 @@ f=8-11=-3
 o''=3
 8-o''=5
 -}
--- CHECK: might get rid of this altogether and in Class encode in terms of eTrue/eFalse only
--- |Encode up to 8 bits.
-{-# INLINE eBitsF #-}
-eBitsF :: NumBits -> Word8 -> Prim
-eBitsF 1 0 = eFalseF
-eBitsF 1 1 = eTrueF
-eBitsF 2 0 = eFalseF >=> eFalseF
-eBitsF 2 1 = eFalseF >=> eTrueF
-eBitsF 2 2 = eTrueF >=> eFalseF
-eBitsF 2 3 = eTrueF >=> eTrueF
-eBitsF n t = \(S op w o) ->
+eBitsF_ :: NumBits -> Word8 -> Prim
+eBitsF_ n t = \(S op w o) ->
   let o' = o + n  -- used bits
       f = 8 - o'  -- remaining free bits
-  in if | f > 0  ->  return $ S op (w .|. (t `shiftL` f)) o'
+  in if | f > 0  ->  return $ S op (w .|. (t `unsafeShiftL` f)) o'
         | f == 0 ->  pokeWord op (w .|. t)
         | otherwise -> let o'' = -f
-                       in poke op (w .|. (t `shiftR` o'')) >> return (S (plusPtr op 1) (t `shiftL` (8-o'')) o'')
+                       in poke op (w .|. (t `unsafeShiftR` o'')) >> return (S (plusPtr op 1) (t `unsafeShiftL` (8-o'')) o'')
+
 
 {-# INLINE eBoolF #-}
 eBoolF :: Bool -> Prim
@@ -317,7 +329,8 @@ eBoolF True  = eTrueF
 {-# INLINE eTrueF #-}
 eTrueF :: Prim
 eTrueF (S op w o) | o == 7 = pokeWord op (w .|. 1)
-                  | otherwise = return (S op (setBit w (7-o)) (o+1))
+                  -- | otherwise = return (S op (setBit w (7-o)) (o+1))
+                  | otherwise = return (S op (w .|. 128 `unsafeShiftR` o) (o+1))
 
 {-# INLINE eFalseF #-}
 eFalseF :: Prim
@@ -335,7 +348,7 @@ eFillerF (S op w _) = pokeWord op (w .|. 1)
 
 {-# INLINE pokeByteUnaligned #-}
 pokeByteUnaligned :: Word8 -> Prim
-pokeByteUnaligned t (S op w o) = poke op (w .|. (t `shiftR` o)) >> return (S (plusPtr op 1) (t `shiftL` (8-o)) o)
+pokeByteUnaligned t (S op w o) = poke op (w .|. (t `unsafeShiftR` o)) >> return (S (plusPtr op 1) (t `unsafeShiftL` (8-o)) o)
 
 {-# INLINE pokeByteAligned #-}
 pokeByteAligned :: Word8 -> Prim

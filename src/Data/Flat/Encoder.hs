@@ -16,6 +16,7 @@ module Data.Flat.Encoder (
     eWord64,
     eWord8,
     eBits,
+    eBits16,
     eFiller,
     eBool,
     eTrue,
