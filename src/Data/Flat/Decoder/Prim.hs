@@ -36,9 +36,10 @@ import           System.Endian
 
 -- |A special state, optimised for constructor decoding
 -- Supports up to 512 constructors (9 bits)
-data ConsState = ConsState {-# UNPACK #-} 
-  !Word -- ^The bits to parse, top bit being the first to parse (could use a Word16 instead, no difference in performance)
-  !Int  -- ^The number of decoded bits
+data ConsState = 
+  ConsState {-# UNPACK #-} 
+    !Word -- ^The bits to parse, top bit being the first to parse (could use a Word16 instead, no difference in performance)
+    !Int  -- ^The number of decoded bits
 
 -- |Switch to constructor decoding 
 -- {-# INLINE consOpen  #-}
