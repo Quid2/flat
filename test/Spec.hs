@@ -40,13 +40,16 @@ import           Test.Data.Values hiding (lbs,ns)
 import           Test.Tasty
 import           Test.Tasty.HUnit
 import           Test.Tasty.QuickCheck as QC hiding (getSize)
+import Test.E
+import Test.E.Flat
+import Test.E.Arbitrary
 -- import           System.Arch
 import           System.Endian
 import Data.FloatCast
 
-instance Flat [Int16]
-instance Flat [Word8]
-instance Flat [Bool]
+-- instance Flat [Int16]
+-- instance Flat [Word8]
+-- instance Flat [Bool]
 
 main = do
 -- #ifdef ghcjs_HOST_OS
@@ -96,6 +99,7 @@ testEncDec = testGroup "encode/decode primitives" [
 
 testFlat = testGroup "flat/unflat" [
    testSize
+  ,testLargeEnum 
   ,flatTests
   ,flatUnflatRT
   ]
@@ -253,13 +257,31 @@ testSize = testGroup "Size" $ concat [
   ,sz (UTF16Text tx) utf16Size
  ]
    where
-    sz v e = [testCase (unwords ["size of",sshow v]) $ getSize v @?= e]
     tx = T.pack "txt"
     utf8Size = 8+8+3*32+8
     utf16Size = 8+8+3*16+8
     bsSize = 8+8+3*8+8
 
+sz v e = [testCase (unwords ["size of",sshow v]) $ getSize v @?= e]
 
+-- E258_256 = 11111110 _257 = 111111110 _258 = 111111111
+#ifdef ENUM_LARGE    
+testLargeEnum = testGroup "test enum with more than 256 constructors" $ concat 
+  [  
+    sz E258_256 8   
+    , sz E258_257 9
+    , sz E258_258 9
+
+    -- As encode are inlined, this is going to take for ever if this is compiled with -O1 or -O2
+    -- , encRaw (E258_256) [0b11111110]
+    -- , encRaw (E258_257) [0b11111111,0b00000000]
+    -- , encRaw (E258_258) [0b11111111,0b10000000]
+    -- , encRaw (E258_256,E258_257,E258_258) [0b11111110,0b11111111,0b01111111,0b11000000]
+
+    , map trip [E258_1,E258_256,E258_257,E258_258]
+    , map trip [E256_1,E256_134,E256_256]
+  ]
+#endif
 
 flatUnflatRT = testGroup "unflat (flat v) == v"
   [  rt "()" (prop_Flat_roundtrip:: RT ())
@@ -283,6 +305,13 @@ flatUnflatRT = testGroup "unflat (flat v) == v"
     ,rt "Unit" (prop_Flat_roundtrip:: RT Unit)
     ,rt "Un" (prop_Flat_roundtrip:: RT Un )
     ,rt "N" (prop_Flat_roundtrip:: RT N )
+    ,rt "E2" (prop_Flat_roundtrip:: RT E2 )
+    ,rt "E3" (prop_Flat_roundtrip:: RT E3 )
+    ,rt "E4" (prop_Flat_roundtrip:: RT E4 )
+    ,rt "E8" (prop_Flat_roundtrip:: RT E8 )
+    ,rt "E16" (prop_Flat_roundtrip:: RT E16 )
+    ,rt "E17" (prop_Flat_roundtrip:: RT E17 )
+    ,rt "E32" (prop_Flat_roundtrip:: RT E32 )
     ,rt "A" (prop_Flat_roundtrip:: RT A )
     ,rt "B" (prop_Flat_roundtrip:: RT B )
     ,rt "Maybe N" (prop_Flat_roundtrip:: RT (Maybe N))
@@ -469,8 +498,6 @@ flatTests = testGroup "flat/unflat Unit tests" $ concat [
 
       teq a b = ser a @?= ser b
 
-      encRaw :: forall a. (Show a, Flat a) => a -> [Word8] -> [TestTree]
-      encRaw v e = [testCase (unwords ["flat raw",sshow v,show . B.unpack . flat $ v]) $ serRaw v @?= e]
               --,testCase (unwords ["unflat raw",sshow v]) $ desRaw e @?= Right v]
 
       -- Aligned values unflat to the original value, modulo the added filler.
@@ -479,10 +506,14 @@ flatTests = testGroup "flat/unflat Unit tests" $ concat [
       -- a v e = [testCase (unwords ["flat postAligned",show v]) $ ser (postAligned v) @?= e
       --         ,testCase (unwords ["unflat postAligned",show v]) $ let Right (PostAligned v' _) = des e in v @?= v']
        
-      trip :: forall a .(Show a,Flat a) => a -> TestTree
-      trip v = testCase (unwords ["roundtrip",sshow v]) $
-        -- we use show to get Right NaN == Right NaN 
-        show (unflat (flat v::B.ByteString)::Decoded a) @?= show (Right v::Decoded a)
+
+encRaw :: forall a. (Show a, Flat a) => a -> [Word8] -> [TestTree]
+encRaw v e = [testCase (unwords ["flat raw",sshow v,show . B.unpack . flat $ v]) $ serRaw v @?= e]  
+
+trip :: forall a .(Show a,Flat a) => a -> TestTree
+trip v = testCase (unwords ["roundtrip",sshow v]) $
+  -- we use show to get Right NaN == Right NaN 
+  show (unflat (flat v::B.ByteString)::Decoded a) @?= show (Right v::Decoded a)
 
 -- Test Data
 lzBS = L.pack bs
