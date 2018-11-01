@@ -135,21 +135,21 @@ test-suite spec
 --         Test.Data2
 --         Test.Data2.Flat
 
-benchmark sbench
-    main-is: Simple.hs
-    type: exitcode-stdio-1.0
-    default-language:   Haskell2010
-    build-depends:
-        base
-        , deepseq
-        ,criterion
-        ,bytestring,text,containers,process,filepath,statistics,directory,timeit
-        ,flat
-    hs-source-dirs: benchmarks test
-    ghc-options: -O2 -dumpdir /tmp/dump -ddump-to-file -dsuppress-all -ddump-simpl -fprint-potential-instances
-    cpp-options: -DENUM_LARGE
-    other-modules:
-        Test.E,Test.Data,Test.Data.Flat,Test.Data.Values,Test.Data2,Test.Data2.Flat,Test.E.Flat,Report
+-- benchmark sbench
+--     main-is: Simple.hs
+--     type: exitcode-stdio-1.0
+--     default-language:   Haskell2010
+--     build-depends:
+--         base
+--         , deepseq
+--         ,criterion
+--         ,bytestring,text,containers,process,filepath,statistics,directory,timeit
+--         ,flat
+--     hs-source-dirs: benchmarks test
+--     ghc-options: -O2 -dumpdir /tmp/dump -ddump-to-file -dsuppress-all -ddump-simpl -fprint-potential-instances
+--     cpp-options: -DENUM_LARGE
+--     other-modules:
+--         Test.E,Test.Data,Test.Data.Flat,Test.Data.Values,Test.Data2,Test.Data2.Flat,Test.E.Flat,Report
 
 
 -- test-suite mspec
