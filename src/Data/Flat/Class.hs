@@ -11,7 +11,7 @@
 {-# LANGUAGE TypeFamilies              #-}
 {-# LANGUAGE TypeOperators             #-}
 {-# LANGUAGE TypeSynonymInstances      #-}
-{-# LANGUAGE UndecidableInstances      #-}
+{-# LANGUAGE UndecidableInstances   ,CPP   #-}
 
 
 -- |Generics-based generation of Flat instances
@@ -24,9 +24,7 @@ module Data.Flat.Class
   )
 where
 
-import           Data.Flat.Decoder              ( Get
-                                                , dBool
-                                                )
+import           Data.Flat.Decoder
 import           Data.Flat.Encoder
 import           GHC.Generics
 import           GHC.TypeLits
@@ -75,6 +73,15 @@ genericDecode :: (GDecode (Rep b), Generic b) => Get b
 genericDecode = to `fmap` gget
 -- genericDecode = undefined
 
+{-# INLINE genericEncode #-}
+-- genericEncode :: (GEncode (Rep a), Generic a) => a -> Encoding
+-- genericEncode = gencode . from
+
+genericEncode :: (GEnkode (Rep a), Generic a) => a -> Encoding
+genericEncode = genkode . from
+-- genericEncode = undefined
+
+
 -- Generic Decoding
 class GDecode f where
   gget :: Get (f t)
@@ -104,25 +111,143 @@ instance Flat a => GDecode (K1 i a) where
   gget = K1 <$> decode
   {-# INLINE gget #-}
 
--- Build constructor representation as single tag
-instance (GDecode a, GDecode b) => GDecode (a :+: b) where
+
+
+-- Different valid decoding setups
+-- #define DEC_BOOLG
+-- #define DEC_BOOL
+
+-- #define DEC_BOOLG
+-- #define DEC_BOOL
+-- #define DEC_BOOL48
+
+-- #define DEC_CONS
+-- #define DEC_BOOLC
+-- #define DEC_BOOL
+
+-- #define DEC_CONS
+-- #define DEC_BOOLC
+-- #define DEC_BOOL
+-- #define DEC_BOOL48
+
+-- #define DEC_CONS
+
+-- #define DEC_CONS
+-- #define DEC_CONS48
+
+#define DEC_CONS
+#define DEC_CONS48
+#define DEC_BOOLC
+#define DEC_BOOL
+
+#ifdef DEC_BOOLG
+instance (GDecode a, GDecode b) => GDecode (a :+: b) 
+#endif
+
+#ifdef DEC_BOOLC
+-- Special case for data types with two constructors
+instance {-# OVERLAPPING #-} (GDecode a,GDecode b) => GDecode (C1 m1 a :+: C1 m2 b) 
+#endif
+
+#ifdef DEC_BOOL
+  where  
+      gget = do
+        -- error "DECODE2_C2"
+        !tag <- dBool
+        !r <- if tag then R1 <$> gget else L1 <$> gget
+        return r
+      {-# INLINE gget #-}
+#endif
+
+#ifdef DEC_CONS
+-- -- Data types with any number of constructors (will silently fail for more than 2**16 constructors)    
+-- Use a custom constructor decoding state
+-- Slightly faster for types with many constructors
+instance {-# OVERLAPPABLE #-} (GDecodeSum (a :+: b),GDecode a, GDecode b) => GDecode (a :+: b) where
   gget = do
-    !tag <- dBool
-    !r <- if tag then R1 <$> gget else L1 <$> gget
-    return r
-    -- R1 <$> gget
+    cs <- consOpen
+    getSum cs
   {-# INLINE gget #-}
+  
+class GDecodeSum f where
+    getSum :: ConsState -> Get (f a)
+
+#ifdef DEC_CONS48
+
+-- These significantly reduce instance compilation time 
+instance {-# OVERLAPPING #-} (GDecodeSum n1,GDecodeSum n2,GDecodeSum n3,GDecodeSum n4) => GDecodeSum ((n1 :+: n2) :+: (n3 :+: n4)) -- where -- getSum = undefined
+      where
+          getSum cs = do
+            -- error "DECODE4"
+            let (cs',tag) = consBits cs 2
+            case tag of
+              0 -> L1 <$> L1 <$> getSum cs'
+              1 -> L1 <$> R1 <$> getSum cs'
+              2 -> R1 <$> L1 <$> getSum cs'
+              _ -> R1 <$> R1 <$> getSum cs'
+          {-# INLINE getSum #-}  
+    
+instance {-# OVERLAPPING #-} (GDecodeSum n1,GDecodeSum n2,GDecodeSum n3,GDecodeSum n4,GDecodeSum n5,GDecodeSum n6,GDecodeSum n7,GDecodeSum n8) => GDecodeSum (((n1 :+: n2) :+: (n3 :+: n4)) :+: ((n5 :+: n6) :+: (n7 :+: n8))) -- where -- getSum cs = undefined
+     where
+      getSum cs = do
+        --error "DECODE8"
+        let (cs',tag) = consBits cs 3
+        case tag of
+          0 -> L1 <$> L1 <$> L1 <$> getSum cs'
+          1 -> L1 <$> L1 <$> R1 <$> getSum cs'
+          2 -> L1 <$> R1 <$> L1 <$> getSum cs'
+          3 -> L1 <$> R1 <$> R1 <$> getSum cs'
+          4 -> R1 <$> L1 <$> L1 <$> getSum cs'
+          5 -> R1 <$> L1 <$> R1 <$> getSum cs'
+          6 -> R1 <$> R1 <$> L1 <$> getSum cs'
+          _ -> R1 <$> R1 <$> R1 <$> getSum cs'
+      {-# INLINE getSum #-}  
+    
+instance {-# OVERLAPPABLE #-} (GDecodeSum a, GDecodeSum b) => GDecodeSum (a :+: b) where
+#else
+instance (GDecodeSum a, GDecodeSum b) => GDecodeSum (a :+: b) where
+#endif
+
+  getSum cs = do
+    let (cs',tag) = consBool cs
+    if tag then R1 <$> getSum cs' else L1 <$> getSum cs'
+  {-# INLINE getSum #-}
 
 
-{-# INLINE genericEncode #-}
--- genericEncode :: (GEncode (Rep a), Generic a) => a -> Encoding
--- genericEncode = gencode . from
+instance GDecode a => GDecodeSum (C1 c a) where
+    getSum (ConsState _ usedBits) = consClose usedBits >> gget   
+    {-# INLINE getSum #-}
+#endif
 
-genericEncode :: (GEnkode (Rep a), Generic a) => a -> Encoding
-genericEncode = genkode . from
+#ifdef DEC_BOOL48
+instance {-# OVERLAPPING #-} (GDecode n1,GDecode n2,GDecode n3,GDecode n4) => GDecode ((n1 :+: n2) :+: (n3 :+: n4)) -- where -- gget = undefined
+  where
+      gget = do
+        -- error "DECODE4"
+        !tag <- dBEBits8 2
+        case tag of
+          0 -> L1 <$> L1 <$> gget
+          1 -> L1 <$> R1 <$> gget
+          2 -> R1 <$> L1 <$> gget
+          _ -> R1 <$> R1 <$> gget
+      {-# INLINE gget #-}  
 
--- genericEncode = undefined
-
+instance {-# OVERLAPPING #-} (GDecode n1,GDecode n2,GDecode n3,GDecode n4,GDecode n5,GDecode n6,GDecode n7,GDecode n8) => GDecode (((n1 :+: n2) :+: (n3 :+: n4)) :+: ((n5 :+: n6) :+: (n7 :+: n8))) -- where -- gget = undefined
+ where
+  gget = do
+    --error "DECODE8"
+    !tag <- dBEBits8 3
+    case tag of
+      0 -> L1 <$> L1 <$> L1 <$> gget
+      1 -> L1 <$> L1 <$> R1 <$> gget
+      2 -> L1 <$> R1 <$> L1 <$> gget
+      3 -> L1 <$> R1 <$> R1 <$> gget
+      4 -> R1 <$> L1 <$> L1 <$> gget
+      5 -> R1 <$> L1 <$> R1 <$> gget
+      6 -> R1 <$> R1 <$> L1 <$> gget
+      _ -> R1 <$> R1 <$> R1 <$> gget
+  {-# INLINE gget #-}  
+#endif
 
 -- -- |Generic Encoder
 -- class GEncode f where
@@ -228,17 +353,34 @@ instance (GEnkode a, GEnkode b) => GEnkode (a :*: b) where
       {-# INLINE genkode #-}
 
 -- instance (NumConstructors (a :+: b) <= 256, GEnkodeSum (a :+: b)) => GEnkode (a :+: b) where
--- --      genkode x = genkodeSum x (Proxy :: Proxy 0) (Proxy :: Proxy 0)
---       genkode x = genkodeSum 0 0 x
+--       --      genkode x = genkodeSum x (Proxy :: Proxy 0) (Proxy :: Proxy 0)
 --       -- genkode x = genkodeSum x 0 0
 --       {-# INLINE genkode #-}
 
-instance (GEnkodeSumBit (a :+: b)) => GEnkode (a :+: b) where
-      genkode x = genkodeSumBit x
+instance GEnkodeSum (a :+: b) => GEnkode (a :+: b) where
+      genkode x = genkodeSum 0 0 x 
       {-# INLINE genkode #-}
 
+-- instance (GEnkodeSumBit (a :+: b)) => GEnkode (a :+: b) where
+--       genkode x = genkodeSumBit x
+--       {-# INLINE genkode #-}
+
+-- class GEnkodeSum f where
+--   genkodeSum :: Word8 -> NumBits -> f a -> Encoding
+
+-- instance (GEnkodeSum a, GEnkodeSum b) => GEnkodeSum (a :+: b) where
+--   genkodeSum !code !numBits s = case s of
+--                            L1 !x -> genkodeSum ((code `unsafeShiftL` 1)) (numBits+1) x
+--                            R1 !x -> genkodeSum ((code `unsafeShiftL` 1) .|. 1) (numBits+1) x
+--   {-# INLINE  genkodeSum #-}
+
+-- instance GEnkode a => GEnkodeSum (C1 c a) where
+--   genkodeSum !code !numBits x = eBits numBits code <> genkode x
+--   {-# INLINE  genkodeSum #-}
+
+-- Encode up to 2^16 constructors
 class GEnkodeSum f where
-  genkodeSum :: Word8 -> NumBits -> f a -> Encoding
+  genkodeSum :: Word16 -> NumBits -> f a -> Encoding
 
 instance (GEnkodeSum a, GEnkodeSum b) => GEnkodeSum (a :+: b) where
   genkodeSum !code !numBits s = case s of
@@ -247,9 +389,8 @@ instance (GEnkodeSum a, GEnkodeSum b) => GEnkodeSum (a :+: b) where
   {-# INLINE  genkodeSum #-}
 
 instance GEnkode a => GEnkodeSum (C1 c a) where
-  genkodeSum !code !numBits x = eBits numBits code <> genkode x
+  genkodeSum !code !numBits x = eBits16 numBits code <> genkode x
   {-# INLINE  genkodeSum #-}
-
 
 class GEnkodeSumBit f where
   genkodeSumBit :: f a -> Encoding
@@ -324,11 +465,16 @@ instance GEnkode a => GEnkodeSumBit (C1 c a) where
 
 >>> natVal (Proxy :: Proxy (NumConstructors (Rep Bool)))
 4
+
+data E2B = E2_1B Bool | E2_2B  deriving (Show,Generic,Eq,NFData)
+
+
 -}
 
--- one = natVal (Proxy :: Proxy  1)
+-- n1 = natVal (Proxy :: Proxy  1)
+-- n2 = natVal (Proxy :: Proxy (NumConstructors (Rep Bool)))
 
-type family NumConstructors (a :: * -> *) :: Nat where  
+type family NumConstructors (a :: * -> *) :: Nat where
     NumConstructors (C1 c a) = 1
     NumConstructors (x :+: y) = NumConstructors x + NumConstructors y
 

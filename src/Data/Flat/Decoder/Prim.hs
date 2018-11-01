@@ -1,4 +1,4 @@
-{-# LANGUAGE BangPatterns        #-}
+{-# LANGUAGE BangPatterns    , CPP    #-}
 {-# LANGUAGE ScopedTypeVariables ,NoMonomorphismRestriction #-}
 -- |Strict Decoder Primitives
 module Data.Flat.Decoder.Prim (
@@ -19,6 +19,8 @@ module Data.Flat.Decoder.Prim (
     dByteString_,
     dLazyByteString_,
     dByteArray_,
+
+    ConsState(..),consOpen,consClose,consBool,consBits
     ) where
 
 import           Control.Monad
@@ -30,6 +32,97 @@ import           Data.FloatCast
 import           Data.Word
 import           Foreign
 import           System.Endian
+
+
+-- |A special state, optimised for constructor decoding
+-- Supports up to 512 constructors (9 bits)
+data ConsState = ConsState {-# UNPACK #-} 
+  !Word -- ^The bits to parse, top bit being the first to parse (could use a Word16 instead, no difference in performance)
+  !Int  -- ^The number of decoded bits
+
+-- |Switch to constructor decoding 
+-- {-# INLINE consOpen  #-}
+consOpen :: Get ConsState
+consOpen = Get $ \endPtr s -> do
+  let u = usedBits s
+  w <- case compare (currPtr s) endPtr of
+    LT -> do -- two different bytes
+      w16::Word16 <- toBE16 <$> peek (castPtr $ currPtr s)
+      return $ fromIntegral w16 `unsafeShiftL` (u+(wordSize-16))
+    EQ -> do
+        w8 :: Word8 <- peek (currPtr s)
+        return $ fromIntegral w8 `unsafeShiftL` (u+(wordSize-8))
+    GT -> notEnoughSpace endPtr s
+  return $ GetResult s (ConsState w 0)
+
+-- |Switch back to normal decoding  
+-- {-# NOINLINE consClose  #-}
+consClose :: Int -> Get ()
+consClose n =  Get $ \endPtr s -> do
+  let u' = n+usedBits s
+  if u' < 8
+     then return $ GetResult (s {usedBits=u'}) ()
+     else if currPtr s >= endPtr
+            then notEnoughSpace endPtr s
+          else return $ GetResult (s {currPtr=currPtr s `plusPtr` 1,usedBits=u'-8}) ()
+
+  {- ensureBits endPtr s n = when ((endPtr `minusPtr` currPtr s) * 8 - usedBits s < n) $ notEnoughSpace endPtr s
+  dropBits8 s n = 
+    let u' = n+usedBits s
+    in if u' < 8
+        then s {usedBits=u'}
+        else s {currPtr=currPtr s `plusPtr` 1,usedBits=u'-8}
+  -}
+
+  --ensureBits endPtr s n
+  --return $ GetResult (dropBits8 s n) ()
+
+-- |Decode a single bit
+consBool :: ConsState -> (ConsState,Bool)
+consBool cs =  (0/=) <$> consBits cs 1
+
+-- consBool (ConsState w usedBits) = (ConsState (w `unsafeShiftL` 1) (1+usedBits),0 /= 32768 .&. w)
+
+-- |Decode from 1 to 3 bits
+-- This could read more bits that are available, but it doesn't matter, errors will be checked in consClose
+consBits :: ConsState -> Int -> (ConsState, Word)
+consBits cs 3 = consBits_ cs 3 7
+consBits cs 2 = consBits_ cs 2 3
+consBits cs 1 = consBits_ cs 1 1
+consBits _  _ = error "unsupported"
+
+consBits_ :: ConsState -> Int -> Word -> (ConsState, Word)
+
+-- Different decoding primitives
+-- All with equivalent performance
+-- #define CONS_ROT
+-- #define CONS_SHL
+#define CONS_STA
+
+#ifdef CONS_ROT
+consBits_ (ConsState w usedBits) numBits mask =
+  let usedBits' = numBits+usedBits 
+      w' = w `rotateL` numBits -- compiles to an or+shiftl+shiftr
+  in (ConsState w' usedBits',w' .&. mask)
+#endif
+
+#ifdef CONS_SHL
+consBits_ :: ConsState -> Int -> Word -> (ConsState, Word)
+consBits_ (ConsState w usedBits) numBits mask =
+  let usedBits' = numBits+usedBits 
+      w' = w `unsafeShiftL` numBits
+  in (ConsState w' usedBits', (w `shR` (wordSize - numBits)) .&. mask)
+#endif
+
+#ifdef CONS_STA
+consBits_ :: ConsState -> Int -> Word -> (ConsState, Word)
+consBits_ (ConsState w usedBits) numBits mask =
+  let usedBits' = numBits+usedBits 
+  in (ConsState w usedBits', (w `shR` (wordSize - usedBits')) .&. mask)
+#endif
+
+wordSize :: Int
+wordSize = finiteBitSize (0 :: Word) 
 
 {-# INLINE ensureBits #-}
 -- |Ensure that the specified number of bits is available
@@ -46,11 +139,18 @@ dropBits n
   | n == 0 = return ()
   | otherwise = error $ unwords ["dropBits",show n]
 
+{-# INLINE dropBits_ #-}  
 dropBits_ :: S -> Int -> S
-dropBits_ s n = let (bytes,bits) = (n+usedBits s) `divMod` 8
-                in S {currPtr=currPtr s `plusPtr` bytes,usedBits=bits}
+dropBits_ s n = 
+  let (bytes,bits) = (n+usedBits s) `divMod` 8
+  -- let 
+  --   n' = n+usedBits s
+  --   bytes = n' `shR` 3
+  --   bits = n' .|. 7
+  in S {currPtr=currPtr s `plusPtr` bytes,usedBits=bits}
 
 {-# INLINE dBool #-}
+-- {-# INLINE dBool #-} -- INLINE Massively increases compilation time and decreases run time by a third
 -- |Decode a boolean
 dBool :: Get Bool
 dBool = Get $ \endPtr s ->
@@ -59,18 +159,19 @@ dBool = Get $ \endPtr s ->
     else do
       !w <- peek (currPtr s)
       let !b = 0 /= (w .&. (128 `shR` usedBits s))
-      -- let b = testBit w (7-usedBits s)
       let !s' = if usedBits s == 7
                   then s { currPtr = currPtr s `plusPtr` 1, usedBits = 0 }
                   else s { usedBits = usedBits s + 1 }
       return $ GetResult s' b
+
 
 {-# INLINE dBEBits8  #-}
 -- |Return the n most significant bits (up to maximum of 8)
 --
 -- The bits are returned right shifted:
 --
--- unflatWith (dBEBits8 3) [128+64+32+1::Word8] == Right 7
+-- >>> unflatWith (dBEBits8 3) [128+64+32+1::Word8]
+-- Right 7
 dBEBits8 :: Int -> Get Word8
 dBEBits8 n = Get $ \endPtr s -> do
       ensureBits endPtr s n
@@ -120,11 +221,12 @@ dBEBits64 n = Get $ \endPtr s -> do
 
 {-# INLINE take8 #-}
 take8 :: S -> Int -> IO (GetResult Word8)
-take8 s n = GetResult (dropBits_ s n) <$> read8 s n
-
-{-# INLINE read8 #-}
-read8 :: S -> Int -> IO Word8
-read8 s n | n >=0 && n <=8 =
+-- take8 s n = GetResult (dropBits_ s n) <$> read8 s n
+take8 s n = GetResult (dropBits8 s n) <$> read8 s n
+  where
+    --{-# INLINE read8 #-}
+    read8 :: S -> Int -> IO Word8
+    read8 s n | n >=0 && n <=8 =
             if n <= 8 - usedBits s
             then do  -- all bits in the same byte
               w <- peek (currPtr s)
@@ -133,6 +235,15 @@ read8 s n | n >=0 && n <=8 =
               w::Word16 <- toBE16 <$> peek (castPtr $ currPtr s)
               return $ fromIntegral $ (w `unsafeShiftL` usedBits s) `shR` (16 - n)
           | otherwise = error $ unwords ["read8: cannot read",show n,"bits"]
+    -- {-# INLINE dropBits8 #-}  
+    -- -- Assume n <= 8
+    dropBits8 :: S -> Int -> S
+    dropBits8 s n = 
+    let u' = n+usedBits s
+    in if u' < 8
+        then s {usedBits=u'}
+        else s {currPtr=currPtr s `plusPtr` 1,usedBits=u'-8}
+
 
 {-# INLINE takeN #-}
 takeN :: (Num a, Bits a) => Int -> S -> IO (GetResult a)
