@@ -268,7 +268,7 @@ eBytesF bs = eFillerF >=> eBytesF_
       pokeWord op' 0
 
 
--- |Encode up to 16 bits.
+-- |Encode up to 9 bits
 {-# INLINE  eBits16F #-}
 eBits16F :: NumBits -> Word16 -> Prim
 --eBits16F numBits code | numBits >8 = eBitsF (numBits-8) (fromIntegral $ code `unsafeShiftR` 8) >=> eBitsF 8 (fromIntegral code)
@@ -329,7 +329,6 @@ eBoolF True  = eTrueF
 {-# INLINE eTrueF #-}
 eTrueF :: Prim
 eTrueF (S op w o) | o == 7 = pokeWord op (w .|. 1)
-                  -- | otherwise = return (S op (setBit w (7-o)) (o+1))
                   | otherwise = return (S op (w .|. 128 `unsafeShiftR` o) (o+1))
 
 {-# INLINE eFalseF #-}
