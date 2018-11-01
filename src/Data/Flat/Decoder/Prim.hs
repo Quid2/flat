@@ -107,7 +107,6 @@ consBits_ (ConsState w usedBits) numBits mask =
 #endif
 
 #ifdef CONS_SHL
-consBits_ :: ConsState -> Int -> Word -> (ConsState, Word)
 consBits_ (ConsState w usedBits) numBits mask =
   let usedBits' = numBits+usedBits 
       w' = w `unsafeShiftL` numBits
@@ -115,7 +114,6 @@ consBits_ (ConsState w usedBits) numBits mask =
 #endif
 
 #ifdef CONS_STA
-consBits_ :: ConsState -> Int -> Word -> (ConsState, Word)
 consBits_ (ConsState w usedBits) numBits mask =
   let usedBits' = numBits+usedBits 
   in (ConsState w usedBits', (w `shR` (wordSize - usedBits')) .&. mask)
@@ -239,10 +237,10 @@ take8 s n = GetResult (dropBits8 s n) <$> read8 s n
     -- -- Assume n <= 8
     dropBits8 :: S -> Int -> S
     dropBits8 s n = 
-    let u' = n+usedBits s
-    in if u' < 8
-        then s {usedBits=u'}
-        else s {currPtr=currPtr s `plusPtr` 1,usedBits=u'-8}
+      let u' = n+usedBits s
+      in if u' < 8
+          then s {usedBits=u'}
+          else s {currPtr=currPtr s `plusPtr` 1,usedBits=u'-8}
 
 
 {-# INLINE takeN #-}
