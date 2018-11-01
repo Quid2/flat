@@ -10,6 +10,7 @@ deriving instance Binary E8
 deriving instance Binary E16
 deriving instance Binary E32
 deriving instance Binary E256
+deriving instance Binary E258
 
 -- fs =
 --     [ Binary E2_1

@@ -1,4 +1,4 @@
-{-# LANGUAGE StandaloneDeriving ,DeriveAnyClass #-}
+{-# LANGUAGE StandaloneDeriving ,DeriveAnyClass , CPP #-}
 module Test.E.Flat where
 
 import           Test.E
@@ -11,7 +11,11 @@ deriving instance Flat E8
 deriving instance Flat E16
 deriving instance Flat E17
 deriving instance Flat E32
+
+#ifdef ENUM_LARGE
 deriving instance Flat E256
+deriving instance Flat E258
+#endif
 
 -- fs =
 --     [ flat E2_1,flat E3_1

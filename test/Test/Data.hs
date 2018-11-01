@@ -44,7 +44,7 @@ data N = One
        | Three
        | Four
        | Five
-  deriving (Eq, Ord, Read, Show, Typeable, Data, Generic, Enum)
+  deriving (Eq, Ord, Read, Show, Typeable, Data, Generic, Enum, Bounded)
 
 -- toForestD :: Forest a -> ForestD (Tr2 a)
  -- toForestD (Forest lt) = undefined -- Forest2 (ForestD (map (\t -> let Tr2 tt = treeConv t in tt) . toList $ lt))

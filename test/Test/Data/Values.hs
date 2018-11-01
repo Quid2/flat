@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP                       #-}
 {-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE NoMonomorphismRestriction , ScopedTypeVariables #-}
 module Test.Data.Values where
 
 import           Control.DeepSeq
@@ -116,14 +116,17 @@ lnx = l2L . ns
 
 ns n = map asN [1..n]
 
-asN = toN . (`mod` 5)
+asN :: Int -> N
+asN = toEnum . (`mod` 5)
 
-toN :: Integer -> N
-toN 1 = One
-toN 2 = Two
-toN 3 = Three
-toN 4 = Four
-toN _ = Five
+-- asN = toN . (`mod` 5)
+
+-- toN :: Integer -> N
+-- toN 1 = One
+-- toN 2 = Two
+-- toN 3 = Three
+-- toN 4 = Four
+-- toN _ = Five
 
 asN3 = toN3 . (`mod` 5)
 toN3 :: Integer -> (N,N,N)
@@ -149,6 +152,10 @@ treeN33Large :: Tree ((N,N,N),(N,N,N),(N,N,N))
 treeN33Large = mkTree asN33 largeSize
 
 treeVarious = mkTree (const v2) 100
+
+mkTreeOf :: forall a. (Enum a ,Bounded a)=> Int -> Tree a
+mkTreeOf = let l = fromEnum (maxBound :: a) +1
+           in mkTree ((toEnum :: (Int -> a)) . (`mod` l))
 
 mkTree mk = mkTree_ 1
   where

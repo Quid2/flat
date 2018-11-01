@@ -57,7 +57,8 @@ derive makeArbitrary ''B
 -}
 -- instance Arbitrary Word7 where arbitrary  = toEnum <$> choose (0, 127)
 -- derive makeArbitrary ''ASCII
--- To generate Arbitrary instances while avoiding a direct dependency on 'derive' (that is not supported by Eta), run in the project directory: derive -a test/Test/Data.hs
+-- To generate Arbitrary instances while avoiding a direct dependency on 'derive' (that is not supported by Eta)
+-- , run in the project directory:  derive -a test/Test/Data.hs --derive=Arbitrary
 {-!
 deriving instance Arbitrary N
 deriving instance Arbitrary Tree
