@@ -148,7 +148,7 @@ script:
         (cd dist && cabal install --force-reinstalls "$SRC_TGZ")
       ;;
     *)
-      stack --no-terminal $ARGS test 
+      stack --fast --no-terminal $ARGS test 
       # --haddock --no-haddock-deps
       ;;
   esac
