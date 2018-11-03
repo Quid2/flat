@@ -138,7 +138,7 @@ script:
 - |
   case "$BUILD" in
     cabal)
-      cabal configure --enable-tests --enable-benchmarks -v2 --ghc-options="-O2"
+      cabal configure --enable-tests --enable-benchmarks -v2 --ghc-options="-O0"
       cabal build
       cabal check || [ "$CABALVER" == "1.16" ]
       cabal test
@@ -148,6 +148,7 @@ script:
         (cd dist && cabal install --force-reinstalls "$SRC_TGZ")
       ;;
     *)
-      stack --no-terminal $ARGS test --haddock --no-haddock-deps
+      stack --no-terminal $ARGS test 
+      # --haddock --no-haddock-deps
       ;;
   esac
