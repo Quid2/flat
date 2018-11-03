@@ -113,8 +113,6 @@ before_install:
   else
     curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
   fi
-  stack 
-  stack upgrade
 
 install:
 - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
@@ -149,7 +147,7 @@ script:
         (cd dist && cabal install --force-reinstalls "$SRC_TGZ")
       ;;
     *)
-      stack --fast --no-terminal $ARGS test 
+      stack --no-terminal $ARGS test --fast
       # --haddock --no-haddock-deps
       ;;
   esac
