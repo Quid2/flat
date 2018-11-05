@@ -28,7 +28,7 @@ import           Data.Array.Unsafe              ( castSTUArray )
 import           GHC.ST                         ( runST
                                                 , ST
                                                 )
-import           System.Endian
+import           Data.Flat.Endian
 
 -- | Reinterpret-casts a `Float` to a `Word32`.
 floatToWord :: Float -> Word32

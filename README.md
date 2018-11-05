@@ -1,11 +1,6 @@
 
 [![Build Status](https://travis-ci.org/Quid2/flat.svg?branch=master)](https://travis-ci.org/Quid2/flat)
 [![Hackage version](https://img.shields.io/hackage/v/flat.svg)](http://hackage.haskell.org/package/flat)
-[![Stackage LTS 6](http://stackage.org/package/flat/badge/lts-6)](http://stackage.org/lts/package/flat)
-[![Stackage LTS 9](http://stackage.org/package/flat/badge/lts-9)](http://stackage.org/lts/package/flat)
-[![Stackage LTS 11](http://stackage.org/package/flat/badge/lts-11)](http://stackage.org/lts/package/flat)
-[![Stackage LTS 12](http://stackage.org/package/flat/badge/lts-12)](http://stackage.org/lts/package/flat)
-[![Stackage Nightly](http://stackage.org/package/flat/badge/nightly)](http://stackage.org/nightly/package/flat)
 
 Haskell implementation of [Flat](http://quid2.org/docs/Flat.pdf), a principled, portable and efficient binary data format ([specs](http://quid2.org)).
 
@@ -111,7 +106,6 @@ f $ Cons North (Cons South (Cons Center (Cons East (Cons West Nil))))
 -> "10010111 01110111 10000001"
 ```
 
-
 The padding is a sequence of 0s terminated by a 1 running till the next byte boundary (if we are already at a byte boundary it will add an additional byte of value 1, that's unfortunate but there is a good reason for this, check the [specs](http://quid2.org/docs/Flat.pdf)).
 
 Byte-padding is automatically added by the function `flat` and removed by `unflat`.
@@ -122,7 +116,7 @@ For some hard data, see this [comparison of the major haskell serialisation libr
 
 Briefly:
  * Size: `flat` produces significantly smaller binaries than all other libraries (3/4 times usually)
- * Encoding: `store` is usually faster
+ * Encoding: `store` and `flat` are usually faster
  * Decoding: `store`, `flat` and `cereal` are usually faster
  * Transfer time (serialisation time + transport time on the network + deserialisation at the receiving end): `flat` is usually faster for all but the highest network speeds
 
@@ -138,43 +132,53 @@ Should also work with (not recently tested):
 
 ####  [GHCJS](https://github.com/ghcjs/ghcjs)
 
-Versions prior to 0.33 (so all versions currently on hackage) encode `Double` values incorrectly when they are not aligned with a byte boundary.
+Tested with:
 
-The version in github has been fixed and it passes all tests in the `flat` testsuite, except for those relative to short bytestrings (Data.ByteString.Short) that are unsupported by `ghcjs`.
+```
+compiler: ghcjs-0.2.1.9007019_ghc-8.0.1
+compiler-check: match-exact
+setup-info:
+  ghcjs:
+    source:
+      ghcjs-0.2.1.9007019_ghc-8.0.1:
+           url: http://ghcjs.tolysz.org/ghc-8.0-2017-02-05-lts-7.19-9007019.tar.gz
+           sha1: d2cfc25f9cda32a25a87d9af68891b2186ee52f9
+```
+ 
+Passes all tests in the `flat` testsuite, except for those relative to short bytestrings (Data.ByteString.Short) that are unsupported by `ghcjs`.
 
-A new hackage release is on its way.
-
-You can build and test `flat` under `ghcjs` with:
+If you use a different version of `ghcjs`, you are advised to run the full test suite by setting your compiler in `stack-ghcjs.yaml` and then running:
 
 `stack test --stack-yaml=stack-ghcjs.yaml`
 
+NOTE: Versions prior to 0.33 encode `Double` values incorrectly when they are not aligned with a byte boundary.
+
 #### [ETA](https://eta-lang.org/)
 
-It compiles and seems to be working, though the full test suite could not be run due to Eta's issues compiling `quickcheck`.
+It builds (with etlas 1.5.0.0 and eta eta-0.8.6b2 under macOS Sierra) and seems to be working, though the full test suite could not be run due to Eta's issues compiling some of the test suite dependencies.
 
 ### Installation
 
 Get the latest stable version from [hackage](https://hackage.haskell.org/package/flat).
 
-If you use ghcjs, use the github version, adding in your stack.yaml:
+### Known Bugs and Infelicities
 
-```
-- location:
-     git: https://github.com/Quid2/flat
-     commit: 4795b519e2bd58127044d54b69dc371018607366
-  extra-dep: true
-```
+* Longish compilation times
+
+'flat` relies more than other serialisation libraries on extensive inlining for its good performance, this unfortunately leads to longer compilation times. 
+
+If you have many data types or very large ones this might become an issue.
+
+A couple of good practices that will eliminate or mitigate this problem are:
+
+** During development, turn optimisations off (`stack --fast` or `-O0` in the cabal file).
+
+** Keep your serialisation code in a separate module(s).
+
+* Data types with more than 512 constructors are currently unsupported
+
+See also the [full list of open issues](https://github.com/Quid2/flat/issues).
 
 ### Acknowledgements
 
  `flat` reuses ideas and readapts code from various packages, mainly: `store`, `binary-bits` and `binary` and includes contributions from Justus Sagemüller.
-
-### Known Bugs and Infelicities
-
-* Long compilation times for generated Flat instances
-
-During development, it's a good idea to turn optimisations off (`stack --fast` or `-O0` in the cabal file), this will completely eliminate the compilation time overhead.
-
-* Data types with more than 256 constructors are unsupported
-
-See also the [full list of open issues](https://github.com/Quid2/flat/issues).

@@ -19,6 +19,9 @@ import qualified Data.Text                      as T
 import           Data.Word
 import           Test.Data
 import qualified Test.Data2                     as D2
+import           qualified Data.IntMap           as IM
+import           qualified Data.IntSet           as IS
+-- import Data.Array as A
 
 instance NFData Various
 instance NFData a => NFData (List a)
@@ -104,7 +107,8 @@ lN = C Three (C Three (C One (C One (C Three (C Four (C One (C Five (C Two (C Th
 
 largeSize = 1000000
 
-couples :: [(Word32,N)]
+-- couples :: [(Word32,N)]
+couples :: [(Int,N)]
 couples = zip [1..] $ ns 1000
 
 lN2 :: List N
@@ -204,9 +208,16 @@ sbs = ("StrictByteString",b2)
 lbs = ("LazyByteString",lb2)
 shortbs = ("ShortByteString",SBS.toShort b2)
 
-mapT = ("map",mapV)
-mapV = M.fromList couples
-mapListT = ("mapList",couples)
+-- array package
+-- arrayT = ("Array",
+
+
+intMapT = ("IntMap",intMap)
+mapT = ("map",dataMap)
+mapListT = ("mapList",listMap)
+intMap = IM.fromList couples
+dataMap = M.fromList couples
+listMap = couples
 
 lN2T = ("List N",lN2)
 lN3T = ("Large List N",lN3)
@@ -262,7 +273,7 @@ force' (NF x) = x `deepseq` ()
 forceCafs :: IO ()
 forceCafs = mapM_ (evaluate . force') cafs
 
--- | List of all data that should be fully evaluated before the benchmark is
+-- | List of all data that should be fully evaluated before a benchmark is
 --   run.
 cafs :: [NF]
 cafs = [

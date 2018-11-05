@@ -10,42 +10,42 @@
 -- | Tests for the flat module
 module Main where
 
+import           Control.Monad
 import           Data.Bits
-import qualified Data.ByteString       as B
-import qualified Data.ByteString.Lazy  as L
-import qualified Data.ByteString.Short as SBS
+import qualified Data.ByteString          as B
+import qualified Data.ByteString.Lazy     as L
+import qualified Data.ByteString.Short    as SBS
 import           Data.Char
 import           Data.Either
 import           Data.Flat
 import           Data.Flat.Bits
 import           Data.Flat.Decoder
-import qualified Data.Flat.Encoder       as E
-import qualified Data.Flat.Encoder.Strict       as E
-import qualified Data.Flat.Encoder.Prim       as E
+import qualified Data.Flat.Encoder        as E
+import qualified Data.Flat.Encoder.Prim   as E
+import qualified Data.Flat.Encoder.Strict as E
 import           Data.Int
 import           Data.List
-import qualified Data.Map              as M
+import qualified Data.Map                 as M
 import           Data.Ord
 import           Data.Proxy
-import qualified Data.Sequence         as Seq
-import qualified Data.Text             as T
+import qualified Data.Sequence            as Seq
+import qualified Data.Text                as T
 import           Data.Word
 import           Numeric.Natural
-import Control.Monad
 import           System.Exit
 import           Test.Data
 import           Test.Data.Arbitrary
 import           Test.Data.Flat
-import           Test.Data.Values hiding (lbs,ns)
+import           Test.Data.Values         hiding (lbs, ns)
+import           Test.E
+import           Test.E.Arbitrary
+import           Test.E.Flat
 import           Test.Tasty
 import           Test.Tasty.HUnit
-import           Test.Tasty.QuickCheck as QC hiding (getSize)
-import Test.E
-import Test.E.Flat
-import Test.E.Arbitrary
+import           Test.Tasty.QuickCheck    as QC hiding (getSize)
 -- import           System.Arch
-import           System.Endian
-import Data.FloatCast
+import           Data.Flat.Endian
+import           Data.FloatCast
 
 -- instance Flat [Int16]
 -- instance Flat [Word8]
@@ -54,7 +54,7 @@ import Data.FloatCast
 main = do
 -- #ifdef ghcjs_HOST_OS
 --   print "GHCJS"
--- #endif  
+-- #endif
 
   -- printInfo
 
@@ -81,8 +81,8 @@ tests = testGroup "Tests" [
   testPrimitives
 
   ,testEncDec
-  
-  ,testFlat
+
+  testFlat
  ]
 
 testPrimitives = testGroup "conversion/memory primitives" [
@@ -99,35 +99,36 @@ testEncDec = testGroup "encode/decode primitives" [
 
 testFlat = testGroup "flat/unflat" [
    testSize
-  ,testLargeEnum 
+  ,testLargeEnum
+  ,testContainers
   ,flatTests
   ,flatUnflatRT
   ]
-   
 
--- System.Endian tests (to run, need to modify imports and cabal file)
+
+-- Data.Flat.Endian tests (to run, need to modify imports and cabal file)
 testEndian = testGroup "Endian" [
    conv toBE16 (2^10 + 3)  (2^9+2^8+4)
   ,conv toBE32 (2^18 + 3)  50332672
   ,conv toBE64 (2^34 + 3)  216172782180892672
-  ,conv toBE16 (0x1234) 0x3412
-  ,conv toBE32 (0x11223344) 0x44332211
-  ,conv toBE64 (0x0123456789ABCDEF) 0xEFCDAB8967452301
+  ,conv toBE16 0x1234 0x3412
+  ,conv toBE32 0x11223344 0x44332211
+  ,conv toBE64 0x0123456789ABCDEF 0xEFCDAB8967452301
   ]
 
 testFloatingConvert = testGroup "Floating conversions" [
    conv floatToWord -0.15625 3189768192
-  ,conv wordToFloat 3189768192 -0.15625 
+  ,conv wordToFloat 3189768192 -0.15625
   ,conv doubleToWord -0.15625 13818169556679524352
-  ,conv wordToDouble 13818169556679524352 -0.15625 
+  ,conv wordToDouble 13818169556679524352 -0.15625
   ,rt "floatToWord" (prop_float_conv :: RT Float)
   ,rt "doubleToWord" (prop_double_conv :: RT Double)
  ]
 
 -- ghcjs bug on shiftR 0, see: https://github.com/ghcjs/ghcjs/issues/706
-testShifts = testGroup "Shifts" $ map tst [0..33] 
-   where 
- tst n = testCase ("shiftR " ++ show n) $ 
+testShifts = testGroup "Shifts" $ map tst [0..33]
+   where
+ tst n = testCase ("shiftR " ++ show n) $
   let val = 4294967295::Word32
       s = val `shift` (-n)
       r = val `shiftR` n
@@ -141,7 +142,7 @@ shR val n = shift val (-n)
 testEncodingPrim = testGroup "Encoding Primitives" [
    encRawWith 1 E.eTrueF [0b10000001]
   ,encRawWith 3 (E.eTrueF >=> E.eFalseF >=> E.eTrueF) [0b10100001]
-  
+
   ,encRawWith 32 (E.eWord32E id $ 2^18 + 3) [3,0,4,0,1]
   ,encRawWith 32 (E.eWord32BEF  $ 2^18 + 3) [0,4,0,3,1]
 
@@ -152,9 +153,9 @@ testEncodingPrim = testGroup "Encoding Primitives" [
   ,encRawWith 65 (E.eFalseF >=> E.eWord64E id (2^34 + 3)) [1,0,0,0,2,0,0,0,129]
   ,encRawWith 65 (E.eFalseF >=> E.eWord64BEF (2^34 + 3))  [0,0,0,2,0,0,0,1,129]
   ]
-  where 
+  where
     encRawWith sz enc exp = testCase (unwords ["encode raw with size",show sz]) $ flatRawWith sz enc @?= exp
-    
+
 
 conv f v e = testCase (unwords ["conv",sshow v,showB . flat $ v,"to",sshow e]) $ f v @?= e
 
@@ -168,7 +169,7 @@ testDecodingPrim = testGroup "Decoding Primitives" [
                                                                  ,0b00000000
                                                                  ,0b00000001
                                                                  ,0b01000000] ((),2^31+2,True,())
-  ,dec (dBE64) [0b10000000
+  ,dec dBE64 [0b10000000
                                                                  ,0b00000000
                                                                  ,0b00000000
                                                                  ,0b00000000
@@ -203,7 +204,7 @@ testDecBits = testGroup "Decode Bits" $ concat [
           decBitsN :: forall a. (Num a,FiniteBits a,Show a,Flat a) => (Int -> Get a) -> [TestTree]
           decBitsN dec = let s = finiteBitSize (undefined::a)
                          in [decBits_ dec val numBitsToTake pre | numBitsToTake <- [0 .. s], val <- [0::a ,1+2^(s - 2)+2^(s - 5) ,fromIntegral $ (2^s::Integer) - 1],pre <- [0,1,7]]
-    
+
           decBits_ :: forall a. (FiniteBits a,Show a,Flat a) => (Int -> Get a) -> a -> Int -> Int -> TestTree
           decBits_ deco val numBitsToTake pre =
             -- a sequence composed by pre zero bits followed by the val and zero bits till the next byte boundary
@@ -219,9 +220,9 @@ testDecBits = testGroup "Decode Bits" $ concat [
                 -- we expect the first numBitsToTake bits of the value
                 expectedD@(Right expected) :: Decoded a = Right $ val `shR` (sz - numBitsToTake) -- ghcjs: shiftR fails, see: https://github.com/ghcjs/ghcjs/issues/706
                 actualD@(Right actual) :: Decoded a = unflatRawWith dec vs
-            in testCase (unwords ["take",show numBitsToTake,"bits from",show val,"of size",show sz,"with prefix",show pre,"sequence",showB vs,show expected,show actual,show $ val == actual,show $ expected == actual,show $ expected /= actual,show $ show expected == show actual,show $ flat expected == flat actual]) 
+            in testCase (unwords ["take",show numBitsToTake,"bits from",show val,"of size",show sz,"with prefix",show pre,"sequence",showB vs,show expected,show actual,show $ val == actual,show $ expected == actual,show $ expected /= actual,show $ show expected == show actual,show $ flat expected == flat actual])
                 $ actualD @?= expectedD
-    
+
 
 testSize = testGroup "Size" $ concat [
   sz () 0
@@ -251,7 +252,7 @@ testSize = testGroup "Size" $ concat [
   ,sz lzBS bsSize
 #ifndef ghcjs_HOST_OS
   ,sz shBS bsSize
-#endif      
+#endif
   ,sz tx utf8Size
   ,sz (UTF8Text tx) utf8Size
   ,sz (UTF16Text tx) utf16Size
@@ -265,10 +266,10 @@ testSize = testGroup "Size" $ concat [
 sz v e = [testCase (unwords ["size of",sshow v]) $ getSize v @?= e]
 
 -- E258_256 = 11111110 _257 = 111111110 _258 = 111111111
-testLargeEnum = testGroup "test enum with more than 256 constructors" $ concat 
-  [  
-#ifdef ENUM_LARGE    
-      sz E258_256 8   
+testLargeEnum = testGroup "test enum with more than 256 constructors" $ concat
+  [
+#ifdef ENUM_LARGE
+      sz E258_256 8
     , sz E258_257 9
     , sz E258_258 9
 
@@ -282,6 +283,13 @@ testLargeEnum = testGroup "test enum with more than 256 constructors" $ concat
     , map trip [E256_1,E256_134,E256_256]
 #endif
   ]
+
+testContainers = testGroup "containers" [
+    trip longSeq
+    , trip dataMap
+    , trip listMap
+    -- , trip intMap
+    ]
 
 flatUnflatRT = testGroup "unflat (flat v) == v"
   [  rt "()" (prop_Flat_roundtrip:: RT ())
@@ -428,8 +436,8 @@ flatTests = testGroup "flat/unflat Unit tests" $ concat [
   ,encRaw (Right (-2.1234E15 , 1.1234E-22) :: Either Bool (Double, Double)) [0b11100001,143,22,113,45,110,160,0,29,176,124,248,188,109,252,215,0]
   ,encRaw (Left True:: Either Bool Direction) [0b01000000]
   ,encRaw (Right West :: Either Bool Direction) [0b11110000]
- 
-  
+
+
 
   ,map trip [minBound,maxBound::Word8]
   ,map trip [minBound,maxBound::Word16]
@@ -482,9 +490,6 @@ flatTests = testGroup "flat/unflat Unit tests" $ concat [
   ,[trip longSBS]
   ,[trip unicodeTextUTF16T]
 #endif
-  ,[trip longSeq]
-  ,[trip mapV]
-  ,[trip map1]
   ]
     where
 
@@ -505,14 +510,14 @@ flatTests = testGroup "flat/unflat Unit tests" $ concat [
               ,testCase (unwords ["unflat",sshow v]) $ let Right v' = des e in v @?= v']
       -- a v e = [testCase (unwords ["flat postAligned",show v]) $ ser (postAligned v) @?= e
       --         ,testCase (unwords ["unflat postAligned",show v]) $ let Right (PostAligned v' _) = des e in v @?= v']
-       
+
 
 encRaw :: forall a. (Show a, Flat a) => a -> [Word8] -> [TestTree]
-encRaw v e = [testCase (unwords ["flat raw",sshow v,show . B.unpack . flat $ v]) $ serRaw v @?= e]  
+encRaw v e = [testCase (unwords ["flat raw",sshow v,show . B.unpack . flat $ v]) $ serRaw v @?= e]
 
 trip :: forall a .(Show a,Flat a) => a -> TestTree
 trip v = testCase (unwords ["roundtrip",sshow v]) $
-  -- we use show to get Right NaN == Right NaN 
+  -- we use show to get Right NaN == Right NaN
   show (unflat (flat v::B.ByteString)::Decoded a) @?= show (Right v::Decoded a)
 
 -- Test Data
@@ -546,14 +551,14 @@ nsI_ =  [( (-) (2 ^(((-) i 1)*7)) 1,fromIntegral (8*i)) | i <- [1 .. 10]]
 
 
 
-#ifndef ghcjs_HOST_OS      
+#ifndef ghcjs_HOST_OS
 shBS = SBS.toShort stBS
 longSBS = SBS.toShort longBS
-#endif      
+#endif
 
 sshow = take 80 . show
 
-showB = show . B.unpack 
+showB = show . B.unpack
 
 errDec :: forall a . (Flat a, Eq a, Show a) => Proxy a -> [Word8] -> [TestTree]
 --errDec _ bs = [testCase "bad decode" $ let ev = (des bs::Decoded a) in ev @?= Left ""]
@@ -565,7 +570,7 @@ ser = B.unpack . flat
 des :: Flat a => [Word8] -> Decoded a
 des = unflat
 
-flatRawWith sz enc = B.unpack $ E.strictEncoder (sz+8) (E.Encoding $ enc >=> E.eFillerF) 
+flatRawWith sz enc = B.unpack $ E.strictEncoder (sz+8) (E.Encoding $ enc >=> E.eFillerF)
 
 serRaw :: Flat a => a -> [Word8]
 -- serRaw = B.unpack . flatRaw
@@ -589,9 +594,9 @@ roundTrip x = unflat (flat x::B.ByteString) == Right x
 -- Test roundtrip for both the value and the value embedded between bools
 roundTripExt x = roundTrip x && roundTrip (True,x,False)
 
-prop_double_conv d = wordToDouble (doubleToWord d) == d 
+prop_double_conv d = wordToDouble (doubleToWord d) == d
 
-prop_float_conv d = wordToFloat (floatToWord d) == d 
+prop_float_conv d = wordToFloat (floatToWord d) == d
 
 {-
 prop_common_unsigned :: (Num l,Num h,Flat l,Flat h) => l -> h -> Bool

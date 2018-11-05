@@ -19,28 +19,24 @@ module Data.Flat.Instances
   )
 where
 
-import qualified Data.ByteString               as B
-import qualified Data.ByteString.Lazy          as L
-import qualified Data.ByteString.Short         as SBS
+import qualified Data.ByteString       as B
+import qualified Data.ByteString.Lazy  as L
+import qualified Data.ByteString.Short as SBS
 import           Data.Char
-import           Data.Containers                ( ContainerKey
-                                                , IsMap
-                                                , MapValue
-                                                , mapFromList
-                                                , mapToList
-                                                )
+import           Data.Containers       (ContainerKey, IsMap, MapValue,
+                                        mapFromList, mapToList)
 import           Data.Flat.Class
 import           Data.Flat.Decoder
 import           Data.Flat.Encoder
 --import           Data.Flat.Size        (arrayBits)
 import           Data.Flat.Types
-import qualified Data.Foldable                 as F
-import qualified Data.Map                      as M
+import qualified Data.Foldable         as F
+import qualified Data.Map              as M
 import           Data.MonoTraversable
-import qualified Data.Sequence                 as S
+import qualified Data.Sequence         as S
 import           Data.Sequences
-import qualified Data.Text                     as T
-import           Prelude                 hiding ( mempty )
+import qualified Data.Text             as T
+import           Prelude               hiding (mempty)
 
 -- Flat instances for common types
 instance Flat () where
@@ -180,6 +176,11 @@ instance (Flat a, Flat b,Ord a) => Flat (M.Map a b) where
    size = sizeMap
    encode = encodeMap
    decode = decodeMap
+
+-- instance Flat a => Flat (IM.IntMap a) where
+--     size = sizeMap
+--     encode = encodeMap
+--     decode = decodeMap
 
 instance Flat a => Flat (S.Seq a) where
   size = sizeSequence

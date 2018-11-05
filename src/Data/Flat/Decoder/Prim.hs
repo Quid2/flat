@@ -1,5 +1,7 @@
-{-# LANGUAGE BangPatterns    , CPP    #-}
-{-# LANGUAGE ScopedTypeVariables ,NoMonomorphismRestriction #-}
+{-# LANGUAGE BangPatterns              #-}
+{-# LANGUAGE CPP                       #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
 -- |Strict Decoder Primitives
 module Data.Flat.Decoder.Prim (
     dBool,
@@ -27,21 +29,24 @@ import           Control.Monad
 import qualified Data.ByteString         as B
 import qualified Data.ByteString.Lazy    as L
 import           Data.Flat.Decoder.Types
+import           Data.Flat.Endian
 import           Data.Flat.Memory
 import           Data.FloatCast
 import           Data.Word
 import           Foreign
-import           System.Endian
 
+-- $setup
+-- >>> :set -XBinaryLiterals
+-- >>> import Data.Flat.Run
 
--- |A special state, optimised for constructor decoding
+-- |A special state, optimised for constructor decoding, consists of:
+-- The bits to parse, top bit being the first to parse (could use a Word16 instead, no difference in performance)
+-- The number of decoded bits
 -- Supports up to 512 constructors (9 bits)
-data ConsState = 
-  ConsState {-# UNPACK #-} 
-    !Word -- ^The bits to parse, top bit being the first to parse (could use a Word16 instead, no difference in performance)
-    !Int  -- ^The number of decoded bits
+data ConsState =
+  ConsState {-# UNPACK #-} !Word !Int
 
--- |Switch to constructor decoding 
+-- |Switch to constructor decoding
 -- {-# INLINE consOpen  #-}
 consOpen :: Get ConsState
 consOpen = Get $ \endPtr s -> do
@@ -56,7 +61,7 @@ consOpen = Get $ \endPtr s -> do
     GT -> notEnoughSpace endPtr s
   return $ GetResult s (ConsState w 0)
 
--- |Switch back to normal decoding  
+-- |Switch back to normal decoding
 -- {-# NOINLINE consClose  #-}
 consClose :: Int -> Get ()
 consClose n =  Get $ \endPtr s -> do
@@ -68,7 +73,7 @@ consClose n =  Get $ \endPtr s -> do
           else return $ GetResult (s {currPtr=currPtr s `plusPtr` 1,usedBits=u'-8}) ()
 
   {- ensureBits endPtr s n = when ((endPtr `minusPtr` currPtr s) * 8 - usedBits s < n) $ notEnoughSpace endPtr s
-  dropBits8 s n = 
+  dropBits8 s n =
     let u' = n+usedBits s
     in if u' < 8
         then s {usedBits=u'}
@@ -102,26 +107,26 @@ consBits_ :: ConsState -> Int -> Word -> (ConsState, Word)
 
 #ifdef CONS_ROT
 consBits_ (ConsState w usedBits) numBits mask =
-  let usedBits' = numBits+usedBits 
+  let usedBits' = numBits+usedBits
       w' = w `rotateL` numBits -- compiles to an or+shiftl+shiftr
   in (ConsState w' usedBits',w' .&. mask)
 #endif
 
 #ifdef CONS_SHL
 consBits_ (ConsState w usedBits) numBits mask =
-  let usedBits' = numBits+usedBits 
+  let usedBits' = numBits+usedBits
       w' = w `unsafeShiftL` numBits
   in (ConsState w' usedBits', (w `shR` (wordSize - numBits)) .&. mask)
 #endif
 
 #ifdef CONS_STA
 consBits_ (ConsState w usedBits) numBits mask =
-  let usedBits' = numBits+usedBits 
+  let usedBits' = numBits+usedBits
   in (ConsState w usedBits', (w `shR` (wordSize - usedBits')) .&. mask)
 #endif
 
 wordSize :: Int
-wordSize = finiteBitSize (0 :: Word) 
+wordSize = finiteBitSize (0 :: Word)
 
 {-# INLINE ensureBits #-}
 -- |Ensure that the specified number of bits is available
@@ -138,11 +143,11 @@ dropBits n
   | n == 0 = return ()
   | otherwise = error $ unwords ["dropBits",show n]
 
-{-# INLINE dropBits_ #-}  
+{-# INLINE dropBits_ #-}
 dropBits_ :: S -> Int -> S
-dropBits_ s n = 
+dropBits_ s n =
   let (bytes,bits) = (n+usedBits s) `divMod` 8
-  -- let 
+  -- let
   --   n' = n+usedBits s
   --   bytes = n' `shR` 3
   --   bits = n' .|. 7
@@ -168,9 +173,8 @@ dBool = Get $ \endPtr s ->
 -- |Return the n most significant bits (up to maximum of 8)
 --
 -- The bits are returned right shifted:
---
--- >>> unflatWith (dBEBits8 3) [128+64+32+1::Word8]
--- Right 7
+-- >>> unflatWith (dBEBits8 3) [0b11100001::Word8] == Right 0b00000111
+-- True
 dBEBits8 :: Int -> Get Word8
 dBEBits8 n = Get $ \endPtr s -> do
       ensureBits endPtr s n
@@ -234,10 +238,10 @@ take8 s n = GetResult (dropBits8 s n) <$> read8 s n
               w::Word16 <- toBE16 <$> peek (castPtr $ currPtr s)
               return $ fromIntegral $ (w `unsafeShiftL` usedBits s) `shR` (16 - n)
           | otherwise = error $ unwords ["read8: cannot read",show n,"bits"]
-    -- {-# INLINE dropBits8 #-}  
+    -- {-# INLINE dropBits8 #-}
     -- -- Assume n <= 8
     dropBits8 :: S -> Int -> S
-    dropBits8 s n = 
+    dropBits8 s n =
       let u' = n+usedBits s
       in if u' < 8
           then s {usedBits=u'}
@@ -268,7 +272,7 @@ takeN n s = read s 0 (n - (n `min` 8)) n
 --       let r = 0
 --       w1 <- fromIntegral <$> r8 s
 --       w2 <- fromIntegral <$> r16 s
---       w1 
+--       w1
 --   return $ GetResult (S {currPtr=currPtr s `plusPtr` bytes,usedBits=bits}) r
 
 -- r8 s = peek (currPtr s)
@@ -330,16 +334,10 @@ dBE64 = Get $ \endPtr s -> do
            !(w2::Word8) <- peek (currPtr s `plusPtr` 8)
            return $ w1 `unsafeShiftL` usedBits s  .|. fromIntegral (w2 `shR` (8-usedBits s))
   return $ GetResult (s {currPtr=currPtr s `plusPtr` 8}) w
-
-{-# INLINE peek64 #-}
-peek64 :: Ptr Word64 -> IO Word64
-peek64 ptr = fix64 <$> peek ptr 
-
--- #ifdef ghcjs_HOST_OS
--- peek64 ptr = (`rotateR` 32) <$> peek ptr 
--- #else
--- peek64 = peek
--- #endif
+    where
+      -- {-# INLINE peek64 #-}
+      peek64 :: Ptr Word64 -> IO Word64
+      peek64 ptr = fix64 <$> peek ptr
 
 {-# INLINE dFloat #-}
 -- |Decode a Float
@@ -381,13 +379,13 @@ getChunksInfo = Get $ \endPtr s -> do
    (currPtr',ns) <- getChunks (currPtr s) id
    return $ GetResult (s {currPtr=currPtr'}) (currPtr s `plusPtr` 1,ns)
 
+-- Fix for ghcjs bug:  https://github.com/ghcjs/ghcjs/issues/706
+-- TODO: verify if actually needed here and if also needed in encoder
 {-# INLINE shR #-}
 shR :: Bits a => a -> Int -> a
 #ifdef ghcjs_HOST_OS
 shR val 0 = val
 shR val n = shift val (-n)
-
--- shR = unsafeShiftR
 #else
-shR = unsafeShiftR  
-#endif      
+shR = unsafeShiftR
+#endif

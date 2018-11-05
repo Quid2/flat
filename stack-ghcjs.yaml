@@ -23,6 +23,7 @@ flags:
     clock: false
 
 resolver: lts-7.19
+
 compiler: ghcjs-0.2.1.9007019_ghc-8.0.1
 compiler-check: match-exact
 setup-info:
@@ -32,6 +33,11 @@ setup-info:
            url: http://ghcjs.tolysz.org/ghc-8.0-2017-02-05-lts-7.19-9007019.tar.gz
            sha1: d2cfc25f9cda32a25a87d9af68891b2186ee52f9
 
+
+# "url": "https://github.com/ghcjs/ghcjs",
+#   "rev": "d20da90a4819faad1c6309a06363b34edac0374c",
+#   "sha256": "0jmxgfm1zwg6xscjcaycfam7zss8ik4ql4ii5lpryh4h6cdhvkbr",
+#   "fetchSubmodules": true
 
 # fails to build
 # resolver: lts-8.11

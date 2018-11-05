@@ -1,5 +1,9 @@
 Significant and compatibility-breaking changes.
 
+Version 0.3.4:
+	- Redisegned Generics-based instance generation (Data.Flat.Class) to reduce compilation time and improve encoding and decoding performance
+	- Fixed GHCJS Double bug and tested GHCJS with full test suite
+
 Version 0.3:
 	- Removed 'flatStrict' and 'unflatStrict' (use 'flat' and 'unflat' instead that also encode/decode strictly)
 	- `unflatWith` now takes a decoder for the unpadded value (previously it expected a padded decoder) and decodes the padded value

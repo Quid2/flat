@@ -18,7 +18,6 @@ import qualified Data.Text                      as T
 import           Data.Word
 import           Numeric.Natural
 
--- ?FIX: Should be Int64 or Word64
 -- |Number of bits
 type NumBits = Int
 

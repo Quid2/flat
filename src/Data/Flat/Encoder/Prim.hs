@@ -35,7 +35,7 @@ module Data.Flat.Encoder.Prim (
     eFalseF,
     varWordF,
     w7l,
-    -- Exported for testing only
+    -- * Exported for testing only
     eWord32BEF,eWord64BEF,eWord32E,eWord64E
     ) where
 
@@ -46,6 +46,7 @@ import qualified Data.ByteString.Lazy.Internal  as L
 import qualified Data.ByteString.Short.Internal as SBS
 import           Data.Char
 import           Data.Flat.Encoder.Types
+import           Data.Flat.Endian
 import           Data.Flat.Memory
 import           Data.Flat.Types
 import           Data.FloatCast
@@ -56,7 +57,6 @@ import qualified Data.Text.Encoding             as T
 import qualified Data.Text.Internal             as T
 import           Data.ZigZag
 import           Foreign
-import           System.Endian
 
 -- import Debug.Trace
 #include "MachDeps.h"
@@ -160,17 +160,6 @@ eWord32E conv t (S op w o) | o==0 = pokeW conv op t >> skipBytes op 4
 
 {-# INLINE eWord64E #-}
 eWord64E :: (Word64 -> Word64) -> Word64 -> Prim
--- #ifdef ghcjs_HOST_OS
--- eWord64E conv t (S op w o) | o==0 = pokeW (conv . (`rotateR` 32)) op t >> skipBytes op 8
---                            | otherwise = pokeW (conv . (`rotateR` 32)) op (asWord64 w `unsafeShiftL` 56 .|. t `unsafeShiftR` o) >> return (S (plusPtr op 8) (asWord8 t `unsafeShiftL` (8-o)) o)
-
--- -- eWord64E conv t (S op w o) | o==0 = pokeW conv op t >> skipBytes op 8
--- --                            | otherwise = pokeW conv op (asWord64 w `unsafeShiftL` 56 .|. t `unsafeShiftR` o) >> return (S (plusPtr op 8) (asWord8 t `unsafeShiftL` (8-o)) o)
--- #else
--- eWord64E conv t (S op w o) | o==0 = pokeW conv op t >> skipBytes op 8
---                            | otherwise = pokeW conv op (asWord64 w `unsafeShiftL` 56 .|. t `unsafeShiftR` o) >> return (S (plusPtr op 8) (asWord8 t `unsafeShiftL` (8-o)) o)
--- #endif
-
 eWord64E conv t (S op w o) | o==0 = poke64 conv op t >> skipBytes op 8
                            | otherwise = poke64 conv op (asWord64 w `unsafeShiftL` 56 .|. t `unsafeShiftR` o) >> return (S (plusPtr op 8) (asWord8 t `unsafeShiftL` (8-o)) o)
 
@@ -285,7 +274,7 @@ eBitsF 2 0 = eFalseF >=> eFalseF
 eBitsF 2 1 = eFalseF >=> eTrueF
 eBitsF 2 2 = eTrueF >=> eFalseF
 eBitsF 2 3 = eTrueF >=> eTrueF
-eBitsF n t = eBitsF_ n t 
+eBitsF n t = eBitsF_ n t
 
 {-
 eBits Example:
@@ -311,6 +300,7 @@ f=8-11=-3
 o''=3
 8-o''=5
 -}
+-- {-# NOINLINE eBitsF_ #-}
 eBitsF_ :: NumBits -> Word8 -> Prim
 eBitsF_ n t = \(S op w o) ->
   let o' = o + n  -- used bits
@@ -368,13 +358,6 @@ pokeW conv op t = poke (castPtr op) (conv t)
 {-# INLINE poke64 #-}
 poke64 :: (t -> Word64) -> Ptr a -> t -> IO ()
 poke64 conv op t = poke (castPtr op) (fix64 . conv $ t)
-
--- #ifdef ghcjs_HOST_OS
--- poke64 conv op t = poke (castPtr op) ((`rotateR` 32) . conv $ t)
--- -- poke64 conv op t = poke (castPtr op) (conv t)
--- #else
--- poke64 conv op t = poke (castPtr op) (conv t)
--- #endif
 
 {-# INLINE skipByte #-}
 skipByte :: Monad m => Ptr a -> m S

@@ -1,4 +1,6 @@
-{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE AllowAmbiguousTypes       #-}
+{-# LANGUAGE BangPatterns              #-}
+{-# LANGUAGE CPP                       #-}
 {-# LANGUAGE DataKinds                 #-}
 {-# LANGUAGE DefaultSignatures         #-}
 {-# LANGUAGE FlexibleContexts          #-}
@@ -11,8 +13,7 @@
 {-# LANGUAGE TypeFamilies              #-}
 {-# LANGUAGE TypeOperators             #-}
 {-# LANGUAGE TypeSynonymInstances      #-}
-{-# LANGUAGE UndecidableInstances   ,CPP   #-}
-
+{-# LANGUAGE UndecidableInstances      #-}
 
 -- |Generics-based generation of Flat instances
 module Data.Flat.Class
@@ -24,63 +25,115 @@ module Data.Flat.Class
   )
 where
 
+import           Data.Bits
 import           Data.Flat.Decoder
 import           Data.Flat.Encoder
+import           Data.Word
 import           GHC.Generics
 import           GHC.TypeLits
-import           Prelude                 hiding ( mempty )
--- import Data.Flat.Generic.Decode(genericDecode)
-import           Data.Word
-import           Data.Bits
+import           Prelude           hiding (mempty)
+
+-- External and Internal inlining
+#define INL 2
+-- Internal inlining
+-- #define INL 1
+-- No inlining
+-- #define INL 0
+
+#if INL == 1
+import           GHC.Exts          (inline)
+#endif
+
 -- import           Data.Proxy
--- import GHC.Magic(inline)
 
 -- $setup
 -- >>> {-# LANGUAGE DataKinds                 #-}
 -- >>> import           Data.Proxy
 
--- |Class of types that can be encoded/decoded
-class Flat a where
-
-    {-# INLINE encode #-}
-    encode :: a -> Encoding
-    -- default encode :: (Generic a, GEncode (Rep a)) => a -> Encoding
-    default encode :: (Generic a, GEnkode (Rep a)) => a -> Encoding
-    encode = genericEncode
-
-    {-# INLINE decode #-}
-    decode :: Get a
-    default decode :: (Generic a, GDecode (Rep a)) => Get a
-    decode = genericDecode
-
-    {-# INLINE size #-}
-    size :: a -> NumBits -> NumBits
-    default size :: (Generic a, GSize (Rep a)) => a -> NumBits -> NumBits
-    size = genericSize
-
-{-# INLINE genericSize #-}
-genericSize :: (GSize (Rep a), Generic a) => a -> NumBits -> NumBits
-genericSize !x !n = gsize n $ from x
--- genericSize = undefined
-
 -- |Calculate the maximum size in bits of the serialisation of the value
 getSize :: Flat a => a -> NumBits
 getSize a = size a 0
 
+-- |Class of types that can be encoded/decoded
+class Flat a where
+    encode :: a -> Encoding
+    default encode :: (Generic a, GEncode (Rep a)) => a -> Encoding
+    encode = gencode . from
 
-{-# INLINE genericDecode #-}
-genericDecode :: (GDecode (Rep b), Generic b) => Get b
-genericDecode = to `fmap` gget
--- genericDecode = undefined
+    decode :: Get a
+    default decode :: (Generic a, GDecode (Rep a)) => Get a
+    decode = to `fmap` gget
 
-{-# INLINE genericEncode #-}
--- genericEncode :: (GEncode (Rep a), Generic a) => a -> Encoding
--- genericEncode = gencode . from
+    size :: a -> NumBits -> NumBits
+    default size :: (Generic a, GSize (Rep a)) => a -> NumBits -> NumBits
+    size !x !n = gsize n $ from x
 
-genericEncode :: (GEnkode (Rep a), Generic a) => a -> Encoding
-genericEncode = genkode . from
--- genericEncode = undefined
+#if INL>=2
+    -- With these, generated code is optimised for specific data types (e.g.: Tree Bool will fuse the code of Tree and Bool)
+    -- This can improve performance very significantly (up to 10X) but also increases compilation times.
+    {-# INLINE size #-}
+    {-# INLINE decode #-}
+    {-# INLINE encode #-}
+#elif INL == 1
+#elif INL == 0
+    {-# NOINLINE size #-}
+    {-# NOINLINE decode #-}
+    {-# NOINLINE encode #-}
+#endif
 
+-- Generic Encoder
+class GEncode f where gencode :: f a -> Encoding
+
+instance {-# OVERLAPPABLE #-} GEncode f => GEncode (M1 i c f) where
+      gencode = gencode . unM1
+      {-# INLINE gencode #-}
+
+  -- Special case, single constructor datatype
+instance {-# OVERLAPPING #-} GEncode a => GEncode (D1 i (C1 c a)) where
+      gencode = gencode . unM1 . unM1
+      {-# INLINE gencode #-}
+
+  -- Type without constructors
+instance GEncode V1 where
+      gencode = unused
+      {-# INLINE gencode #-}
+
+  -- Constructor without arguments
+instance GEncode U1 where
+      gencode U1 = mempty
+      {-# INLINE gencode #-}
+
+instance Flat a => GEncode (K1 i a) where
+      {-# INLINE gencode #-}
+#if INL == 1
+      gencode x = inline encode (unK1 x)
+#else
+      gencode = encode . unK1
+#endif
+
+instance (GEncode a, GEncode b) => GEncode (a :*: b) where
+      --gencode (!x :*: (!y)) = gencode x <++> gencode y
+      gencode (x :*: y) = gencode x <> gencode y
+      {-# INLINE gencode #-}
+
+instance (NumConstructors (a :+: b) <= 512,GEncodeSum (a :+: b)) => GEncode (a :+: b) where
+-- instance (GEncodeSum (a :+: b)) => GEncode (a :+: b) where
+      gencode = gencodeSum 0 0
+      {-# INLINE gencode #-}
+
+-- Constructor Encoding
+class GEncodeSum f where
+  gencodeSum :: Word16 -> NumBits -> f a -> Encoding
+
+instance (GEncodeSum a, GEncodeSum b) => GEncodeSum (a :+: b) where
+  gencodeSum !code !numBits s = case s of
+                           L1 !x -> gencodeSum ((code `unsafeShiftL` 1)) (numBits+1) x
+                           R1 !x -> gencodeSum ((code `unsafeShiftL` 1) .|. 1) (numBits+1) x
+  {-# INLINE  gencodeSum #-}
+
+instance GEncode a => GEncodeSum (C1 c a) where
+  gencodeSum !code !numBits x = eBits16 numBits code <> gencode x
+  {-# INLINE  gencodeSum #-}
 
 -- Generic Decoding
 class GDecode f where
@@ -108,9 +161,12 @@ instance (GDecode a, GDecode b) => GDecode (a :*: b) where
 
 -- Constants, additional parameters, and rank-1 recursion
 instance Flat a => GDecode (K1 i a) where
+#if INL == 1
+  gget = K1 <$> inline decode
+#else
   gget = K1 <$> decode
+#endif
   {-# INLINE gget #-}
-
 
 
 -- Different valid decoding setups
@@ -141,16 +197,16 @@ instance Flat a => GDecode (K1 i a) where
 #define DEC_BOOL
 
 #ifdef DEC_BOOLG
-instance (GDecode a, GDecode b) => GDecode (a :+: b) 
+instance (GDecode a, GDecode b) => GDecode (a :+: b)
 #endif
 
 #ifdef DEC_BOOLC
 -- Special case for data types with two constructors
-instance {-# OVERLAPPING #-} (GDecode a,GDecode b) => GDecode (C1 m1 a :+: C1 m2 b) 
+instance {-# OVERLAPPING #-} (GDecode a,GDecode b) => GDecode (C1 m1 a :+: C1 m2 b)
 #endif
 
 #ifdef DEC_BOOL
-  where  
+  where
       gget = do
         -- error "DECODE2_C2"
         !tag <- dBool
@@ -160,49 +216,51 @@ instance {-# OVERLAPPING #-} (GDecode a,GDecode b) => GDecode (C1 m1 a :+: C1 m2
 #endif
 
 #ifdef DEC_CONS
--- -- Data types with any number of constructors (will silently fail for more than 2**16 constructors)    
--- Use a custom constructor decoding state
--- Slightly faster for types with many constructors
-instance {-# OVERLAPPABLE #-} (GDecodeSum (a :+: b),GDecode a, GDecode b) => GDecode (a :+: b) where
+-- | Data types with up to 512 constructors
+-- Uses a custom constructor decoding state
+-- instance {-# OVERLAPPABLE #-} (GDecodeSum (a :+: b),GDecode a, GDecode b) => GDecode (a :+: b) where
+instance {-# OVERLAPPABLE #-} (NumConstructors (a :+: b) <= 512, GDecodeSum (a :+: b),GDecode a, GDecode b) => GDecode (a :+: b) where
   gget = do
     cs <- consOpen
     getSum cs
   {-# INLINE gget #-}
-  
+
+-- Constructor Decoder
 class GDecodeSum f where
     getSum :: ConsState -> Get (f a)
 
 #ifdef DEC_CONS48
 
--- These significantly reduce instance compilation time 
+-- Decode constructors in groups of 2 or 3 bits
+-- Significantly reduce instance compilation time and slightly improve execution times
 instance {-# OVERLAPPING #-} (GDecodeSum n1,GDecodeSum n2,GDecodeSum n3,GDecodeSum n4) => GDecodeSum ((n1 :+: n2) :+: (n3 :+: n4)) -- where -- getSum = undefined
       where
           getSum cs = do
             -- error "DECODE4"
             let (cs',tag) = consBits cs 2
             case tag of
-              0 -> L1 <$> L1 <$> getSum cs'
-              1 -> L1 <$> R1 <$> getSum cs'
-              2 -> R1 <$> L1 <$> getSum cs'
-              _ -> R1 <$> R1 <$> getSum cs'
-          {-# INLINE getSum #-}  
-    
+              0 -> L1 . L1 <$> getSum cs'
+              1 -> L1 . R1 <$> getSum cs'
+              2 -> R1 . L1 <$> getSum cs'
+              _ -> R1 . R1 <$> getSum cs'
+          {-# INLINE getSum #-}
+
 instance {-# OVERLAPPING #-} (GDecodeSum n1,GDecodeSum n2,GDecodeSum n3,GDecodeSum n4,GDecodeSum n5,GDecodeSum n6,GDecodeSum n7,GDecodeSum n8) => GDecodeSum (((n1 :+: n2) :+: (n3 :+: n4)) :+: ((n5 :+: n6) :+: (n7 :+: n8))) -- where -- getSum cs = undefined
      where
       getSum cs = do
         --error "DECODE8"
         let (cs',tag) = consBits cs 3
         case tag of
-          0 -> L1 <$> L1 <$> L1 <$> getSum cs'
-          1 -> L1 <$> L1 <$> R1 <$> getSum cs'
-          2 -> L1 <$> R1 <$> L1 <$> getSum cs'
-          3 -> L1 <$> R1 <$> R1 <$> getSum cs'
-          4 -> R1 <$> L1 <$> L1 <$> getSum cs'
-          5 -> R1 <$> L1 <$> R1 <$> getSum cs'
-          6 -> R1 <$> R1 <$> L1 <$> getSum cs'
-          _ -> R1 <$> R1 <$> R1 <$> getSum cs'
-      {-# INLINE getSum #-}  
-    
+          0 -> L1 . L1 . L1 <$> getSum cs'
+          1 -> L1 . L1 . R1 <$> getSum cs'
+          2 -> L1 . R1 . L1 <$> getSum cs'
+          3 -> L1 . R1 . R1 <$> getSum cs'
+          4 -> R1 . L1 . L1 <$> getSum cs'
+          5 -> R1 . L1 . R1 <$> getSum cs'
+          6 -> R1 . R1 . L1 <$> getSum cs'
+          _ -> R1 . R1 . R1 <$> getSum cs'
+      {-# INLINE getSum #-}
+
 instance {-# OVERLAPPABLE #-} (GDecodeSum a, GDecodeSum b) => GDecodeSum (a :+: b) where
 #else
 instance (GDecodeSum a, GDecodeSum b) => GDecodeSum (a :+: b) where
@@ -215,7 +273,7 @@ instance (GDecodeSum a, GDecodeSum b) => GDecodeSum (a :+: b) where
 
 
 instance GDecode a => GDecodeSum (C1 c a) where
-    getSum (ConsState _ usedBits) = consClose usedBits >> gget   
+    getSum (ConsState _ usedBits) = consClose usedBits >> gget
     {-# INLINE getSum #-}
 #endif
 
@@ -230,7 +288,7 @@ instance {-# OVERLAPPING #-} (GDecode n1,GDecode n2,GDecode n3,GDecode n4) => GD
           1 -> L1 <$> R1 <$> gget
           2 -> R1 <$> L1 <$> gget
           _ -> R1 <$> R1 <$> gget
-      {-# INLINE gget #-}  
+      {-# INLINE gget #-}
 
 instance {-# OVERLAPPING #-} (GDecode n1,GDecode n2,GDecode n3,GDecode n4,GDecode n5,GDecode n6,GDecode n7,GDecode n8) => GDecode (((n1 :+: n2) :+: (n3 :+: n4)) :+: ((n5 :+: n6) :+: (n7 :+: n8))) -- where -- gget = undefined
  where
@@ -246,290 +304,10 @@ instance {-# OVERLAPPING #-} (GDecode n1,GDecode n2,GDecode n3,GDecode n4,GDecod
       5 -> R1 <$> L1 <$> R1 <$> gget
       6 -> R1 <$> R1 <$> L1 <$> gget
       _ -> R1 <$> R1 <$> R1 <$> gget
-  {-# INLINE gget #-}  
+  {-# INLINE gget #-}
 #endif
 
--- -- |Generic Encoder
--- class GEncode f where
---   gencode :: f t -> Encoding
-
--- -- Metadata (constructor name, etc)
--- instance {-# OVERLAPPABLE #-} GEncode a => GEncode (M1 i c a) where
---   gencode = gencode . unM1
---   {-# INLINE  gencode #-}
-
--- -- Special case, single constructor datatype
--- instance {-# OVERLAPPING #-} (GEncoders a) => GEncode (D1 i (C1 c a)) where
---   gencode !x = encodersS $ gencoders x id []
---   {-# INLINE  gencode #-}
-
--- -- Type without constructors
--- instance GEncode V1 where
---   gencode _ = unused
---   {-# INLINE  gencode #-}
-
--- -- Constructor without arguments
--- instance GEncode U1 where
---   gencode U1 = mempty
---   {-# INLINE  gencode #-}
-
--- -- Product: constructor with parameters
--- instance GEncode (a :*: b) where
---   gencode _ = unused
---   {-# INLINE gencode #-}
-
--- -- Constants, additional parameters, and rank-1 recursion
--- instance Flat a => GEncode (K1 i a) where
---   --gencode = inline encode . unK1
---   gencode = encode . unK1
---   {-# INLINE gencode #-}
-
--- -- Build constructor representation as single tag
--- instance (NumConstructors (a :+: b) <= 256, GEncodeSum 0 0 (a :+: b)) => GEncode (a :+: b) where
---   gencode x = gencodeSum x (Proxy :: Proxy 0) (Proxy :: Proxy 0)
---   {-# INLINE gencode #-}
-
-
--- class GEncoders f where
---   -- |Determine the list of encoders corresponding to a type
---   gencoders :: f t -> ([Encoding] -> [Encoding]) -> ([Encoding] -> [Encoding])
-
--- instance {-# OVERLAPPABLE #-} GEncoders a => GEncoders (M1 i c a) where
---     gencoders m !l = gencoders (unM1 m) l
---     {-# INLINE gencoders #-}
-
--- -- Special case, single constructor datatype
--- instance {-# OVERLAPPING #-} GEncoders a => GEncoders (D1 i (C1 c a)) where
---     gencoders x !l = gencoders (unM1 . unM1 $ x) l
---     {-# INLINE gencoders #-}
-
--- -- Type without constructors
--- instance GEncoders V1 where
---     gencoders _ _ = unused
-
--- -- Constructor without arguments
--- instance GEncoders U1 where
---     gencoders U1 !l = l
---     {-# INLINE gencoders #-}
-
--- -- Constants, additional parameters, and rank-1 recursion
--- instance Flat a => GEncoders (K1 i a) where
---   gencoders k !l = l . (gencode k :)
---   {-# INLINE gencoders #-}
-
--- -- Product: constructor with parameters
--- instance (GEncoders a, GEncoders b) => GEncoders (a :*: b) where
---   gencoders (x :*: y) !l = gencoders y (gencoders x l)
---   {-# INLINE gencoders #-}
-
-class GEnkode f where genkode :: f a -> Encoding
-
-instance {-# OVERLAPPABLE #-} GEnkode f => GEnkode (M1 i c f) where
-      genkode = genkode . unM1
-      {-# INLINE genkode #-}
-
-  -- Special case, single constructor datatype
-instance {-# OVERLAPPING #-} GEnkode a => GEnkode (D1 i (C1 c a)) where
-      genkode = genkode . unM1 . unM1
-      {-# INLINE genkode #-}
-
-  -- Type without constructors
-instance GEnkode V1 where
-      genkode = unused
-      {-# INLINE genkode #-}
-
-  -- Constructor without arguments
-instance GEnkode U1 where
-      genkode U1 = mempty
-      {-# INLINE genkode #-}
-
-instance Flat a => GEnkode (K1 i a) where
-      genkode = encode . unK1
-      {-# INLINE genkode #-}
-
-instance (GEnkode a, GEnkode b) => GEnkode (a :*: b) where
-      --genkode (!x :*: (!y)) = genkode x <++> genkode y
-      genkode (x :*: y) = genkode x <> genkode y
-      {-# INLINE genkode #-}
-
--- instance (NumConstructors (a :+: b) <= 256, GEnkodeSum (a :+: b)) => GEnkode (a :+: b) where
---       --      genkode x = genkodeSum x (Proxy :: Proxy 0) (Proxy :: Proxy 0)
---       -- genkode x = genkodeSum x 0 0
---       {-# INLINE genkode #-}
-
-instance GEnkodeSum (a :+: b) => GEnkode (a :+: b) where
-      genkode x = genkodeSum 0 0 x 
-      {-# INLINE genkode #-}
-
--- instance (GEnkodeSumBit (a :+: b)) => GEnkode (a :+: b) where
---       genkode x = genkodeSumBit x
---       {-# INLINE genkode #-}
-
--- class GEnkodeSum f where
---   genkodeSum :: Word8 -> NumBits -> f a -> Encoding
-
--- instance (GEnkodeSum a, GEnkodeSum b) => GEnkodeSum (a :+: b) where
---   genkodeSum !code !numBits s = case s of
---                            L1 !x -> genkodeSum ((code `unsafeShiftL` 1)) (numBits+1) x
---                            R1 !x -> genkodeSum ((code `unsafeShiftL` 1) .|. 1) (numBits+1) x
---   {-# INLINE  genkodeSum #-}
-
--- instance GEnkode a => GEnkodeSum (C1 c a) where
---   genkodeSum !code !numBits x = eBits numBits code <> genkode x
---   {-# INLINE  genkodeSum #-}
-
--- Encode up to 2^16 constructors
-class GEnkodeSum f where
-  genkodeSum :: Word16 -> NumBits -> f a -> Encoding
-
-instance (GEnkodeSum a, GEnkodeSum b) => GEnkodeSum (a :+: b) where
-  genkodeSum !code !numBits s = case s of
-                           L1 !x -> genkodeSum ((code `unsafeShiftL` 1)) (numBits+1) x
-                           R1 !x -> genkodeSum ((code `unsafeShiftL` 1) .|. 1) (numBits+1) x
-  {-# INLINE  genkodeSum #-}
-
-instance GEnkode a => GEnkodeSum (C1 c a) where
-  genkodeSum !code !numBits x = eBits16 numBits code <> genkode x
-  {-# INLINE  genkodeSum #-}
-
-class GEnkodeSumBit f where
-  genkodeSumBit :: f a -> Encoding
-
-instance (GEnkodeSumBit a, GEnkodeSumBit b) => GEnkodeSumBit (a :+: b) where
-  genkodeSumBit s = case s of
-                           L1 !x -> eFalse <> genkodeSumBit x
-                           R1 !x -> eTrue <> genkodeSumBit x
-  {-# INLINE  genkodeSumBit #-}
-
-instance GEnkode a => GEnkodeSumBit (C1 c a) where
-  genkodeSumBit x = genkode x
-  {-# INLINE  genkodeSumBit #-}
-
-
--- |Encode sum (VERY SLOW AT COMPILATION TIME)
--- class (KnownNat code, KnownNat numBits) => GEnkodeSum (numBits:: Nat) (code :: Nat) (f :: * -> *) where
---    genkodeSum :: f a -> Proxy numBits -> Proxy code -> Encoding
-
--- instance (GEnkodeSum (n+1) (m*2) a,GEnkodeSum (n+1) (m*2+1) b, KnownNat n,KnownNat m) => GEnkodeSum n m (a :+: b) where
---     {-# INLINE genkodeSum #-}
---     genkodeSum !x _ _ = case x of
---                          L1 l -> genkodeSum l (Proxy :: Proxy (n+1)) (Proxy :: Proxy (m*2))
---                          R1 r -> genkodeSum r (Proxy :: Proxy (n+1)) (Proxy :: Proxy (m*2+1))
-
-
--- instance (GEnkode a, KnownNat n,KnownNat m) => GEnkodeSum n m (C1 c a) where
---     {-# INLINE genkodeSum #-}
---     genkodeSum !x _ _  = eBits numBits code <> genkode x
---        where
---         numBits = fromInteger (natVal (Proxy :: Proxy n))
---         code = fromInteger (natVal (Proxy :: Proxy m))
-
-
-
--- class GEnkodeSum f where
---           genkodeSum :: f a -> Word8 -> NumBits  -> Encoding
-
--- instance (GEnkodeSum a, GEnkodeSum b) => GEnkodeSum (a :+: b) where
---           genkodeSum s !code !numBits = case s of
---                                    L1 !x -> genkodeSum x ((code `unsafeShiftL` 1)) (numBits+1)
---                                    R1 !x -> genkodeSum x ((code `unsafeShiftL` 1) .|. 1) (numBits+1)
---           {-# INLINE  genkodeSum #-}
-
--- instance GEnkode a => GEnkodeSum (C1 c a) where
---         genkodeSum x !code !numBits = eBits numBits code <> genkode x
---         {-# INLINE  genkodeSum #-}        
-
-
-
--- |Encode sum
--- class (KnownNat code, KnownNat numBits) =>
---       GEncodeSum (numBits:: Nat) (code :: Nat) (f :: * -> *) where
---   gencodeSum :: f a -> Proxy numBits -> Proxy code -> Encoding
-
--- instance (GEncodeSum (n+1) (m*2) a,GEncodeSum (n+1) (m*2+1) b, KnownNat n,KnownNat m)
---          => GEncodeSum n m (a :+: b) where
---     gencodeSum !x _ _ = case x of
---                          L1 l -> gencodeSum l (Proxy :: Proxy (n+1)) (Proxy :: Proxy (m*2))
---                          R1 r -> gencodeSum r (Proxy :: Proxy (n+1)) (Proxy :: Proxy (m*2+1))
---     {-# INLINE gencodeSum #-}
-
--- instance (GEncoders a, KnownNat n,KnownNat m) => GEncodeSum n m (C1 c a) where
---     {-# INLINE gencodeSum #-}
---     gencodeSum !x _ _  = encodersS $ gencoders x (eBits numBits code:) []
---       where
---         numBits = fromInteger (natVal (Proxy :: Proxy n))
---         code = fromInteger (natVal (Proxy :: Proxy m))
-
-
-{- |Calculate number of constructors
-
->>> natVal (Proxy :: Proxy (NumConstructors (Rep Bool)))
-4
-
-data E2B = E2_1B Bool | E2_2B  deriving (Show,Generic,Eq,NFData)
-
-
--}
-
--- n1 = natVal (Proxy :: Proxy  1)
--- n2 = natVal (Proxy :: Proxy (NumConstructors (Rep Bool)))
-
-type family NumConstructors (a :: * -> *) :: Nat where
-    NumConstructors (C1 c a) = 1
-    NumConstructors (x :+: y) = NumConstructors x + NumConstructors y
-
--- type family ConsSize (a :: * -> *) :: Nat where
---       ConsSize (C1 c a) = 0
---       ConsSize (x :+: y) = 1 + Max (ConsSize x) (ConsSize y)
-
--- type family Max (n :: Nat) (m :: Nat) :: Nat where
---    Max n m  = If (n <=? m) m n
-
--- type family If c (t::Nat) (e::Nat) where
---     If 'True  t e = t
---     If 'False t e = e
-
--- Proxy :: Proxy (ConsSize ). from 
-
--- class GConsSize (f :: * -> *) where gConsSize :: f a -> NumBits
-
--- instance GConsSize V1 where
---   gConsSize _ = 0
---   {-# INLINE gConsSize #-}
-
--- instance  GConsSize (C1 c a)  where gConsSize _ = 0
-
---instance  GConsSize f  where gConsSize _ =  fromInteger (natVal (Proxy :: Proxy 3)) -- (ConsSize f)))
-
--- instance  KnownNat (ConsSize f) => GConsSize f  where gConsSize _ =  fromInteger (natVal (Proxy :: (ConsSize f)))
-
--- instance (ConsSize f a) => GConsSize (C1 c a)  where gConsSize = 0 -- fromInteger (natVal (Proxy :: Proxy (ConsSize a)))
-
--- instance GConsSize f where gConsSize m = fromInteger (natVal (Proxy :: Proxy (ConsSize m)))
-
-
--- -- |Calculate size in bits of constructor
--- class KnownNat n => GConsSize (n :: Nat) (f :: * -> *) where gConsSize :: Proxy n -> NumBits
-
--- instance (gConsSize (n + 1) a, GConsSize (n + 1) b, KnownNat n)
---          => GConsSize n (a :+: b) where
---     gConsSize !n _ = case x of
---                         L1 !l -> gConsSize n l (Proxy :: Proxy (n+1))
---                         R1 !r -> gConsSize n r (Proxy :: Proxy (n+1))
---     {-# INLINE gConsSize #-}
-
--- instance (GSize a, KnownNat n) => GConsSize n (C1 c a) where
---     {-# INLINE gConsSize #-}
---     gConsSize !n !x _ = gsize (constructorSize + n) x
---       where
---         constructorSize :: NumBits
-        -- constructorSize = fromInteger (natVal (Proxy :: Proxy n))
-
-
-
-
-
--- |Calculate the maximum number of bits required for the serialisation of a value
+-- |Calculate the number of bits required for the serialisation of a value
 -- Implemented as a function that adds the maximum size to a running total
 class GSize f where gsize :: NumBits -> f a -> NumBits
 
@@ -548,55 +326,127 @@ instance GSize U1 where
     gsize !n _ = n
     {-# INLINE gsize #-}
 
--- Skip metadata    
+-- Skip metadata
 instance Flat a => GSize (K1 i a) where
-    gsize !n x = size (unK1 x) n
-    {-# INLINE gsize #-}
+#if INL == 1
+  gsize !n x = inline size (unK1 x) n
+#else
+  gsize !n x = size (unK1 x) n
+#endif
+  {-# INLINE gsize #-}
 
 instance (GSize a, GSize b) => GSize (a :*: b) where
     gsize !n (x :*: y) = gsize (gsize n x) y
     {-# INLINE gsize #-}
 
--- instance (NumConstructors (a :+: b) <= 256, GSizeSum 0 (a :+: b)) => GSize (a :+: b) where
--- instance (GSizeSum 0 (a :+: b)) => GSize (a :+: b) where 
---    gsize !n x = gsizeSum n x (Proxy :: Proxy 0) 
---    {-# INLINE gsize #-}
+-- Different size implementations
+#define SIZ_ADD
+-- #define SIZ_NUM
 
+-- #define SIZ_MAX
+-- #define SIZ_MAX_VAL
+-- #define SIZ_MAX_PROX
+
+#ifdef SIZ_ADD
 instance (GSizeSum (a :+: b)) => GSize (a :+: b) where
-  gsize !n x = gsizeSum n x
+  gsize !n = gsizeSum n
+#endif
+
+#ifdef SIZ_NUM
+instance (GSizeSum (a :+: b)) => GSize (a :+: b) where
+  gsize !n x = n + gsizeSum 0 x
+#endif
+
+#ifdef SIZ_MAX
+instance (GSizeNxt (a :+: b),GSizeMax (a:+:b)) => GSize (a :+: b) where
+  gsize !n x = gsizeNxt (gsizeMax x + n) x
   {-# INLINE gsize #-}
 
--- |Calculate size in bits of constructor
--- class KnownNat n => GSizeSum (n :: Nat) (f :: * -> *) where gsizeSum :: NumBits -> f a -> Proxy n -> NumBits
+-- Calculate the maximum size of a class constructor (that might be one bit more than the size of some of its constructors)
+#ifdef SIZ_MAX_VAL
+class GSizeMax (f :: * -> *) where gsizeMax :: f a ->  NumBits
 
--- instance (GSizeSum (n + 1) a, GSizeSum (n + 1) b, KnownNat n)
---          => GSizeSum n (a :+: b) where
---     gsizeSum !n x _ = case x of
---                         L1 !l -> gsizeSum n l (Proxy :: Proxy (n+1))
---                         R1 !r -> gsizeSum n r (Proxy :: Proxy (n+1))
---     {-# INLINE gsizeSum #-}
+instance (GSizeMax f, GSizeMax g) => GSizeMax (f :+: g) where
+    gsizeMax _ = 1 + max (gsizeMax (undefined::f a )) (gsizeMax (undefined::g a))
+    {-# INLINE gsizeMax #-}
 
--- instance (GSize a, KnownNat n) => GSizeSum n (C1 c a) where
---     {-# INLINE gsizeSum #-}
---     gsizeSum !n !x _ = gsize (constructorSize + n) x
+instance (GSize a) => GSizeMax (C1 c a) where
+    {-# INLINE gsizeMax #-}
+    gsizeMax _ = 0
+#endif
+
+#ifdef SIZ_MAX_PROX
+-- instance (GSizeNxt (a :+: b),GSizeMax (a:+:b)) => GSize (a :+: b) where
+--   gsize !n x = gsizeNxt (gsizeMax x + n) x
+--   {-# INLINE gsize #-}
+
+
+-- -- |Calculate size in bits of constructor
+-- class KnownNat n => GSizeMax (n :: Nat) (f :: * -> *) where gsizeMax :: f a -> Proxy n -> NumBits
+
+-- instance (GSizeMax (n + 1) a, GSizeMax (n + 1) b, KnownNat n) => GSizeMax n (a :+: b) where
+--     gsizeMax !n x _ = case x of
+--                         L1 !l -> gsizeMax n l (Proxy :: Proxy (n+1))
+--                         R1 !r -> gsizeMax n r (Proxy :: Proxy (n+1))
+--     {-# INLINE gsizeMax #-}
+
+-- instance (GSize a, KnownNat n) => GSizeMax n (C1 c a) where
+--     {-# INLINE gsizeMax #-}
+--     gsizeMax !n !x _ = gsize (constructorSize + n) x
 --       where
 --         constructorSize :: NumBits
 --         constructorSize = fromInteger (natVal (Proxy :: Proxy n))
 
+-- class KnownNat (ConsSize f) => GSizeMax (f :: * -> *) where
+--   gsizeMax :: f a ->  NumBits
+--   gsizeMax _ = fromInteger (natVal (Proxy :: Proxy (ConsSize f)))
+
+type family ConsSize (a :: * -> *) :: Nat where
+      ConsSize (C1 c a) = 0
+      ConsSize (x :+: y) = 1 + Max (ConsSize x) (ConsSize y)
+
+type family Max (n :: Nat) (m :: Nat) :: Nat where
+   Max n m  = If (n <=? m) m n
+
+type family If c (t::Nat) (e::Nat) where
+    If 'True  t e = t
+    If 'False t e = e
+#endif
+
+-- Calculate the size of a value, not taking in account its constructor
+class GSizeNxt (f :: * -> *) where gsizeNxt :: NumBits -> f a ->  NumBits
+
+instance (GSizeNxt a, GSizeNxt b) => GSizeNxt (a :+: b) where
+    gsizeNxt n x = case x of
+                        L1 !l-> gsizeNxt n l
+                        R1 !r-> gsizeNxt n r
+    {-# INLINE gsizeNxt #-}
+
+instance (GSize a) => GSizeNxt (C1 c a) where
+    {-# INLINE gsizeNxt #-}
+    gsizeNxt !n !x = gsize n x
+#endif
+
 -- Calculate size in bits of constructor
--- vs proxy implementatio: similar compilation time but much better run times (at least for Tree N, -70%)
+-- vs proxy implementation: similar compilation time but much better run times (at least for Tree N, -70%)
 class GSizeSum (f :: * -> *) where gsizeSum :: NumBits -> f a ->  NumBits
 
 instance (GSizeSum a, GSizeSum b)
          => GSizeSum (a :+: b) where
     gsizeSum !n x = case x of
-                        L1 !l -> gsizeSum (n+1) l
-                        R1 !r -> gsizeSum (n+1) r
+                        L1 !l-> gsizeSum (n+1) l
+                        R1 !r-> gsizeSum (n+1) r
     {-# INLINE gsizeSum #-}
 
 instance (GSize a) => GSizeSum (C1 c a) where
     {-# INLINE gsizeSum #-}
     gsizeSum !n !x = gsize n x
+
+
+-- |Calculate number of constructors
+type family NumConstructors (a :: * -> *) :: Nat where
+  NumConstructors (C1 c a) = 1
+  NumConstructors (x :+: y) = NumConstructors x + NumConstructors y
 
 
 unused :: forall a . a

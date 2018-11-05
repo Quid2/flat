@@ -14,7 +14,6 @@ module Data.Flat.Decoder.Types (
     notEnoughSpace,
     tooMuchSpace,
     badEncoding,
-    -- Env
     ) where
 
 import           Control.DeepSeq
@@ -62,6 +61,7 @@ newtype Get a = Get {runGet ::
                         -> IO (GetResult a)
                     } -- deriving (Functor)
 
+-- Seems to give better performance than the derived version                    
 instance Functor Get where
     fmap f g = Get $ \end s -> do
         GetResult s' a <- runGet g end s

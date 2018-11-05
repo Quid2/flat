@@ -6,6 +6,9 @@ import           Data.List
 import           Control.DeepSeq
 -- import Data.Proxy
 
+data S3 = S_1 | S_2 Bool | S_3 Char deriving (Show,Generic,Eq,NFData)
+
+
 g :: (Num a, Enum a, Show a) => a -> String
 g n =
     let dt = "E" ++ show n
@@ -16,12 +19,10 @@ g n =
             , intercalate " | " $ map ((\n -> dt ++ "_" ++ n) . show) [1 .. n]
             , "deriving (Show,Generic,Eq,NFData,Enum,Bounded)"
             ]
-
+            
 data E1 = E1 deriving (Show,Generic,Eq,NFData,Enum,Bounded)
 
 data E2 = E2_1 | E2_2 deriving (Show,Generic,Eq,NFData,Enum,Bounded)
-
-data E2B = E2_1B Bool | E2_2B Char deriving (Show,Generic,Eq,NFData)
 
 data E3 = E3_1 | E3_2 | E3_3 deriving (Show,Generic,Eq,NFData,Enum,Bounded)
 

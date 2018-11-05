@@ -41,3 +41,4 @@ unflatRawWith dec = strictDecoder dec . toByteString
 -- |Encode unpadded value
 flatRaw :: (Flat a, AsByteString b) => a -> b
 flatRaw a = fromByteString $ E.strictEncoder (getSize a) (encode a)
+

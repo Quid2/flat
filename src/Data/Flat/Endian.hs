@@ -1,5 +1,7 @@
 {-# LANGUAGE CPP #-}
-module System.Endian
+-- | Endian utilities
+-- Exported for testing purposes, but not meant to be used outside this package.
+module Data.Flat.Endian
     (
     toBE32
     , toBE64
@@ -17,7 +19,7 @@ import Data.Bits
 #endif
 
 isBigEndian :: Bool
-isBigEndian = 
+isBigEndian =
 #ifdef WORDS_BIGENDIAN
     True
 #else
@@ -48,6 +50,7 @@ toBE16 = id
 toBE16 = byteSwap16
 #endif
 
+-- | Fix issue with `ghcjs` (different order of 32 bit halves of 64 values with respect to `ghc`)
 fix64 :: Word64 -> Word64
 #ifdef ghcjs_HOST_OS
 fix64 = (`rotateR` 32)
