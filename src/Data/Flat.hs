@@ -1,7 +1,6 @@
 module Data.Flat (
     -- |Check the <https://github.com/Quid2/flat tutorial and github repo>.
     module Data.Flat.Class,
-    module Data.Flat.Decoder,
     module Data.Flat.Filler,
     module Data.Flat.Instances,
     module Data.Flat.Run,
