@@ -82,7 +82,7 @@ tests = testGroup "Tests" [
 
   ,testEncDec
 
-  testFlat
+  ,testFlat
  ]
 
 testPrimitives = testGroup "conversion/memory primitives" [
