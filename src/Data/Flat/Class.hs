@@ -219,7 +219,7 @@ instance {-# OVERLAPPING #-} (GDecode a,GDecode b) => GDecode (C1 m1 a :+: C1 m2
 -- | Data types with up to 512 constructors
 -- Uses a custom constructor decoding state
 -- instance {-# OVERLAPPABLE #-} (GDecodeSum (a :+: b),GDecode a, GDecode b) => GDecode (a :+: b) where
-instance {-# OVERLAPPABLE #-} (NumConstructors (a :+: b) <= 512, GDecodeSum (a :+: b),GDecode a, GDecode b) => GDecode (a :+: b) where
+instance {-# OVERLAPPABLE #-} (NumConstructors (a :+: b) <= 512, GDecodeSum (a :+: b)) => GDecode (a :+: b) where
   gget = do
     cs <- consOpen
     getSum cs
