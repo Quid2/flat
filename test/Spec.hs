@@ -94,7 +94,9 @@ testPrimitives = testGroup "conversion/memory primitives" [
 testEncDec = testGroup "encode/decode primitives" [
    testEncodingPrim
   ,testDecodingPrim
-  --,testDecBits
+#ifdef TEST_DECBITS  
+  ,testDecBits
+#endif  
   ]
 
 testFlat = testGroup "flat/unflat" [
