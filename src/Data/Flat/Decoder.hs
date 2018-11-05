@@ -42,6 +42,6 @@ module Data.Flat.Decoder (
     ConsState(..),consOpen,consClose,consBool,consBits
     ) where
 
-import Data.Flat.Decoder.Prim
-import Data.Flat.Decoder.Strict
-import Data.Flat.Decoder.Types
+import           Data.Flat.Decoder.Prim
+import           Data.Flat.Decoder.Strict
+import           Data.Flat.Decoder.Types

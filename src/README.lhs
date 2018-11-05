@@ -133,7 +133,7 @@ Get the latest stable version from [hackage](https://hackage.haskell.org/package
 
 ### Known Bugs and Infelicities
 
-* Longish compilation times
+#### Longish compilation times
 
 'flat` relies more than other serialisation libraries on extensive inlining for its good performance, this unfortunately leads to longer compilation times. 
 
@@ -141,11 +141,11 @@ If you have many data types or very large ones this might become an issue.
 
 A couple of good practices that will eliminate or mitigate this problem are:
 
-** During development, turn optimisations off (`stack --fast` or `-O0` in the cabal file).
+* During development, turn optimisations off (`stack --fast` or `-O0` in the cabal file).
 
-** Keep your serialisation code in a separate module(s).
+* Keep your serialisation code in a separate module(s).
 
-* Data types with more than 512 constructors are currently unsupported
+#### Data types with more than 512 constructors are currently unsupported
 
 See also the [full list of open issues](https://github.com/Quid2/flat/issues).
 
