@@ -119,7 +119,7 @@ test-suite spec
 --   HS-Source-Dirs:     test
 
 benchmark sbench
-    main-is: Simple.hs
+    main-is: Mini.hs
     type: exitcode-stdio-1.0
     default-language:   Haskell2010
     build-depends:
