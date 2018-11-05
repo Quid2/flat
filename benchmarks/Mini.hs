@@ -11,6 +11,7 @@ import           Criterion.Types
 import qualified Data.ByteString    as B
 import           Data.Flat
 import           Report
+import           System.Directory
 import           System.FilePath
 import           System.Process     (callCommand)
 import           Test.Data.Flat
@@ -70,6 +71,7 @@ tmpDir = "/tmp"
 
 main
  = do
+  createDirectoryIfMissing True workDir
   mainBench_ (reportsFile workDir)
   -- deleteMeasures workDir
   ms <- updateMeasures_ workDir
