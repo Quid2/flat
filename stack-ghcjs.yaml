@@ -51,6 +51,6 @@ compiler-check: match-exact
 setup-info:
   ghcjs:
     source:
-      ghcjs-0.2.1.9008011_ghc-8.0.2:
+      ghcjs-0.2.1.9009021_ghc-8.0.2:
         url: https://github.com/matchwood/ghcjs-stack-dist/raw/master/ghcjs-0.2.1.9009021.tar.gz
         sha1: b1740c3c99e5039ac306702894cd6e58283f4d31           
