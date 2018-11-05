@@ -90,8 +90,7 @@ test-suite spec
                 -- >=0.9
                 , containers
                 , deepseq == 1.4.*
-                , QuickCheck 
-                -->= 2.10
+                , QuickCheck >= 2.10
                 , text
                 , bytestring
                 , array
