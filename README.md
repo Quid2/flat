@@ -146,7 +146,7 @@ NOTE: A native [TypeScript/JavaScript version](https://github.com/Quid2/ts) of `
 
 #### [ETA](https://eta-lang.org/)
 
-It builds (with etlas 1.5.0.0 and eta eta-0.8.6b2 under macOS Sierra) and seems to be working, though the full test suite could not be run due to Eta's issues compiling some of the test suite dependencies.
+It builds (with etlas 1.5.0.0 and eta eta-0.8.6b2) but currently fails the test suite.
 
 ### Installation
 
