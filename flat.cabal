@@ -1,5 +1,5 @@
 name: flat
-version: 0.3.3
+version: 0.3.4
 synopsis: Principled and efficient bit-oriented binary serialization.
 description: Principled and efficient bit-oriented binary serialization, check the <http://github.com/Quid2/flat online tutorial>.
 homepage: http://quid2.org
@@ -11,7 +11,6 @@ maintainer:          tittoassini@gmail.com
 copyright:           Copyright: (c) 2016-2018 Pasqualino `Titto` Assini
 cabal-version: >=1.10
 build-type: Simple
--- The library (but not its tests) compiles with ETA >= 0.7.2 (see https://eta-lang.org/) 
 Tested-With: GHC == 7.10.3 GHC == 8.0.2 GHC == 8.2.2 GHC == 8.4.4 GHC == 8.6.1
 
 extra-source-files:

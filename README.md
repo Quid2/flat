@@ -142,7 +142,7 @@ If you use a different version of `ghcjs`, you might want to run the test suite 
 
 NOTE: Versions prior to 0.33 encode `Double` values incorrectly when they are not aligned with a byte boundary.
 
-NOTE: A [native TypeScript/JavaScript version](https://github.com/Quid2/ts) of `flat` is under development.
+NOTE: A native [TypeScript/JavaScript version](https://github.com/Quid2/ts) of `flat` is under development.
 
 #### [ETA](https://eta-lang.org/)
 
