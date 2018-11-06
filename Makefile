@@ -1,3 +1,5 @@
+# For internal testing only
+
 dev: 
 	stack test :spec --file-watch --fast
 
@@ -25,6 +27,8 @@ tspeed:
 tst: 
 	/usr/bin/time -l stack test :spec
 
+jtst:
+	stack test :spec --fast
 
 rspeed: 
 	stack bench :sbench
@@ -34,9 +38,16 @@ bench:
 	stack bench :sbench  --file-watch
 
 jstest:
-	stack test --fast --file-watch --stack-yaml=stack-ghcjs.yaml
+	stack clean;stack test --fast --file-watch --stack-yaml=stack-ghcjs.yaml  --ghc-options "-UENUM_LARGE -UTEST_DECBITS"
 
-docs: 
+jsbench:
+	stack bench :sbench --stack-yaml=stack-ghcjs.yaml
+
+jsprof:
+	node --prof /Users/titto/workspace/flat/.stack-work/dist/x86_64-osx/Cabal-1.24.2.0_ghcjs/build/spec/spec
+	node --prof-process isolate-0x102801c00-v8.log > processed.txt
+
+docs:
 	stack haddock --no-haddock-deps --open
 
 eta:

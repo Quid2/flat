@@ -2,13 +2,13 @@ name: flat
 version: 0.3.3
 synopsis: Principled and efficient bit-oriented binary serialization.
 description: Principled and efficient bit-oriented binary serialization, check the <http://github.com/Quid2/flat online tutorial>.
-homepage: http://github.com/Quid2/flat
+homepage: http://quid2.org
 category: Data,Parsing,Serialization
 license:             BSD3
 license-file:        LICENSE
 author:              Pasqualino `Titto` Assini
 maintainer:          tittoassini@gmail.com
-copyright:           Copyright: (c) 2016 Pasqualino `Titto` Assini
+copyright:           Copyright: (c) 2016-2018 Pasqualino `Titto` Assini
 cabal-version: >=1.10
 build-type: Simple
 -- The library (but not its tests) compiles with ETA >= 0.7.2 (see https://eta-lang.org/) 
@@ -98,7 +98,11 @@ test-suite spec
 
     default-language: Haskell2010
     hs-source-dirs: test
-    cpp-options: -DLIST_BIT -DENUM_LARGE -DTEST_DECBITS
+    cpp-options: -DLIST_BIT 
+    -- Add large data types test
+    -- cpp-options: -DENUM_LARGE
+    -- Add low level decoding test  
+    -- cpp-options: -DTEST_DECBITS
     other-modules:
         Test.Data
         Test.Data2
@@ -110,7 +114,7 @@ test-suite spec
         Test.Data2.Flat
         Test.Data.Values
 
--- Tests embedded in haddock docs (won't compile with ghcjs)
+-- Tests embedded in code documentation (won't compile with ghcjs)
 -- test-suite docs
 --   default-language:   Haskell2010
 --   type:               exitcode-stdio-1.0
@@ -118,19 +122,20 @@ test-suite spec
 --   build-depends:      base, doctest>=0.11.2,filemanip>=0.3.6.3
 --   HS-Source-Dirs:     test
 
-benchmark sbench
-    main-is: Mini.hs
-    type: exitcode-stdio-1.0
-    default-language:   Haskell2010
-    build-depends:
-        base
-        , deepseq
-        ,criterion
-        ,bytestring,text,containers,process,filepath,statistics,directory
-        -- ,timeit
-        ,flat
-    hs-source-dirs: benchmarks test
-    ghc-options: -O2 -dumpdir /tmp/dump -ddump-to-file -dsuppress-all -ddump-simpl -fprint-potential-instances
-    -- cpp-options: -DENUM_LARGE
-    other-modules:
-        Test.E,Test.Data,Test.Data.Flat,Test.Data.Values,Test.Data2,Test.Data2.Flat,Test.E.Flat,Report
+-- Simple benchmark (won't compile with ghcjs)
+-- benchmark sbench
+--     main-is: Mini.hs
+--     type: exitcode-stdio-1.0
+--     default-language:   Haskell2010
+--     build-depends:
+--         base
+--         , deepseq
+--         ,criterion
+--         ,bytestring,text,containers,process,filepath,statistics,directory
+--         -- ,timeit
+--         ,flat
+--     hs-source-dirs: benchmarks test
+--     ghc-options: -O2 -dumpdir /tmp/dump -ddump-to-file -dsuppress-all -ddump-simpl -fprint-potential-instances
+--     -- cpp-options: -DENUM_LARGE
+--     other-modules:
+--         Test.E,Test.Data,Test.Data.Flat,Test.Data.Values,Test.Data2,Test.Data2.Flat,Test.E.Flat,Report

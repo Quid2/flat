@@ -1,37 +1,15 @@
-packages:
-- '.'
-
-# - location: ..
-#   extra-dep: true
-
-# - location:
-#      git: https://github.com/Quid2/flat
-#      commit: ea28b1bf57fe1d45edcdc90bb2dc399eea887339
-#   extra-dep: true
-
-extra-deps:
-- happy-1.19.5 # required to avoid a stack bug
-#- QuickCheck-2.12.6.1@sha256:95b4e3b01033bf7d2ad21d0085266dba378477ac88e3d11ff238fc9db2575e6d
-- QuickCheck-2.11.3@sha256:e4c56f52532c993fc4460aeac7a2543dc03a68fba36eff420f3294d4d2622416
-- tasty-1.1.0.4@sha256:1310ceed449b3227614b329a1672a2c5bb046cb49e281996523567b3b0ad9ecc
-- tasty-quickcheck-0.10@sha256:9ddbacf1504bbbc4b99ab447d26651ad8454b69ceced3486e4623dccb89fb3d9
-- optparse-applicative-0.14.3.0@sha256:b6b56a922d10911a2824b965750ddc7794de746e347afe67f1a84d05168368dc
-- wcwidth-0.0.2@sha256:77531eb6683c505c22ab3fa11bbc43d3ce1e7dac21401d4d5a19677d348bb5f3
-
-flags:
-   tasty:
-    clock: false
+# GHCJS version used for testing
 
 # Requires cabal 1.24.2.0 to build correctly
-# resolver: lts-7.19
-# compiler: ghcjs-0.2.1.9007019_ghc-8.0.1
-# compiler-check: match-exact
-# setup-info:
-#   ghcjs:
-#     source:
-#       ghcjs-0.2.1.9007019_ghc-8.0.1:
-#            url: http://ghcjs.tolysz.org/ghc-8.0-2017-02-05-lts-7.19-9007019.tar.gz
-#            sha1: d2cfc25f9cda32a25a87d9af68891b2186ee52f9
+resolver: lts-7.19
+compiler: ghcjs-0.2.1.9007019_ghc-8.0.1
+compiler-check: match-exact
+setup-info:
+  ghcjs:
+    source:
+      ghcjs-0.2.1.9007019_ghc-8.0.1:
+           url: http://ghcjs.tolysz.org/ghc-8.0-2017-02-05-lts-7.19-9007019.tar.gz
+           sha1: d2cfc25f9cda32a25a87d9af68891b2186ee52f9
 
 
 # Requires cabal 1.24.2.0 to build correctly
@@ -45,12 +23,37 @@ flags:
 #         url: https://github.com/matchwood/ghcjs-stack-dist/raw/master/ghcjs-0.2.1.9008011.tar.gz
 #         sha1: a72a5181124baf64bcd0e68a8726e65914473b3b           
 
-resolver: lts-9.21
-compiler: ghcjs-0.2.1.9009021_ghc-8.0.2
-compiler-check: match-exact
-setup-info:
-  ghcjs:
-    source:
-      ghcjs-0.2.1.9009021_ghc-8.0.2:
-        url: https://github.com/matchwood/ghcjs-stack-dist/raw/master/ghcjs-0.2.1.9009021.tar.gz
-        sha1: b1740c3c99e5039ac306702894cd6e58283f4d31           
+
+# Requires cabal-2.0.1.1 to build correctly
+# resolver: lts-9.21
+# compiler: ghcjs-0.2.1.9009021_ghc-8.0.2
+# compiler-check: match-exact
+# setup-info:
+#   ghcjs:
+#     source:
+#       ghcjs-0.2.1.9009021_ghc-8.0.2:
+#         url: https://github.com/matchwood/ghcjs-stack-dist/raw/master/ghcjs-0.2.1.9009021.tar.gz
+#         sha1: b1740c3c99e5039ac306702894cd6e58283f4d31           
+
+packages:
+- '.'
+
+# - location: ..
+#   extra-dep: true
+
+# - location:
+#      git: https://github.com/Quid2/flat
+#      commit: ea28b1bf57fe1d45edcdc90bb2dc399eea887339
+#   extra-dep: true
+
+extra-deps:
+- happy-1.19.5 # required to avoid a stack bug
+- QuickCheck-2.11.3@sha256:e4c56f52532c993fc4460aeac7a2543dc03a68fba36eff420f3294d4d2622416
+- tasty-1.1.0.4@sha256:1310ceed449b3227614b329a1672a2c5bb046cb49e281996523567b3b0ad9ecc
+- tasty-quickcheck-0.10@sha256:9ddbacf1504bbbc4b99ab447d26651ad8454b69ceced3486e4623dccb89fb3d9
+- optparse-applicative-0.14.3.0@sha256:b6b56a922d10911a2824b965750ddc7794de746e347afe67f1a84d05168368dc
+- wcwidth-0.0.2@sha256:77531eb6683c505c22ab3fa11bbc43d3ce1e7dac21401d4d5a19677d348bb5f3
+
+flags:
+   tasty:
+    clock: false

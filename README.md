@@ -131,27 +131,18 @@ Should also work with (not recently tested):
   * [ghc](https://www.haskell.org/ghc/) 7.10.3/LLVM 3.5.2 (Arm7)
 
 ####  [GHCJS](https://github.com/ghcjs/ghcjs)
-
-Tested with:
-
-```
-compiler: ghcjs-0.2.1.9007019_ghc-8.0.1
-compiler-check: match-exact
-setup-info:
-  ghcjs:
-    source:
-      ghcjs-0.2.1.9007019_ghc-8.0.1:
-           url: http://ghcjs.tolysz.org/ghc-8.0-2017-02-05-lts-7.19-9007019.tar.gz
-           sha1: d2cfc25f9cda32a25a87d9af68891b2186ee52f9
-```
  
 Passes all tests in the `flat` testsuite, except for those relative to short bytestrings (Data.ByteString.Short) that are unsupported by `ghcjs`.
 
-If you use a different version of `ghcjs`, you are advised to run the full test suite by setting your compiler in `stack-ghcjs.yaml` and then running:
+Check [stack-ghcjs.yaml](https://github.com/Quid2/flat/blob/master/stack-ghcjs.yaml) to see with what versions of `ghcjs` it has been tested.
+
+If you use a different version of `ghcjs`, you might want to run the test suite by setting your compiler in [stack-ghcjs.yaml](https://github.com/Quid2/flat/blob/master/stack-ghcjs.yaml) and then running:
 
 `stack test --stack-yaml=stack-ghcjs.yaml`
 
 NOTE: Versions prior to 0.33 encode `Double` values incorrectly when they are not aligned with a byte boundary.
+
+NOTE: A [native TypeScript/JavaScript version](https://github.com/Quid2/ts) of `flat` is under development.
 
 #### [ETA](https://eta-lang.org/)
 
