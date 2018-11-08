@@ -2,20 +2,20 @@
 
 module Report where
 
-import Control.DeepSeq
-import Control.Monad
-import Criterion.IO
-import Criterion.Types
-import Data.List
-import qualified Data.Map as M
-import Data.Maybe
-import GHC.Generics
-import Statistics.Types
-import System.Directory
-import System.FilePath
-import Text.Printf
-import Data.Bifunctor  
-import Data.Char
+import           Control.DeepSeq
+import           Control.Monad
+import           Criterion.IO
+import           Criterion.Types
+import           Data.List
+import qualified Data.Map                      as M
+import           Data.Maybe
+import           GHC.Generics
+import           Statistics.Types
+import           System.Directory
+import           System.FilePath
+import           Text.Printf
+import           Data.Bifunctor
+import           Data.Char
 
 -- | Map test names to test measures
 type Measures = M.Map String Measure
@@ -68,64 +68,77 @@ data Measure = Measure
 fromList [("deserialization (time)/BinTree Direction-binary",Measure {mTest = "deserialization (time)/BinTree Direction-binary", mValue = 1989.0}),("serialization (time)/BinTree Direction-binary",Measure {mTest = "serialization (time)/BinTree Direction-binary", mValue = 1004.0}),("size (bytes)/BinTree Direction-binary",Measure {mTest = "size (bytes)/BinTree Direction-binary", mValue = 6291455.0}),("size (bytes)/Cars-binary",Measure {mTest = "size (bytes)/Cars-binary", mValue = 301455.0}),("size (bytes)/Cars-flat",Measure {mTest = "size (bytes)/Cars-flat", mValue = 300000.0}),("transfer [10 MBits] (time)/BinTree Direction-binary",Measure {mTest = "transfer [10 MBits] (time)/BinTree Direction-binary", mValue = 8026.164}),("transfer [100 MBits] (time)/BinTree Direction-binary",Measure {mTest = "transfer [100 MBits] (time)/BinTree Direction-binary", mValue = 3496.3164}),("transfer [1000 MBits] (time)/BinTree Direction-binary",Measure {mTest = "transfer [1000 MBits] (time)/BinTree Direction-binary", mValue = 3043.33164})]
 -}
 renderTable :: Measures -> String
-renderTable ms = 
-  let tests = allOf mObj ms
-      kinds = allOf mType ms
-      vals = allOf mSub ms
-      lines s = s : map (\t -> showPkgs $ map (\v -> tos t s v ms) vals) kinds
-  in unlines . map mdRow $ ("Dataset\\Measure":map short kinds) : replicate (length kinds+1) " ---" : map lines tests
-    where
-      pkgVals = map snd . tops . sort . catMaybes . map ((\m -> (mValue m,pkgRef $ mSub m)) <$>)
-      tops [] = []
-      tops hs = let limit = fst (head hs) * 1.3 in takeWhile (\e -> fst e <= limit) hs
-      showPkgs = intercalate "," . pkgVals 
-      mdRow vs = concat["|",intercalate "|" vs,"|"]
-      pkgRef name = concat ["[",name,"](https://hackage.haskell.org/package/",name,")"]
-      short = unwords . init . words 
+renderTable ms =
+  let
+    tests = allOf mObj ms
+    kinds = allOf mType ms
+    vals  = allOf mSub ms
+    lines s = s : map (\t -> showPkgs $ map (\v -> tos t s v ms) vals) kinds
+  in
+    unlines
+    . map mdRow
+    $ ("Dataset\\Measure" : map short kinds)
+    : replicate (length kinds + 1) " ---"
+    : map lines tests
+ where
+  pkgVals = map snd . tops . sort . catMaybes . map
+    ((\m -> (mValue m, pkgRef $ mSub m)) <$>)
+  tops [] = []
+  tops hs =
+    let limit = fst (head hs) * 1.3 in takeWhile (\e -> fst e <= limit) hs
+  showPkgs = intercalate "," . pkgVals
+  mdRow vs = concat ["|", intercalate "|" vs, "|"]
+  pkgRef name =
+    concat ["[", name, "](https://hackage.haskell.org/package/", name, ")"]
+  short = unwords . init . words
 
 tos :: String -> String -> String -> Measures -> Maybe Measure
-tos t o s ms = M.lookup (concat[t,"/",o,"-",s]) ms
+tos t o s ms = M.lookup (concat [t, "/", o, "-", s]) ms
 
-summaryTable :: M.Map k Measure
-                      -> [(String, [(String, [(Double, [Measure])])])]
-summaryTable = map (second $ (map (second $ by mValue) . by mType)) . by mObj . M.elems
+summaryTable :: M.Map k Measure -> [(String, [(String, [(Double, [Measure])])])]
+summaryTable =
+  map (second $ (map (second $ by mValue) . by mType)) . by mObj . M.elems
 
 addTransfers :: FilePath -> IO ()
 addTransfers workDir = addMeasures__ workDir addTransfers_ >> return ()
 
 addTransfers_ :: Measures -> Measures
 addTransfers_ ms =
-  let tests = allOf mObjSub ms
-      addT :: Measures -> String -> Measures
-      addT ms o =
-        fromMaybe ms $
-        (\ser des siz ->
-           let add1 :: Double -> Measures -> Measures
-               add1 megaBits ms =
-                 let trans =
-                       concat
-                         [ "transfer ["
-                         , show (round megaBits :: Integer)
-                         , " MBits] (time)/"
-                         , o
-                         ]
-                     time =
-                       mValue ser + mValue des +
-                       mValue siz * 8 / (megaBits * 1000)
-                  in add (Measure trans time) ms
-            in add1 1000 (add1 100 (add1 10 ms))) <$>
-        M.lookup ("serialization (time)/" ++ o) ms <*>
-        M.lookup ("deserialization (time)/" ++ o) ms <*>
-        M.lookup ("size (bytes)/" ++ o) ms
-   in foldl addT ms tests
+  let
+    tests = allOf mObjSub ms
+    addT :: Measures -> String -> Measures
+    addT ms o =
+      fromMaybe ms
+        $   (\ser des siz ->
+              let
+                add1 :: Double -> Measures -> Measures
+                add1 megaBits ms =
+                  let
+                    trans =
+                      concat
+                        [ "transfer ["
+                        , show (round megaBits :: Integer)
+                        , " MBits] (time)/"
+                        , o
+                        ]
+                    time =
+                      mValue ser + mValue des + mValue siz * 8 / (megaBits * 1000)
+                  in
+                    add (Measure trans time) ms
+              in
+                add1 1000 (add1 100 (add1 10 ms))
+            )
+        <$> M.lookup ("serialization (time)/" ++ o) ms
+        <*> M.lookup ("deserialization (time)/" ++ o) ms
+        <*> M.lookup ("size (bytes)/" ++ o) ms
+  in
+    foldl addT ms tests
 
 add :: Measure -> Measures -> Measures
 add m = M.insert (mTest m) m
 
 mKindPkg :: Measure -> (String, String)
-mKindPkg m =
-  let (k, _:p) = break (== '-') $ mTest m
-   in (k, p)
+mKindPkg m = let (k, _ : p) = break (== '-') $ mTest m in (k, p)
 
 mKind :: Measure -> String
 mKind = fst . mKindPkg
@@ -149,9 +162,7 @@ brk2 :: Eq a => a -> [a] -> [a]
 brk2 sep = tail . snd . break (== sep)
 
 mKindPkgVal :: Measure -> (String, (String, Double))
-mKindPkgVal m =
-  let (k, p) = mKindPkg m
-   in (k, (p, mValue m))
+mKindPkgVal m = let (k, p) = mKindPkg m in (k, (p, mValue m))
 
 byTestKind :: Measures -> [(String, (String, Double))]
 byTestKind = map mKindPkgVal . M.elems
@@ -164,8 +175,8 @@ allOf f = nub . map f . M.elems
 
 allTests :: [(String, (String, Double))] -> [(String, [(String, Double)])]
 allTests = -- by fst
-  sort .
-   map (\g -> (fst . head $ g, map snd g)) . groupBy (\a b -> fst a == fst b)
+           sort . map (\g -> (fst . head $ g, map snd g)) . groupBy
+  (\a b -> fst a == fst b)
 
 -- order by dimension
 by :: (Ord a, Ord t) => (t -> a) -> [t] -> [(a, [t])]
@@ -195,34 +206,28 @@ updateMeasures_ dir = do
 addMeasures_ :: FilePath -> Measures -> IO (Measures, Measures, Measures)
 addMeasures_ dir m' = addMeasures__ dir (const m')
 
-addMeasures__ ::
-     FilePath -> (Measures -> Measures) -> IO (Measures, Measures, Measures)
+addMeasures__
+  :: FilePath -> (Measures -> Measures) -> IO (Measures, Measures, Measures)
 addMeasures__ dir f = do
   !m <- readMeasures dir
-  let m' = f m
+  let m'  = f m
   let m'' = M.union m' m
   writeMeasures dir m''
   return (m, m', m'')
 
 addMeasures :: FilePath -> String -> [(String, Double)] -> IO ()
-addMeasures dir name ms =
-  void $
-  addMeasures_
-    dir
-    (M.fromList $
-     map
-       (\(pkg, val) ->
-          let n = concat [name, "-", pkg]
-           in (n, Measure n val))
-       ms)
+addMeasures dir name ms = void $ addMeasures_
+  dir
+  (M.fromList $ map
+    (\(pkg, val) -> let n = concat [name, "-", pkg] in (n, Measure n val))
+    ms
+  )
 
 readMeasures :: FilePath -> IO Measures
 readMeasures dir = do
   let f = measuresFile dir
   fe <- doesFileExist f
-  if not fe
-    then return M.empty
-    else (force . read) <$> readFile f
+  if not fe then return M.empty else (force . read) <$> readFile f
 
 writeMeasures :: FilePath -> Measures -> IO ()
 writeMeasures dir = writeFile (measuresFile dir) . show
@@ -243,13 +248,15 @@ printMeasures :: FilePath -> IO ()
 printMeasures dir = reportMeasures_ dir >>= putStrLn
 
 printSummary :: FilePath -> (String -> Bool) -> IO ()
-printSummary dir f = readMeasures dir >>= putStrLn . renderTable . M.filter (f . mTest)
+printSummary dir f =
+  readMeasures dir >>= putStrLn . renderTable . M.filter (f . mTest)
 
 reportMeasures :: FilePath -> IO ()
 reportMeasures dir =
-  reportMeasures_ dir >>=
-  writeFile (reportsMDFile dir) .
-  ("Results that are within 30% of the best result are displayed in **bold**.\n\n" ++)
+  reportMeasures_ dir
+    >>= writeFile (reportsMDFile dir)
+    . ("Results that are within 30% of the best result are displayed in **bold**.\n\n" ++
+      )
 
 reportMeasures_ :: FilePath -> IO String
 reportMeasures_ dir = reportMeasures__ (const True) <$> readMeasures dir
@@ -257,11 +264,10 @@ reportMeasures_ dir = reportMeasures__ (const True) <$> readMeasures dir
 printMeasuresCurrent :: (Measures, Measures, Measures) -> IO ()
 printMeasuresCurrent (_, m', m'') =
   let currentKinds = allKinds m'
-   in printMeasuresAll_ (\ts -> fst ts `elem` currentKinds) m''
+  in  printMeasuresAll_ (\ts -> fst ts `elem` currentKinds) m''
 
 printMeasuresAll_ :: ((String, [(String, Double)]) -> Bool) -> Measures -> IO ()
-printMeasuresAll_ f
- = putStrLn . reportMeasures__ f
+printMeasuresAll_ f = putStrLn . reportMeasures__ f
 
 reportMeasures__ :: ((String, [(String, Double)]) -> Bool) -> Measures -> String
 reportMeasures__ f =
@@ -269,11 +275,12 @@ reportMeasures__ f =
 
 printMeasuresDiff :: (Measures, Measures, Measures) -> IO ()
 printMeasuresDiff (m, m', _) =
-  mapM_ (\(n, d) -> putStrLn (unwords [n, show d, "%"])) . M.toList $
-  M.intersectionWith
-    (\a b -> round ((mValue b / mValue a - 1) * 100) :: Int)
-    m
-    m'
+  mapM_ (\(n, d) -> putStrLn (unwords [n, show d, "%"]))
+    . M.toList
+    $ M.intersectionWith
+        (\a b -> round ((mValue b / mValue a - 1) * 100) :: Int)
+        m
+        m'
 
 readReports :: FilePath -> IO [Report]
 readReports jsonReportFile = do
@@ -282,47 +289,54 @@ readReports jsonReportFile = do
     then return [] -- M.empty
     else do
       er <- readJSONReports jsonReportFile
-      return $
-        case er of
-          Right (_, _, reports) -> reports
-          _ -> [] -- M.empty
+      return $ case er of
+        Right (_, _, reports) -> reports
+        _                     -> [] -- M.empty
 
 report :: String -> [(String, Double)] -> String
 report _ [] = []
-report name rs
- =
+report name rs =
   let (_, rss) = report_ rs
-      width = maximum . map (length . fst) $ rs
-      out = ["| ---| ---|","| package | performance |","",unwords ["####",name, "(best first)"]] 
-      -- out = ["| ---| ---| ---|","| package | measure | relative measure |","",unwords ["####",name, "(best first)"]] 
-   in unlines . reverse $
-      "" :
-      foldl'
-        (\out (n, r, a) ->
-           let bold n = concat ["**",n,"**"] 
-               marked n = -- fix prob with github bold display
-                 if r <= 1.3 
-                   then if isSpace (head n) 
-                        then let (n1,n2) = span isSpace n in n1 ++ bold n2 
-                        else let (n1,n2) = span (not . isSpace) n in bold n1 ++ n2 
-                   else n
-            in unwords
-                 [ "|"
-                 ,marked (printString width n) -- pkg name
-                 ,"|"
-                 -- , printf "%11.1f" a -- absolute measure
-                 -- ,"|"
-                 , marked (printDouble r) -- relative measure
-                 , "|"] :
-               out)
-        out
-        rss
+      width    = maximum . map (length . fst) $ rs
+      out =
+        [ "| ---| ---|"
+        , "| package | performance |"
+        , ""
+        , unwords ["####", name, "(best first)"]
+        ]
+          -- out = ["| ---| ---| ---|","| package | measure | relative measure |","",unwords ["####",name, "(best first)"]] 
+  in  unlines
+      . reverse
+      $ ""
+      : foldl'
+          (\out (n, r, a) ->
+            let bold n = concat ["**", n, "**"]
+                marked n = -- fix prob with github bold display
+                           if r <= 1.3
+                  then if isSpace (head n)
+                    then let (n1, n2) = span isSpace n in n1 ++ bold n2
+                    else
+                      let (n1, n2) = span (not . isSpace) n in bold n1 ++ n2
+                  else n
+            in  unwords
+                    [ "|"
+                    , marked (printString width n) -- pkg name
+                    , "|"
+                  -- , printf "%11.1f" a -- absolute measure
+                  -- ,"|"
+                    , marked (printDouble r) -- relative measure
+                    , "|"
+                    ]
+                  : out
+          )
+          out
+          rss
 
 report_ :: (Fractional c, Ord c) => [(a, c)] -> ((a, c), [(a, c, c)])
 report_ rs =
-  let rss = sortOn snd rs
+  let rss  = sortOn snd rs
       best = snd . head $ rss
-   in (head rss, map (\(n, v) -> (n, v / best, v)) rss)
+  in  (head rss, map (\(n, v) -> (n, v / best, v)) rss)
 
 printDouble :: Double -> String
 printDouble = printf "%7.1f"
