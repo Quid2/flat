@@ -87,7 +87,7 @@ test-suite spec
 
     if impl(eta)
         -- use latest versions supported by eta
-        build-depends: HUnit == 1.6.0.0,array==0.5.2.0,bytestring == 0.10.8.2,deepseq == 1.4.3.0,containers == 0.5.9.1, text == 1.2.3.0,tasty == 1.1.0.3,QuickCheck==2.10
+        build-depends: HUnit == 1.6.0.0,array==0.5.2.0,bytestring == 0.10.8.2,deepseq == 1.4.3.0,containers == 0.5.9.1, text == 1.2.3.0,tasty == 1.1.0.3,QuickCheck==2.10, filepath == 1.4.1.1
     else 
         build-depends: array,bytestring,deepseq,containers,text,filepath,tasty,QuickCheck
 
@@ -110,12 +110,12 @@ test-suite spec
         Test.Data.Values
 
 -- Tests embedded in code documentation (won't compile with ghcjs)
-test-suite docs
-  default-language:   Haskell2010
-  type:               exitcode-stdio-1.0
-  main-is:            DocSpec.hs
-  build-depends:      base, doctest>=0.11.2,filemanip>=0.3.6.3
-  HS-Source-Dirs:     test
+-- test-suite docs
+--   default-language:   Haskell2010
+--   type:               exitcode-stdio-1.0
+--   main-is:            DocSpec.hs
+--   build-depends:      base, docetlastest>=0.11.2,filemanip>=0.3.6.3
+--   HS-Source-Dirs:     test
 
 -- Simple benchmark (won't compile with ghcjs)
 benchmark miniBench
@@ -137,3 +137,9 @@ benchmark miniBench
     -- cpp-options: -DENUM_LARGE
     other-modules:
         Test.E,Test.Data,Test.Data.Flat,Test.Data.Values,Test.Data2,Test.Data2.Flat,Test.E.Flat,Report
+
+-- executable unicodeTest
+--   default-language:   Haskell2010
+--   main-is:             unicodeTest.hs
+--   hs-source-dirs:      test
+--   build-depends:      base,  flat, time
