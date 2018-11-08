@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP                       #-}
 {-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE NoMonomorphismRestriction , ScopedTypeVariables #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
 module Test.Data.Values where
 
 import           Control.DeepSeq
@@ -12,6 +13,8 @@ import           Data.Char
 import           Data.Flat
 import           Data.Foldable
 import           Data.Int
+import qualified Data.IntMap                    as IM
+import qualified Data.IntSet                    as IS
 import           Data.List
 import qualified Data.Map                       as M
 import qualified Data.Sequence                  as Seq
@@ -19,8 +22,6 @@ import qualified Data.Text                      as T
 import           Data.Word
 import           Test.Data
 import qualified Test.Data2                     as D2
-import           qualified Data.IntMap           as IM
-import           qualified Data.IntSet           as IS
 -- import Data.Array as A
 
 instance NFData Various
@@ -181,7 +182,7 @@ car1 = Car 2343 1965 True ModelB [18,234] "1234" [SunRoof,CruiseControl] (Engine
 
 treeN = mkTree asN3 1
 
-asciiStrT = ("asciiStr", longS $ "To hike, or not to hike? US Federal Reserve chair Janet Yellen faces a tricky decision at today's FOMC meeting. Photograph: Action Press/Rex. Theme park operator Merlin Entertainments suffered a significant drop in visitor numbers to its Alton Towers attraction after a serious rollercoaster accident in June.")
+asciiStrT = ("asciiStr", longS english )
 
 unicodeTextUTF8T = ("unicodeTextUTF8",UTF8Text unicodeText)
 unicodeTextUTF16T = ("unicodeTextUTF16",UTF16Text unicodeText)
@@ -193,7 +194,16 @@ unicodeStrT = ("unicodeStr",unicodeStr)
 
 unicodeStr = notLongS uniSS
 
-uniSS = "\x1F600\&\x1F600\&\x1F600\&I promessi sposi è un celebre romanzo storico di Alessandro Manzoni, ritenuto il più famoso e il più letto tra quelli scritti in lingua italiana[1].维护和平正义 开创美好未来——习近平主席在纪念中国人民抗日战争暨世界反法西斯战争胜利70周年大会上重要讲话在国际社会引起热烈反响"
+
+-- uniSS = "\x1F600\&\x1F600\&\x1F600\&I promessi sposi è un celebre romanzo storico di Alessandro Manzoni, ritenuto il più famoso e il più letto tra quelli scritti in lingua italiana[1].维护和平正义 开创美好未来——习近平主席在纪念中国人民抗日战争暨世界反法西斯战争胜利70周年大会上重要讲话在国际社会引起热烈反响"
+uniSS = concat [special,latin,chinese]
+special = "&forall;\&"
+-- Crashes eta
+-- emoji = "\x1F600"
+
+english = "To hike, or not to hike? US Federal Reserve chair Janet Yellen faces a tricky decision at today's FOMC meeting. Photograph: Action Press/Rex. Theme park operator Merlin Entertainments suffered a significant drop in visitor numbers to its Alton Towers attraction after a serious rollercoaster accident in June."
+latin = "I promessi sposi è un celebre romanzo storico di Alessandro Manzoni, ritenuto il più famoso e il più letto tra quelli scritti in lingua italiana[1]."
+chinese = "维护和平正义 开创美好未来——习近平主席在纪念中国人民抗日战争暨世界反法西斯战争胜利70周年大会上重要讲话在国际社会引起热烈反响"
 
 longS =  take 1000000 . concat . repeat
 
