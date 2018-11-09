@@ -150,7 +150,7 @@ benchmark miniBench
 
 executable listTest
   default-language:   Haskell2010
-  main-is:             listTest.hs
+  main-is:             ListTest.hs
   hs-source-dirs:      test
   build-depends:      base,  flat, time
   ghc-options: -O2 -dumpdir /tmp/dump -ddump-to-file -dsuppress-all -ddump-simpl -ddump-deriv
