@@ -9,8 +9,7 @@ matrix:
   include:
   - env: IMG=quid2/x64-ubuntu-stack CMD="stack test --resolver lts-11.22"
     
-  # - IMG: quid2/x32-ubuntu-cabal
-  #   CMD: cabal install --only-dependencies --enable-tests;cabal test
+  - env: IMG=quid2/x32-ubuntu-cabal CMD="cabal install --only-dependencies --enable-tests;cabal test"
 
 before_install:
 - docker pull $IMG
