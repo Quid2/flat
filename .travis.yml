@@ -5,6 +5,8 @@ language: c
 services:
   - docker
 
+env: PKG=flat
+
 matrix:
   include:
   - env: IMG=quid2/x32-ubuntu-cabal CMD="cabal install --only-dependencies --enable-tests;cabal test"
@@ -19,4 +21,4 @@ before_install:
 - docker pull $IMG
 
 script:
-- docker run -it $IMG bash -c "git clone https://github.com/Quid2/flat;cd flat;${CMD}"
+- docker run -it $IMG bash -c "git clone https://github.com/Quid2/flat;cd $PKG;${CMD}"
