@@ -11,7 +11,13 @@ matrix:
   
   - env: IMG=quid2/x64-ubuntu-stack CMD="stack test --resolver lts-6.35"
 
+  - env: IMG=quid2/x64-ubuntu-stack CMD="stack test --resolver lts-9.21"
+
   - env: IMG=quid2/x64-ubuntu-stack CMD="stack test --resolver lts-11.22"
+
+  - env: IMG=quid2/x64-ubuntu-stack CMD="stack test --resolver lts-12.19"
+
+  - env: IMG=quid2/x64-ubuntu-stack CMD="stack test --resolver lts-nightly-2018-11-18"
   
   - env: IMG=quid2/x64-ubuntu-ghcjs CMD="stack test --stack-yaml stack-ghcjs.yaml"
 
