@@ -9,4 +9,4 @@ before_install:
 - docker pull quid2/x64-ubuntu-stack
 
 script:
-- docker run -it quid2/x64-ubuntu-stack bash -c 'git clone https://github.com/Quid2/flat;cd flat;stack test --resolver lts-6.35'
+- docker run -it quid2/x64-ubuntu-stack bash -c 'git clone https://github.com/Quid2/flat;cd flat;stack test --resolver lts-11.22'
