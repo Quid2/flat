@@ -110,7 +110,7 @@ testFlat = testGroup "flat/unflat" [
 
 -- Data.Flat.Endian tests (to run, need to modify imports and cabal file)
 testEndian = testGroup "Endian" [
-   conv toBE16 (2^10 + 3)  (2^9+2^8+4)
+   conv toBE16 (2^10 + 3)  (2^9+2^8+55)
   ,conv toBE32 (2^18 + 3)  50332672
   ,conv toBE64 (2^34 + 3)  216172782180892672
   ,conv toBE16 0x1234 0x3412
