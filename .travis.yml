@@ -17,7 +17,7 @@ matrix:
 
   - env: IMG=quid2/x64-ubuntu-stack CMD="stack test --resolver lts-12.19"
 
-  - env: IMG=quid2/x64-ubuntu-stack CMD="stack test --resolver lts-nightly-2018-11-18"
+  - env: IMG=quid2/x64-ubuntu-stack CMD="stack test --resolver nightly-2018-11-18"
   
   - env: IMG=quid2/x64-ubuntu-ghcjs CMD="stack test --stack-yaml stack-ghcjs.yaml"
 
@@ -26,4 +26,4 @@ before_install:
 
 script:
 - PKG=flat
-- docker run -it $IMG bash -c "git clone https://github.com/Quid2/flat;cd $PKG;${CMD}"
+- docker run -it $IMG bash -c "git clone https://github.com/Quid2/$CMD;cd $PKG;$CMD"
