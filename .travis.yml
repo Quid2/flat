@@ -21,7 +21,7 @@ matrix:
 
   # - env: IMG=quid2/x64-ubuntu-stack-lts-11.22 CMD="stack test --resolver lts-11.22"
 
-  # - env: IMG=quid2/x64-ubuntu-stack-lts-12.19 CMD="stack test --resolver lts-12.19"
+  - env: IMG=quid2/x64-ubuntu-stack-lts-12.19 CMD="stack test --resolver lts-12.19"
 
   # - env: IMG=quid2/x64-ubuntu-stack-nightly-2018-11-19 CMD="stack test --resolver nightly-2018-11-19"
   
