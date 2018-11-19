@@ -26,4 +26,4 @@ before_install:
 
 script:
 - PKG=flat
-- docker run -it $IMG bash -c "git clone https://github.com/Quid2/$CMD;cd $PKG;$CMD"
+- docker run -it $IMG bash -c "git clone https://github.com/Quid2/$PKG;cd $PKG;$CMD"
