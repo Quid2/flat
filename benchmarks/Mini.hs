@@ -1,7 +1,7 @@
 -- Mini Benchmark
 {-# LANGUAGE DeriveAnyClass      #-}
 {-# LANGUAGE DeriveGeneric       #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables ,CPP #-}
 
 module Main where
 import           Control.Concurrent
@@ -20,39 +20,26 @@ import           Test.Data.Flat
 import           Test.Data.Values
 import           Test.E
 import           Test.E.Flat
+import Data.List
+import Common
 
-data ValTest a = ValTest
-  { name   :: String
-  , val    :: a
-  , enc    :: Encoded a
-  , encLen :: !Int
-  } deriving (Generic, NFData, Show)
+#ifdef ETA_VERSION    
+import Data.Function(trampoline)
+import GHC.IO(trampolineIO)
+#else
+trampoline = id
+trampolineIO = id
+#endif
 
-data Encoded a = Encoded
-  { bs :: B.ByteString
-  } deriving (Generic, NFData, Show)
-
-encod :: Flat a => a -> Encoded a
-encod = Encoded . flat
-
-decod :: Flat a => Encoded a -> Decoded a
-decod (Encoded bs) = unflat bs
-
-valTest (n, v) =
-  let e = encod v
-  in ValTest n v e (B.length $ bs e)
-
-treeLarge :: Tree E16
-treeLarge = mkTreeOf largeSize
-treeLargeT = ("LargeTree",treeLarge)
+bname = bench . benchName
 
 setupEnv = do
   -- print treeLarge
   let small = replicate 1000 (1 :: Int)
   let v1 = (E3_3, B.pack [193])
   let v2 = (E16_16, B.pack [241])
-  let v3 = v2
-  -- let v3 = (E256_256, B.pack [255, 1])
+  -- let v3 = valTest longBoolListT
+  let v3 = "" -- (E256_256, B.pack [255, 1])
   let v4 = valTest treeLargeT
   -- print $ "Size Tree is " ++ show (getSize treeLarge)
   -- print $ "Size Tree " ++ show (5999999 == getSize treeLarge)
@@ -71,31 +58,17 @@ workDir = projDir </> "benchmarks/data"
 
 tmpDir = "/tmp"
 
-data REC = REC {l::Int,r::Int} deriving (Read,Show)
-
 main
- = do
-  -- print "OK"
-  -- -- print (read (show (M.fromList []:: M.Map Int Int)) :: M.Map Int Int)
-  -- print (read "106.31866268954991" :: Double)
-  -- print (read "\"runtime-basic/dec\"" :: String)
-  -- print (read "False" :: Bool)
-  -- print (read "(False,3234.34)" :: (Bool,Double))
-  -- -- print (read "TRUE \"ab\" 3.4545" :: BOOL)
-  -- print (read "4" :: Int)
-  -- print (read "REC {l=3,r=4}" :: REC)
-  -- print (read "REC 3 4" :: REC)
-  -- -- print (read "FALSE 3.45" :: BOOL)
-  -- print (read "Right False" :: Either () Bool)
-  -- print (read "Measure \"runtime-basic/dec\" 106.31866268954991" :: Measure)
-  -- print (read "Measure {mTest = \"runtime-basic/dec\", mValue = 106.31866268954991}" :: Measure)
+ = trampolineIO $ do
   createDirectoryIfMissing True workDir
   mainBench_ (reportsFile workDir)
-  -- printMeasures
+  prtMeasures
 
-printMeasures = do  
+prtMeasures = do  
     -- delete measures to avoid eta read bug
-    -- deleteMeasures workDir
+-- #ifdef ETA_VERSION    
+--     deleteMeasures workDir
+-- #endif
     ms <- updateMeasures_ workDir
     printMeasuresDiff ms
     -- printMeasuresAll ms
@@ -109,17 +82,20 @@ mainBench_ jsonReportFile =
   where
     runtime =
       env setupEnv $ \ ~(v1, v2, v3, v4 ) ->
+        bgroup "basic" [
+          basicTest "large Tree" v4
+          -- ,basicTest "large list" v3
+        ]
+
+basicTest name v =         
         bgroup
-          "runtime-basic"
-          -- bench "dec" $ whnf (\(v, b) -> unflat b == Right v) v1
-          --, bench "dec" $ whnf (\(v, b) -> unflat b == Right v) v2
-          --, bench "dec" $ whnf (\(v, b) -> unflat b == Right v) v3
-          -- bench "enc eq" $ whnf (\tv -> enc tv == encVal tv) v4
-          [ bench "enc" $whnf (\tv -> B.length (bs (encod (val tv))) == encLen tv) v4
-           ,bench "size" $whnf (getSize . val) v4
-           ,bench "dec eq" $ whnf (\tv -> val tv == val tv) v4
-           ,bench "dec" $ whnf (\tv -> decod (enc tv) == Right (val tv)) v4
-          ]
+        name
+        [ bname "size" $whnf (getSize . val) v
+         ,bname "enc" $whnf (\tv -> B.length (bs (encod (val tv))) == encLen tv) v
+         ,bname "dec eq" $ whnf (\tv -> val tv == val tv) v
+         ,bname "dec" $ whnf (\tv -> decod (enc tv) == Right (val tv)) v
+        ]
+
     --compilation = bgroup "compilation-basic" [bench "compile" $ nfIO comp]
 
 -- comp = do

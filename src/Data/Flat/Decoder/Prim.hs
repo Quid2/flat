@@ -368,12 +368,12 @@ getChunksInfo = Get $ \endPtr s -> do
 
    let getChunks srcPtr l = do
           ensureBits endPtr s 8
-          n <- fromIntegral <$> peek srcPtr
+          !n <- fromIntegral <$> peek srcPtr
           if n==0
             then return (srcPtr `plusPtr` 1,l [])
             else do
               ensureBits endPtr s ((n+1)*8)
-              getChunks (srcPtr `plusPtr` (n+1)) (l . (n:))
+              getChunks (srcPtr `plusPtr` (n+1)) (l . (n:)) -- eta: stck overflow (missing tail call optimisation)
 
    when (usedBits s /=0) $ badEncoding endPtr s "usedBits /= 0"
    (currPtr',ns) <- getChunks (currPtr s) id

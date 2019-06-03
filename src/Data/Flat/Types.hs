@@ -22,7 +22,7 @@ import           Numeric.Natural
 type NumBits = Int
 
 -- |A wrapper to encode/decode Text as UTF8 (slower but more compact)
-newtype UTF8Text = UTF8Text T.Text deriving (Eq,Ord,Show)
+newtype UTF8Text = UTF8Text {unUTF8::T.Text} deriving (Eq,Ord,Show)
 
 -- |A wrapper to encode/decode Text as UTF16 (faster but bigger)
-newtype UTF16Text = UTF16Text T.Text deriving (Eq,Ord,Show)
+newtype UTF16Text = UTF16Text {unUTF16::T.Text} deriving (Eq,Ord,Show)

@@ -11,7 +11,7 @@ maintainer:          tittoassini@gmail.com
 copyright:           Copyright: (c) 2016-2018 Pasqualino `Titto` Assini
 cabal-version: >=1.10
 build-type: Simple
-Tested-With: GHC == 7.10.3 GHC == 8.0.2 GHC == 8.2.2 GHC == 8.4.4 GHC == 8.6.1
+Tested-With: GHC == 7.10.3 GHC == 8.0.2 GHC == 8.2.2 GHC == 8.4.4 GHC == 8.6.5
 
 extra-source-files:
     stack.yaml
@@ -44,10 +44,10 @@ library
         Data.FloatCast
         Data.ZigZag
         Data.Flat.Instances
-        Data.Flat.Endian                  
+        Data.Flat.Endian 
 
     build-depends:
-        base >=4.8 && <5
+        base >=4.8.2.0 && <5
         , bytestring>=0.10.6
         , deepseq >= 1.4
         , ghc-prim
@@ -73,9 +73,7 @@ library
                       TypeFamilies TypeOperators UndecidableInstances
     hs-source-dirs: src
     ghc-options: -Wall -O2 -funbox-strict-fields -fno-warn-orphans -fno-warn-name-shadowing
-    ghc-options: -dumpdir /tmp/dump -ddump-to-file -dsuppress-all -ddump-simpl -ddump-deriv
-    if impl(eta)
-        cpp-options: -DETA_COMPILER
+    -- ghc-options: -dumpdir /tmp/dump -ddump-to-file -dsuppress-all -ddump-simpl -ddump-deriv
 
 -- Full test suite
 test-suite spec
@@ -99,9 +97,9 @@ test-suite spec
     hs-source-dirs: test
     cpp-options: -DLIST_BIT 
     -- Add large data types test
-    -- cpp-options: -DENUM_LARGE
+    cpp-options: -DENUM_LARGE
     -- Add low level decoding test  
-    -- cpp-options: -DTEST_DECBITS
+    cpp-options: -DTEST_DECBITS
     other-modules:
         Test.Data
         Test.Data2
@@ -113,13 +111,31 @@ test-suite spec
         Test.Data2.Flat
         Test.Data.Values
 
--- Tests embedded in code documentation (won't compile with ghcjs)
+-- Tests embedded in code documentation (won't compile with ghcjs or eta)
 -- test-suite docs
 --   default-language:   Haskell2010
 --   type:               exitcode-stdio-1.0
 --   main-is:            DocSpec.hs
---   build-depends:      base, docetlastest>=0.11.2,filemanip>=0.3.6.3
+--   build-depends:      base, doctest>=0.11.2,filemanip>=0.3.6.3
 --   HS-Source-Dirs:     test
+
+benchmark microBench
+    main-is: Micro.hs
+    type: exitcode-stdio-1.0
+    default-language:   Haskell2010
+    build-depends:
+        base
+        ,benchpress,bytestring,deepseq,containers,text
+        ,flat
+    hs-source-dirs: benchmarks test
+    other-modules: Common
+                    Test.Data
+                    Test.Data.Flat
+                    Test.Data.Values
+                    Test.Data2
+                    Test.Data2.Flat
+                    Test.E
+                    Test.E.Flat
 
 -- Simple benchmark (won't compile with ghcjs)
 benchmark miniBench
@@ -133,10 +149,12 @@ benchmark miniBench
         -- use latest versions supported by eta
         build-depends: bytestring == 0.10.8.2,directory==1.3.1.0,deepseq == 1.4.3.0, vector-algorithms == 0.7.0.1,criterion == 1.5.1.0,statistics == 0.14.0.2,containers == 0.5.9.1,process == 1.6.2.0, text == 1.2.3.0, filepath == 1.4.1.1
     else 
-        build-depends: bytestring,criterion == 1.5.1.0,directory,deepseq,statistics,containers,process,text,filepath
+        --build-depends: bytestring,criterion == 1.5.1.0,directory,deepseq,statistics,containers,process,text,filepath
+        build-depends: bytestring,criterion,directory,deepseq,statistics,containers,process,text,filepath
 
     hs-source-dirs: benchmarks test
-    ghc-options: -O2 -dumpdir /tmp/dump -ddump-to-file -dsuppress-all -ddump-simpl -ddump-deriv
+    ghc-options: -O2 
+    -- -dumpdir /tmp/dump -ddump-to-file -dsuppress-all -ddump-simpl -ddump-deriv
     -- -fprint-potential-instances
     -- cpp-options: -DENUM_LARGE
     other-modules:
@@ -153,4 +171,26 @@ executable listTest
   main-is:             ListTest.hs
   hs-source-dirs:      test
   build-depends:      base,  flat, time
-  ghc-options: -O2 -dumpdir /tmp/dump -ddump-to-file -dsuppress-all -ddump-simpl -ddump-deriv
+  --ghc-options: -O2 -dumpdir /tmp/dump -ddump-to-file -dsuppress-all -ddump-simpl -ddump-deriv
+
+-- test-suite core
+--     main-is: Core.hs
+--     type: exitcode-stdio-1.0
+--     default-language: Haskell2010
+--     hs-source-dirs: test
+--     ghc-options: -O2  -dumpdir /tmp/dump -ddump-to-file -dsuppress-all -ddump-simpl
+--     --  -ddump-simpl-stats -ddump-rule-rewrites -dsuppress-idinfo -dsuppress-coercions -dsuppress-type-applications  -dsuppress-module-prefixes -dsuppress-type-signatures -dsuppress-uniques 
+--     build-depends:
+--                   base
+--                 , bytestring
+--                 , deepseq
+--                 , flat
+--                 , inspection-testing >= 0.4.1.1
+
+--     other-modules:
+--         Test.E
+--         Test.E.Flat
+--         Test.Data
+--         Test.Data.Flat
+--         Test.Data2
+--         Test.Data2.Flat

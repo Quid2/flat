@@ -1,5 +1,4 @@
-{-# LANGUAGE CPP #-}
--- {-# LANGUAGE TemplateHaskell , CPP#-}
+{-# LANGUAGE  CPP , ScopedTypeVariables #-}
 
 module Test.Data.Arbitrary where
 import qualified Data.ByteString as BS
@@ -11,7 +10,17 @@ import Test.Tasty.QuickCheck
 import           Test.Data
 -- import           Data.DeriveTH
 
+#if MIN_VERSION_base(4,9,0)
+import qualified Data.List.NonEmpty as BI
+#endif
+
 import Numeric.Natural (Natural)
+
+#if MIN_VERSION_base(4,9,0)  
+instance Arbitrary a => Arbitrary (BI.NonEmpty a) where
+  arbitrary = BI.fromList . getNonEmpty <$> (arbitrary :: Gen (NonEmptyList a))
+  shrink xs = BI.fromList <$> shrink (BI.toList xs)
+#endif
 
 instance Arbitrary Natural where
   arbitrary = arbitrarySizedNatural
@@ -31,13 +40,13 @@ instance Arbitrary SBS.ShortByteString where
   arbitrary = SBS.pack <$> arbitrary
   shrink xs = SBS.pack <$> shrink (SBS.unpack xs)
 
-instance Arbitrary TS.Text where
-    arbitrary = TS.pack <$> arbitrary
-    shrink xs = TS.pack <$> shrink (TS.unpack xs)
+-- instance Arbitrary TS.Text where
+--     arbitrary = TS.pack <$> arbitrary
+--     shrink xs = TS.pack <$> shrink (TS.unpack xs)
 
-instance Arbitrary TL.Text where
-    arbitrary = TL.pack <$> arbitrary
-    shrink xs = TL.pack <$> shrink (TL.unpack xs)
+-- instance Arbitrary TL.Text where
+--     arbitrary = TL.pack <$> arbitrary
+--     shrink xs = TL.pack <$> shrink (TL.unpack xs)
 
 -- xxx = generate (arbitrary :: Gen (Large (Int)))
 
@@ -58,6 +67,7 @@ derive makeArbitrary ''B
 -- instance Arbitrary Word7 where arbitrary  = toEnum <$> choose (0, 127)
 -- derive makeArbitrary ''ASCII
 -- To generate Arbitrary instances while avoiding a direct dependency on 'derive' (that is not supported by Eta)
+
 -- , run in the project directory:  derive -a test/Test/Data.hs --derive=Arbitrary
 {-!
 deriving instance Arbitrary N

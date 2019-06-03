@@ -1,15 +1,21 @@
 Significant and compatibility-breaking changes.
 
+Version 0.3.6:
+    - Added instances for base, containers, array, vector ...
+	- ? Fixed GHCJS bug
+	- Added support for ETA
+	- Tested with GHC 8.6.2
+	
 Version 0.3.4:
 	- Redisegned Generics-based instance generation (Data.Flat.Class) to reduce compilation time and improve encoding and decoding performance
 	- Fixed GHCJS Double bug and tested GHCJS with full test suite
+
+Version 0.3.2:
+	- Tested with ghc 8.2.1
+	- Dropped dependencies on the 'cpu', 'derive' and 'tasty' packages to make it compatible with the Eta compiler (https://github.com/typelead/eta)
 
 Version 0.3:
 	- Removed 'flatStrict' and 'unflatStrict' (use 'flat' and 'unflat' instead that also encode/decode strictly)
 	- `unflatWith` now takes a decoder for the unpadded value (previously it expected a padded decoder) and decodes the padded value
 	- Added some decoding primitives
 	- Added Data.ByteString.Convert
-
-Version 0.3.1:
-	- Tested with ghc 8.2.1
-	- Dropped dependencies on the 'cpu', 'derive' and 'tasty' packages to make it compatible with the Eta compiler (https://github.com/typelead/eta)

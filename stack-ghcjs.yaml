@@ -21,19 +21,7 @@ setup-info:
 #     source:
 #       ghcjs-0.2.1.9008011_ghc-8.0.2:
 #         url: https://github.com/matchwood/ghcjs-stack-dist/raw/master/ghcjs-0.2.1.9008011.tar.gz
-#         sha1: a72a5181124baf64bcd0e68a8726e65914473b3b           
-
-
-# Requires cabal-2.0.1.1 to build correctly
-# resolver: lts-9.21
-# compiler: ghcjs-0.2.1.9009021_ghc-8.0.2
-# compiler-check: match-exact
-# setup-info:
-#   ghcjs:
-#     source:
-#       ghcjs-0.2.1.9009021_ghc-8.0.2:
-#         url: https://github.com/matchwood/ghcjs-stack-dist/raw/master/ghcjs-0.2.1.9009021.tar.gz
-#         sha1: b1740c3c99e5039ac306702894cd6e58283f4d31           
+#         sha1: a72a5181124baf64bcd0e68a8726e65914473b3b                    
 
 packages:
 - '.'
@@ -53,6 +41,7 @@ extra-deps:
 - tasty-quickcheck-0.10
 - optparse-applicative-0.14.3.0
 - wcwidth-0.0.2
+- benchpress-0.2.2.12
 
 # - gauge-0.2.4
 # - basement-0.0.8@sha256:5eaa84a8395afc00751918adbde4db66b05e7126caf20779c0ddf4b94c23bc00

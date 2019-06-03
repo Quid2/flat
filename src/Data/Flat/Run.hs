@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE CPP #-}
 -- |Encoding and decoding functions
 module Data.Flat.Run (
     flat,
@@ -40,5 +41,24 @@ unflatRawWith dec = strictDecoder dec . toByteString
 
 -- |Encode unpadded value
 flatRaw :: (Flat a, AsByteString b) => a -> b
-flatRaw a = fromByteString $ E.strictEncoder (getSize a) (encode a)
+flatRaw a = fromByteString $ 
+    E.strictEncoder 
+        (getSize a) 
+#ifdef ETA_VERSION    
+        (E.trampolineEncoding (encode a))
+#else
+        (encode a)
+#endif
+
+-- #ifdef ETA_VERSION    
+--   deriving (Show, Eq, Ord, Typeable, Generic, NFData)
+
+-- instance Flat a => Flat (PostAligned a) where
+--   encode (PostAligned val fill) = trampolineEncoding (encode val) <> encode fill
+
+-- #else
+--   deriving (Show, Eq, Ord, Typeable, Generic, NFData,Flat)
+-- #endif
+
+
 

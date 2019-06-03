@@ -53,8 +53,8 @@ import           Data.FloatCast
 import           Data.Primitive.ByteArray
 import qualified Data.Text                      as T
 import qualified Data.Text.Array                as TA
-import qualified Data.Text.Encoding             as T
-import qualified Data.Text.Internal             as T
+import qualified Data.Text.Encoding             as TE
+import qualified Data.Text.Internal             as TI
 import           Data.ZigZag
 import           Foreign
 
@@ -210,14 +210,18 @@ varWordN_ writeByte = go
 low7 :: (Integral a) => a -> Word8
 low7 t = fromIntegral t .&. 0x7F
 
+-- | Encode text as UTF8 and encode the result as an array of bytes
 -- PROB: encodeUtf8 calls a C primitive, not compatible with GHCJS
 eUTF8F :: T.Text -> Prim
-eUTF8F = eBytesF . T.encodeUtf8
+eUTF8F = eBytesF . TE.encodeUtf8
 
+-- PROB: Not compatible with GHCJS
+-- | Encode text as UTF16 and encode the result as an array of bytes
+-- Efficient, as Text is already internally encoded as UTF16.  
 eUTF16F :: T.Text -> Prim
 eUTF16F t = eFillerF >=> eUTF16F_ t
   where
-    eUTF16F_ !(T.Text (TA.Array array) w16Off w16Len) s = writeArray array (2 * w16Off) (2 * w16Len) (nextPtr s)
+    eUTF16F_ !(TI.Text (TA.Array array) w16Off w16Len) s = writeArray array (2 * w16Off) (2 * w16Len) (nextPtr s)
 
 eLazyBytesF :: L.ByteString -> Prim
 eLazyBytesF bs = eFillerF >=> \s -> write bs (nextPtr s)

@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP       #-}
 module Data.Flat.Encoder (
     Encoding,
     (<>),
@@ -59,6 +60,9 @@ module Data.Flat.Encoder (
     sBool,
     sUTF8Max,
     eUTF8,
+#ifdef ETA_VERSION
+    trampolineEncoding,
+#endif
     ) where
 
 import           Data.Flat.Encoder.Prim

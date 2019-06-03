@@ -20,7 +20,7 @@ import Data.Bits
 
 isBigEndian :: Bool
 isBigEndian =
-#ifdef WORDS_BIGENDIAN
+#if defined(WORDS_BIGENDIAN) || defined(ETA_VERSION)
     True
 #else
     False
@@ -28,7 +28,7 @@ isBigEndian =
 
 -- | Convert a 64 bit value in cpu endianess to big endian
 toBE64 :: Word64 -> Word64
-#ifdef WORDS_BIGENDIAN
+#if defined(WORDS_BIGENDIAN) || defined(ETA_VERSION)
 toBE64 = id
 #else
 toBE64 = byteSwap64
@@ -36,7 +36,7 @@ toBE64 = byteSwap64
 
 -- | Convert a 32 bit value in cpu endianess to big endian
 toBE32 :: Word32 -> Word32
-#ifdef WORDS_BIGENDIAN
+#if defined(WORDS_BIGENDIAN) || defined(ETA_VERSION)
 toBE32 = id
 #else
 toBE32 = byteSwap32
@@ -44,7 +44,7 @@ toBE32 = byteSwap32
 
 -- | Convert a 16 bit value in cpu endianess to big endian
 toBE16 :: Word16 -> Word16
-#ifdef WORDS_BIGENDIAN
+#if defined(WORDS_BIGENDIAN) || defined(ETA_VERSION)
 toBE16 = id
 #else
 toBE16 = byteSwap16

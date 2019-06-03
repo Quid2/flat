@@ -125,7 +125,7 @@ Briefly:
 #### [GHC](https://www.haskell.org/ghc/) 
 
 Tested with:
-  * [ghc](https://www.haskell.org/ghc/) 7.10.3, 8.0.2, 8.2.2, 8.4.4 and 8.6.1 (x64)
+  * [ghc](https://www.haskell.org/ghc/) 7.10.3, 8.0.2, 8.2.2, 8.4.4 and 8.6.3 (x64)
 
 Should also work with (not recently tested):
   * [ghc](https://www.haskell.org/ghc/) 7.10.3/LLVM 3.5.2 (Arm7)

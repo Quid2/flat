@@ -1,19 +1,29 @@
 {-# LANGUAGE BangPatterns              #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE CPP       #-}
 
 -- |Strict encoder
 module Data.Flat.Encoder.Strict where
 
-import qualified Data.ByteString         as B
-import qualified Data.ByteString.Lazy    as L
+import qualified Data.ByteString               as B
+import qualified Data.ByteString.Lazy          as L
 import           Data.Flat.Encoder.Prim
-import qualified Data.Flat.Encoder.Size  as S
+import qualified Data.Flat.Encoder.Size        as S
 import           Data.Flat.Encoder.Types
 import           Data.Flat.Memory
 import           Data.Flat.Types
 import           Data.Foldable
-import           Data.Semigroup          (Semigroup (..))
+import           Data.Semigroup                 ( Semigroup(..) )
+
+#ifdef ETA_VERSION    
+-- import Data.Function(trampoline)
+import GHC.IO(trampolineIO)
+trampolineEncoding (Encoding op) = Encoding (\s -> trampolineIO (op s)) 
+#else
+--trampoline = id
+-- trampolineIO = id
+#endif
 
 -- |Strict encoder
 strictEncoder :: NumBits -> Encoding -> B.ByteString
@@ -62,7 +72,7 @@ encodersS ws = foldl' mappend mempty ws
 encodeListWith :: (t -> Encoding) -> [t] -> Encoding
 encodeListWith enc = go
  where
-  go []       = eFalse
+  go []        = eFalse
   go (x : xs) = eTrue <> enc x <> go xs
 
 -- {-# INLINE encodeList #-}

@@ -92,17 +92,22 @@ Briefly:
 
 ### Compatibility
 
-#### [GHC](https://www.haskell.org/ghc/) 
+Successfully tested with:
 
-Tested with:
-  * [ghc](https://www.haskell.org/ghc/) 7.10.3, 8.0.2, 8.2.2, 8.4.4 and 8.6.1 (x64)
+* [GHC](https://www.haskell.org/ghc/) 7.10.3, 8.0.2, 8.2.2, 8.4.4 and 8.6.3 (x64)
 
-Should also work with (not recently tested):
-  * [ghc](https://www.haskell.org/ghc/) 7.10.3/LLVM 3.5.2 (Arm7)
+* [GHC](https://www.haskell.org/ghc/) 7.10.3/LLVM 3.5.2 (Arm7)
+  * Caveat: not recently tested
 
-####  [GHCJS](https://github.com/ghcjs/ghcjs)
- 
-Passes all tests in the `flat` testsuite, except for those relative to short bytestrings (Data.ByteString.Short) that are unsupported by `ghcjs`.
+* [GHCJS](https://github.com/ghcjs/ghcjs)
+  * Caveats:
+    * short bytestrings (Data.ByteString.Short) that seem unsupported by `ghcjs`.
+* Current version short bytestrings (Data.ByteString.Short) that seem unsupported by `ghcjs`.
+* Versions of `flat` prior to 0.33 encode `Double` values incorrectly when they are not aligned with a byte boundary.
+* !Performance in untested, as the 
+Passes all tests in the `flat` testsuite, except for those relative to short bytestrings (Data.ByteString.Short) that seem unsupported by `ghcjs`.
+
+PROBLEM: unicode 16
 
 Check [stack-ghcjs.yaml](https://github.com/Quid2/flat/blob/master/stack-ghcjs.yaml) to see with what versions of `ghcjs` it has been tested.
 
@@ -110,13 +115,12 @@ If you use a different version of `ghcjs`, you might want to run the test suite 
 
 `stack test --stack-yaml=stack-ghcjs.yaml`
 
-NOTE: Versions prior to 0.33 encode `Double` values incorrectly when they are not aligned with a byte boundary.
-
-NOTE: A native [TypeScript/JavaScript version](https://github.com/Quid2/ts) of `flat` is under development.
-
-#### [ETA](https://eta-lang.org/)
-
-It builds (with etlas 1.5.0.0 and eta eta-0.8.6b2 under macOS Sierra) and seems to be working, though the full test suite could not be run due to Eta's issues compiling some of the test suite dependencies.
+* [ETA](https://eta-lang.org/) 0.8.6b2 & etlas>=1.5.0.0
+  * Caveats:
+    * Compatible since version 0.36
+    * Eta requires patched versions of certain packages. When compiling under eta, `flat`'s cabal file selects the latest patched versions available at the time of release.
+    * Eta has an issue with recursion, that in certain cases leads to a st There is a problem with recursion. This causes teh encoding of lists larger than about 1500 elements (or whatever the java maximum stack is set to be), to fail.
+  See [issue](https://github.com/typelead/eta/issues/901) for details.
 
 ### Installation
 
@@ -124,9 +128,11 @@ Get the latest stable version from [hackage](https://hackage.haskell.org/package
 
 ### Known Bugs and Infelicities
 
+See also the [full list of open issues](https://github.com/Quid2/flat/issues).
+
 #### Longish compilation times
 
-'flat` relies more than other serialisation libraries on extensive inlining for its good performance, this unfortunately leads to longer compilation times. 
+`flat` relies more than other serialisation libraries on extensive inlining for its good performance, this unfortunately leads to longer compilation times. 
 
 If you have many data types or very large ones this might become an issue.
 
@@ -138,9 +144,12 @@ A couple of good practices that will eliminate or mitigate this problem are:
 
 #### Data types with more than 512 constructors are currently unsupported
 
-See also the [full list of open issues](https://github.com/Quid2/flat/issues).
-
 ### Acknowledgements
 
- `flat` reuses ideas and readapts code from various packages, mainly: `store`, `binary-bits` and `binary` and includes contributions from Justus Sagemüller.
+`flat` reuses ideas and readapts code from various packages, mainly: `store`, `binary-bits` and `binary` and includes contributions from Justus Sagemüller.
 
+### Other Stuff You Might Like
+
+check zm
+
+* A native [TypeScript/JavaScript version](https://github.com/Quid2/ts) of `flat` is under development.

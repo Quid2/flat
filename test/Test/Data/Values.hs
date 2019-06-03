@@ -24,6 +24,7 @@ import           Test.Data
 import qualified Test.Data2                     as D2
 -- import Data.Array as A
 
+
 instance NFData Various
 instance NFData a => NFData (List a)
 instance NFData a => NFData (D2.List a)
@@ -182,7 +183,9 @@ car1 = Car 2343 1965 True ModelB [18,234] "1234" [SunRoof,CruiseControl] (Engine
 
 treeN = mkTree asN3 1
 
-asciiStrT = ("asciiStr", longS english )
+longAsciiStrT = ("asciiStr", longS english )
+
+asciiTextT = ("asciiText", T.pack $ longS english )
 
 unicodeTextUTF8T = ("unicodeTextUTF8",UTF8Text unicodeText)
 unicodeTextUTF16T = ("unicodeTextUTF16",UTF16Text unicodeText)
@@ -208,6 +211,8 @@ chinese = "维护和平正义 开创美好未来——习近平主席在纪念�
 longS =  take 1000000 . concat . repeat
 
 notLongS =  take 1000 . concat . repeat
+
+longBoolListT = ("Long [Bool]",map (odd . ord) (longS uniSS) :: [Bool])
 
 arr0 = ("[Bool]",map (odd . ord) unicodeStr :: [Bool])
 
@@ -313,7 +318,9 @@ cafs = [
        , NF arr0
        , NF longS
        , NF unicodeStr
-       , NF asciiStrT
+       , NF longBoolListT
+       , NF longAsciiStrT
+       , NF asciiTextT
        , NF unicodeStrT
        , NF unicodeTextT
        --, NF unicodeTextUTF8T

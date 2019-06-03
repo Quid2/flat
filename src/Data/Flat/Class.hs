@@ -32,7 +32,7 @@ import           Data.Word
 import           GHC.Generics
 import           GHC.TypeLits
 import           Prelude           hiding (mempty)
-
+import Data.Proxy
 -- External and Internal inlining
 #define INL 2
 -- Internal inlining
@@ -336,7 +336,10 @@ instance Flat a => GSize (K1 i a) where
   {-# INLINE gsize #-}
 
 instance (GSize a, GSize b) => GSize (a :*: b) where
-    gsize !n (x :*: y) = gsize (gsize n x) y
+    gsize !n (x :*: y) = 
+      let !n' = gsize n x
+      in gsize n' y
+      -- gsize (gsize n x) y
     {-# INLINE gsize #-}
 
 -- Different size implementations
@@ -450,4 +453,4 @@ type family NumConstructors (a :: * -> *) :: Nat where
 
 
 unused :: forall a . a
-unused = error $ "Now, now, you could not possibly have meant this.."
+unused = error "Now, now, you could not possibly have meant this.."

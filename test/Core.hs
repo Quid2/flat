@@ -158,6 +158,8 @@ szb = getSize False
 
 -- sz_direction = getSize North
 
+inspect $ hasNoGenerics 'szb
+
 inspect $ 'sizeBool === 'const1
 
 inspect $ 'size3 === 'size3Code

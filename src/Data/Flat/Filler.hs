@@ -1,6 +1,8 @@
 {-# LANGUAGE DeriveAnyClass      #-}
 {-# LANGUAGE DeriveGeneric       #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE CPP       #-}
+
 -- |Pre-value and post-value byte alignments
 module Data.Flat.Filler (
     Filler(..),
@@ -32,7 +34,18 @@ instance Flat Filler where
 
 -- |A Post aligned value, a value followed by a filler
 data PostAligned a = PostAligned { postValue :: a, postFiller :: Filler }
+#ifdef ETA_VERSION    
+  deriving (Show, Eq, Ord, Typeable, Generic, NFData)
+
+instance Flat a => Flat (PostAligned a) where
+  encode (PostAligned val fill) = trampolineEncoding (encode val) <> encode fill
+
+#else
   deriving (Show, Eq, Ord, Typeable, Generic, NFData,Flat)
+#endif
+--  deriving (Show, Eq, Ord, Typeable, Generic, NFData,Flat)
+
+
 
 -- |A Pre aligned value, a value preceded by a filler
 data PreAligned a = PreAligned { preFiller :: Filler, preValue :: a }

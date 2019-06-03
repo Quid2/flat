@@ -24,9 +24,6 @@ import qualified Data.Flat.Encoder        as E
 import qualified Data.Flat.Encoder.Prim   as E
 import qualified Data.Flat.Encoder.Strict as E
 import           Data.Int
-import           Data.List
-import qualified Data.Map                 as M
-import           Data.Ord
 import           Data.Proxy
 import qualified Data.Sequence            as Seq
 import qualified Data.Text                as T
@@ -34,19 +31,44 @@ import           Data.Word
 import           Numeric.Natural
 import           System.Exit
 import           Test.Data
-import           Test.Data.Arbitrary
+import           Test.Data.Arbitrary()
 import           Test.Data.Flat
 import           Test.Data.Values         hiding (lbs, ns)
 import           Test.E
-import           Test.E.Arbitrary
+import           Test.E.Arbitrary()
 import           Test.E.Flat
 import           Test.Tasty
 import           Test.Tasty.HUnit
 import           Test.Tasty.QuickCheck    as QC hiding (getSize)
--- import           System.Arch
 import           Data.Flat.Endian
 import           Data.FloatCast
+import Data.Text.Arbitrary
+-- import Test.QuickCheck.Arbitrary
+import qualified Data.Complex as B
+import qualified Data.Ratio as B
 
+import qualified Data.Map                 as C
+import qualified Data.Map.Strict                 as CS
+import qualified Data.Map.Lazy                 as CL
+import qualified Data.IntMap.Strict as CS
+import qualified Data.IntMap.Lazy  as CL
+
+
+-- import           Data.List
+-- import           Data.Ord
+
+#if MIN_VERSION_base(4,9,0)
+import qualified Data.List.NonEmpty as BI
+#endif
+  
+instance Arbitrary UTF8Text where
+  arbitrary = UTF8Text <$> arbitrary
+  shrink t = UTF8Text <$> shrink (unUTF8 t)
+
+instance Arbitrary UTF16Text where
+    arbitrary = UTF16Text <$> arbitrary
+    shrink t = UTF16Text <$> shrink (unUTF16 t)
+  
 -- instance Flat [Int16]
 -- instance Flat [Word8]
 -- instance Flat [Bool]
@@ -58,17 +80,14 @@ main = do
 
   -- printInfo
 
+  -- print $ flat asciiStrT
+
   mainTest
   -- print $ flatRaw 18446744073709551615::Word64
   -- print $ B.unpack . flat $ (True,0::Word64,18446744073709551615::Word64)
   -- print (2^56::Word64,fromIntegral (1::Word8) `shiftL` 56 :: Word64,(18446744073709551615::Word64) `shiftR` 1)
   -- mainShow
   -- eWord64E id 0b
-
--- printInfo = do
---   print $ "BigEndian: " ++ show isBigEndian
---    print getSystemArch
---    print getSystemEndianness
 
 mainShow = do
   mapM_ (\_ -> generate (arbitrary :: Gen Int) >>= print) [1..10]
@@ -88,7 +107,7 @@ tests = testGroup "Tests" [
 testPrimitives = testGroup "conversion/memory primitives" [
    testEndian
   ,testFloatingConvert
-  --,testShifts
+  --,testShifts -- ghcjs fails this
   ]
 
 testEncDec = testGroup "encode/decode primitives" [
@@ -100,13 +119,12 @@ testEncDec = testGroup "encode/decode primitives" [
   ]
 
 testFlat = testGroup "flat/unflat" [
-   testSize
+  testSize
   ,testLargeEnum
   ,testContainers
-  ,flatTests
   ,flatUnflatRT
+  ,flatTests
   ]
-
 
 -- Data.Flat.Endian tests (to run, need to modify imports and cabal file)
 testEndian = testGroup "Endian" [
@@ -145,14 +163,16 @@ testEncodingPrim = testGroup "Encoding Primitives" [
    encRawWith 1 E.eTrueF [0b10000001]
   ,encRawWith 3 (E.eTrueF >=> E.eFalseF >=> E.eTrueF) [0b10100001]
 
-  ,encRawWith 32 (E.eWord32E id $ 2^18 + 3) [3,0,4,0,1]
-  ,encRawWith 32 (E.eWord32BEF  $ 2^18 + 3) [0,4,0,3,1]
+  -- Depends on endianess
+  --,encRawWith 32 (E.eWord32E id $ 2^18 + 3) [3,0,4,0,1]
+  -- ,encRawWith 64 (E.eWord64E id $ 0x1122334455667788) [0x88,0x77,0x66,0x55,0x44,0x33,0x22,0x11,1]
+  --,encRawWith 65 (E.eTrueF >=> E.eWord64E id (2^34 + 3)) [1,0,0,0,2,0,0,128,129]
+  --,encRawWith 65 (E.eFalseF >=> E.eWord64E id (2^34 + 3)) [1,0,0,0,2,0,0,0,129]
 
-  ,encRawWith 64 (E.eWord64E id $ 0x1122334455667788) [0x88,0x77,0x66,0x55,0x44,0x33,0x22,0x11,1]
+  -- Big Endian
+  ,encRawWith 32 (E.eWord32BEF  $ 2^18 + 3) [0,4,0,3,1]
   ,encRawWith 64 (E.eWord64BEF  $ 2^34 + 3) [0,0,0,4,0,0,0,3,1]
-  ,encRawWith 65 (E.eTrueF >=> E.eWord64E id (2^34 + 3)) [1,0,0,0,2,0,0,128,129]
   ,encRawWith 65 (E.eTrueF >=> E.eWord64BEF (2^34 + 3)) [128,0,0,2,0,0,0,1,129]
-  ,encRawWith 65 (E.eFalseF >=> E.eWord64E id (2^34 + 3)) [1,0,0,0,2,0,0,0,129]
   ,encRawWith 65 (E.eFalseF >=> E.eWord64BEF (2^34 + 3))  [0,0,0,2,0,0,0,1,129]
   ]
   where
@@ -275,7 +295,7 @@ testLargeEnum = testGroup "test enum with more than 256 constructors" $ concat
     , sz E258_257 9
     , sz E258_258 9
 
-    -- As encode are inlined, this is going to take for ever if this is compiled with -O1 or -O2
+    -- As encodes are inlined, this is going to take for ever if this is compiled with -O1 or -O2
     -- , encRaw (E258_256) [0b11111110]
     -- , encRaw (E258_257) [0b11111111,0b00000000]
     -- , encRaw (E258_258) [0b11111111,0b10000000]
@@ -295,23 +315,48 @@ testContainers = testGroup "containers" [
 
 flatUnflatRT = testGroup "unflat (flat v) == v"
   [  rt "()" (prop_Flat_roundtrip:: RT ())
-    ,rt "Bool" (prop_Flat_roundtrip::RT Bool)
-    ,rt "Word8" (prop_Flat_Large_roundtrip:: RTL Word8)
-    ,rt "Word16" (prop_Flat_Large_roundtrip:: RTL Word16)
-    ,rt "Word32" (prop_Flat_Large_roundtrip:: RTL Word32)
-    ,rt "Word64" (prop_Flat_Large_roundtrip:: RTL Word64)
-    ,rt "Word" (prop_Flat_Large_roundtrip:: RTL Word)
+    ,rt "Bool" (prop_Flat_roundtrip::RT Bool)          
+    ,rt "Char" (prop_Flat_roundtrip:: RT Char)
+    ,rt "Complex" (prop_Flat_roundtrip:: RT (B.Complex Float))
+    ,rt "Either N Bool" (prop_Flat_roundtrip:: RT (Either N Bool))
+    ,rt "Either Int Char" (prop_Flat_roundtrip:: RT (Either Int Char))
     ,rt "Int8" (prop_Flat_Large_roundtrip:: RTL Int8)
     ,rt "Int16" (prop_Flat_Large_roundtrip:: RTL Int16)
     ,rt "Int32" (prop_Flat_Large_roundtrip:: RTL Int32)
     ,rt "Int64" (prop_Flat_Large_roundtrip:: RTL Int64)
     ,rt "Int" (prop_Flat_Large_roundtrip:: RTL Int)
-    ,rt "Integer" (prop_Flat_roundtrip:: RT Integer)
+    ,rt "[Int16]" (prop_Flat_roundtrip:: RT [Int16])
+    ,rt "String" (prop_Flat_roundtrip:: RT String)
+#if MIN_VERSION_base(4,9,0)
+    ,rt "NonEmpty" (prop_Flat_roundtrip:: RT (BI.NonEmpty Bool))
+#endif      
+    ,rt "Maybe N" (prop_Flat_roundtrip:: RT (Maybe N))
+    ,rt "Ratio" (prop_Flat_roundtrip:: RT (B.Ratio Int32))
+    ,rt "Word8" (prop_Flat_Large_roundtrip:: RTL Word8)
+    ,rt "Word16" (prop_Flat_Large_roundtrip:: RTL Word16)
+    ,rt "Word32" (prop_Flat_Large_roundtrip:: RTL Word32)
+    ,rt "Word64" (prop_Flat_Large_roundtrip:: RTL Word64)
+    ,rt "Word" (prop_Flat_Large_roundtrip:: RTL Word)
     ,rt "Natural" (prop_Flat_roundtrip:: RT Natural)
+    ,rt "Integer" (prop_Flat_roundtrip:: RT Integer)
     ,rt "Float" (prop_Flat_roundtrip:: RT Float)
     ,rt "Double" (prop_Flat_roundtrip:: RT Double)
-    ,rt "Char" (prop_Flat_roundtrip:: RT Char)
-    --,rt "ASCII" (prop_Flat_roundtrip:: RT ASCII)
+
+    ,rt "Text" (prop_Flat_roundtrip:: RT T.Text)
+    ,rt "UTF8 Text" (prop_Flat_roundtrip:: RT UTF8Text)
+    ,rt "UTF16 Text" (prop_Flat_roundtrip:: RT UTF16Text)
+
+    ,rt "ByteString" (prop_Flat_roundtrip:: RT B.ByteString)
+    ,rt "Lazy ByteString" (prop_Flat_roundtrip:: RT L.ByteString)
+#ifndef ghcjs_HOST_OS
+    ,rt "Short ByteString" (prop_Flat_roundtrip:: RT SBS.ShortByteString)
+#endif
+
+    ,rt "Map.Strict" (prop_Flat_roundtrip:: RT (CS.Map Int Bool))
+    ,rt "Map.Lazy" (prop_Flat_roundtrip:: RT (CL.Map Int Bool))
+    ,rt "IntMap.Strict" (prop_Flat_roundtrip:: RT (CS.IntMap Bool))
+    ,rt "IntMap.Lazy" (prop_Flat_roundtrip:: RT (CL.IntMap Bool))
+
     ,rt "Unit" (prop_Flat_roundtrip:: RT Unit)
     ,rt "Un" (prop_Flat_roundtrip:: RT Un )
     ,rt "N" (prop_Flat_roundtrip:: RT N )
@@ -324,21 +369,9 @@ flatUnflatRT = testGroup "unflat (flat v) == v"
     ,rt "E32" (prop_Flat_roundtrip:: RT E32 )
     ,rt "A" (prop_Flat_roundtrip:: RT A )
     ,rt "B" (prop_Flat_roundtrip:: RT B )
-    ,rt "Maybe N" (prop_Flat_roundtrip:: RT (Maybe N))
-    ,rt "Either N Bool" (prop_Flat_roundtrip:: RT (Either N Bool))
-    ,rt "Either Int Char" (prop_Flat_roundtrip:: RT (Either Int Char))
     -- ,rt "Tree Bool" (prop_Flat_roundtrip:: RT (Tree Bool))
     -- ,rt "Tree N" (prop_Flat_roundtrip:: RT (Tree N))
     ,rt "List N" (prop_Flat_roundtrip:: RT (List N))
-    ,rt "[Int16]" (prop_Flat_roundtrip:: RT [Int16])
-    ,rt "String" (prop_Flat_roundtrip:: RT String)
-    -- Generates incorrect ascii chars?
-    ,rt "Text" (prop_Flat_roundtrip:: RT T.Text)
-    ,rt "ByteString" (prop_Flat_roundtrip:: RT B.ByteString)
-    ,rt "Lazy ByteString" (prop_Flat_roundtrip:: RT L.ByteString)
-#ifndef ghcjs_HOST_OS
-    ,rt "Short ByteString" (prop_Flat_roundtrip:: RT SBS.ShortByteString)
-#endif
     ]
 
 rt n = QC.testProperty (unwords ["round trip",n])
@@ -440,7 +473,6 @@ flatTests = testGroup "flat/unflat Unit tests" $ concat [
   ,encRaw (Right West :: Either Bool Direction) [0b11110000]
 
 
-
   ,map trip [minBound,maxBound::Word8]
   ,map trip [minBound,maxBound::Word16]
   ,map trip [minBound,maxBound::Word32]
@@ -449,8 +481,8 @@ flatTests = testGroup "flat/unflat Unit tests" $ concat [
   ,map trip [minBound::Int16,maxBound::Int16]
   ,map trip [minBound::Int32,maxBound::Int32]
   ,map trip [minBound::Int64,maxBound::Int64]
-  ,map trip [0::Float,-0::Float,0/0::Float,1/0::Float]
-  ,map trip [0::Double,-0::Double,0/0::Double,1/0::Double]
+  ,map tripShow [0::Float,-0::Float,0/0::Float,1/0::Float]
+  ,map tripShow [0::Double,-0::Double,0/0::Double,1/0::Double]
   ,encRaw '\0' [0]
   ,encRaw '\1' [1]
   ,encRaw '\127' [127]
@@ -486,7 +518,20 @@ flatTests = testGroup "flat/unflat Unit tests" $ concat [
    -- Long LazyStrings can have internal sections shorter than 255
    --,s (L.pack $ csb 600) (bsl s600)
   ,[trip [1..100::Int16]]
-  ,[trip asciiStrT,trip "维护和平正",trip (T.pack "abc"),trip unicodeText,trip unicodeTextUTF8T]
+
+-- See https://github.com/typelead/eta/issues/901
+#ifndef ETA_VERSION
+  ,[trip longAsciiStrT] 
+  ,[trip longBoolListT] 
+#endif
+
+  ,[trip asciiTextT] 
+  ,[trip english] 
+  ,[trip "维护和平正"]
+  ,[trip (T.pack "abc")]
+  ,[trip unicodeText]
+  ,[trip unicodeTextUTF8T]
+
   ,[trip longBS,trip longLBS]
 #ifndef ghcjs_HOST_OS
   ,[trip longSBS]
@@ -517,8 +562,13 @@ flatTests = testGroup "flat/unflat Unit tests" $ concat [
 encRaw :: forall a. (Show a, Flat a) => a -> [Word8] -> [TestTree]
 encRaw v e = [testCase (unwords ["flat raw",sshow v,show . B.unpack . flat $ v]) $ serRaw v @?= e]
 
-trip :: forall a .(Show a,Flat a) => a -> TestTree
+trip :: forall a .(Show a,Flat a,Eq a) => a -> TestTree
 trip v = testCase (unwords ["roundtrip",sshow v]) $
+  -- direct comparison
+  (unflat (flat v::B.ByteString)::Decoded a) @?= (Right v::Decoded a)
+
+tripShow :: forall a .(Show a,Flat a,Eq a) => a -> TestTree
+tripShow v = testCase (unwords ["roundtrip",sshow v]) $
   -- we use show to get Right NaN == Right NaN
   show (unflat (flat v::B.ByteString)::Decoded a) @?= show (Right v::Decoded a)
 
@@ -540,7 +590,7 @@ longLBS = L.concat $ concat $ replicate 10 [L.pack lbs]
 lbs = concat $ replicate 100 [234,123,255,0]
 cs n = replicate n 'c' -- take n $ cycle ['a'..'z']
 csb = map (fromIntegral . ord) . cs
-map1 = M.fromList [(False,True),(True,False)]
+map1 = C.fromList [(False,True),(True,False)]
 
 ns :: [(Word64, Int)]
 ns =  [( (-) (2 ^(i*7)) 1,fromIntegral (8*i)) | i <- [1 .. 10]]
