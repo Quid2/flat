@@ -9,11 +9,11 @@ matrix:
   include:
   # - env: IMG=quid2/eta CMD="etlas update;etlas test"
 
-  - env: IMG=quid2/x64-ubuntu-ghcjs CMD="stack test --stack-yaml stack-ghcjs.yaml"
+  # - env: IMG=quid2/x64-ubuntu-ghcjs CMD="stack test --stack-yaml stack-ghcjs.yaml"
 
-  - env: IMG=quid2/x64-ubuntu-ghcjs-9.21 CMD="stack test --stack-yaml stack-ghcjs-9.21.yaml"
+  # - env: IMG=quid2/x64-ubuntu-ghcjs-9.21 CMD="stack test --stack-yaml stack-ghcjs-9.21.yaml"
 
-  # - env: IMG=quid2/x32-ubuntu-cabal CMD="cabal install --only-dependencies --enable-tests;cabal test"
+  - env: IMG=quid2/x32-ubuntu-cabal CMD="cabal v2-build --only-dependencies --enable-tests;cabal v2-build;cabal v2-test"
 
   #- env: IMG=quid2/x64-ubuntu-stack-lts-6.35 CMD="stack test --resolver lts-6.35"
 
@@ -21,7 +21,7 @@ matrix:
 
   # - env: IMG=quid2/x64-ubuntu-stack-lts-11.22 CMD="stack test --resolver lts-11.22"
 
-  - env: IMG=quid2/x64-ubuntu-stack-lts-12.19 CMD="stack test --resolver lts-12.19"
+  # - env: IMG=quid2/x64-ubuntu-stack-lts-12.19 CMD="stack test --resolver lts-12.19"
 
   # - env: IMG=quid2/x64-ubuntu-stack-nightly-2018-11-19 CMD="stack test --resolver nightly-2018-11-19"
   
