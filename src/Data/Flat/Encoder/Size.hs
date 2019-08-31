@@ -1,5 +1,6 @@
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE CPP          #-}
+
 -- |Primitives to calculate the encoding size of a value
 module Data.Flat.Encoder.Size where
 
@@ -14,9 +15,7 @@ import           Data.Flat.Types
 import qualified Data.Text                      as T
 import qualified Data.Text.Internal             as T
 import           Data.ZigZag
-
 #include "MachDeps.h"
-
 -- A filler can take anything from 1 to 8 bits
 sFillerMax :: NumBits
 sFillerMax = 8
@@ -38,27 +37,26 @@ sDouble = 64
 
 {-# INLINE sChar #-}
 sChar :: Char -> NumBits
-sChar  = sWord32  . fromIntegral . ord
+sChar = sWord32 . fromIntegral . ord
 
 sCharMax :: NumBits
 sCharMax = 24
 
 {-# INLINE sWord #-}
 sWord :: Word -> NumBits
-
 {-# INLINE sInt #-}
 sInt :: Int -> NumBits
-
 #if WORD_SIZE_IN_BITS == 64
 sWord = sWord64 . fromIntegral
+
 sInt = sInt64 . fromIntegral
 #elif WORD_SIZE_IN_BITS == 32
 sWord = sWord32 . fromIntegral
+
 sInt = sInt32 . fromIntegral
 #else
 #error expected WORD_SIZE_IN_BITS to be 32 or 64
 #endif
-
 -- TODO: optimize ints sizes
 {-# INLINE sInt16 #-}
 sInt16 :: Int16 -> NumBits
@@ -74,30 +72,33 @@ sInt64 = sWord64 . zzEncode
 
 {-# INLINE sWord16 #-}
 sWord16 :: Word16 -> NumBits
-sWord16 w | w < 128 = 8
-          | w < 16384 = 16
-          | otherwise = 24
+sWord16 w
+  | w < 128 = 8
+  | w < 16384 = 16
+  | otherwise = 24
 
 {-# INLINE sWord32 #-}
 sWord32 :: Word32 -> NumBits
-sWord32 w | w < 128 = 8
-          | w < 16384 = 16
-          | w < 2097152 = 24
-          | w < 268435456 = 32
-          | otherwise = 40
+sWord32 w
+  | w < 128 = 8
+  | w < 16384 = 16
+  | w < 2097152 = 24
+  | w < 268435456 = 32
+  | otherwise = 40
 
 {-# INLINE sWord64 #-}
 sWord64 :: Word64 -> NumBits
-sWord64 w | w < 128 = 8
-          | w < 16384 = 16
-          | w < 2097152 = 24
-          | w < 268435456 = 32
-          | w < 34359738368 = 40
-          | w < 4398046511104 = 48
-          | w < 562949953421312 = 56
-          | w < 72057594037927936 = 64
-          | w < 9223372036854775808 = 72
-          | otherwise = 80
+sWord64 w
+  | w < 128 = 8
+  | w < 16384 = 16
+  | w < 2097152 = 24
+  | w < 268435456 = 32
+  | w < 34359738368 = 40
+  | w < 4398046511104 = 48
+  | w < 562949953421312 = 56
+  | w < 72057594037927936 = 64
+  | w < 9223372036854775808 = 72
+  | otherwise = 80
 
 {-# INLINE sInteger #-}
 sInteger :: Integer -> NumBits
@@ -110,21 +111,21 @@ sNatural = sIntegral . toInteger
 -- BAD: duplication of work with encoding
 {-# INLINE sIntegral #-}
 sIntegral :: (Bits t, Integral t) => t -> Int
-sIntegral t = let vs = w7l t
-              in length vs*8
+sIntegral t =
+  let vs = w7l t
+   in length vs * 8
 
 --sUTF8 :: T.Text -> NumBits
 --sUTF8 t = fold
-
 -- Wildly pessimistic but fast
 {-# INLINE sUTF8Max #-}
 sUTF8Max :: Text -> NumBits
-sUTF8Max = blobBits . (4*) . T.length
-
+sUTF8Max = blobBits . (4 *) . T.length
+#ifndef ghcjs_HOST_OS
 {-# INLINE sUTF16 #-}
 sUTF16 :: T.Text -> NumBits
 sUTF16 = blobBits . textBytes
-
+#endif
 {-# INLINE sBytes #-}
 sBytes :: B.ByteString -> NumBits
 sBytes = blobBits . B.length
@@ -136,7 +137,7 @@ sLazyBytes bs = 16 + L.foldrChunks (\b l -> blkBitsBS b + l) 0 bs
 {-# INLINE sShortBytes #-}
 sShortBytes :: SBS.ShortByteString -> NumBits
 sShortBytes = blobBits . SBS.length
-
+#ifndef ghcjs_HOST_OS
 -- We are not interested in the number of unicode chars (returned by T.length, an O(n) operation)
 -- just the number of bytes
 -- > T.length (T.pack "\x1F600")
@@ -146,28 +147,34 @@ sShortBytes = blobBits . SBS.length
 {-# INLINE textBytes #-}
 textBytes :: T.Text -> Int
 textBytes !(T.Text _ _ w16Len) = w16Len * 2
-
+#endif
 {-# INLINE bitsToBytes #-}
 bitsToBytes :: Int -> Int
 bitsToBytes = numBlks 8
 
 {-# INLINE numBlks #-}
 numBlks :: Integral t => t -> t -> t
-numBlks blkSize bits = let (d,m) = bits `divMod` blkSize
-                       in d + (if m==0 then 0 else 1)
+numBlks blkSize bits =
+  let (d, m) = bits `divMod` blkSize
+   in d +
+      (if m == 0
+         then 0
+         else 1)
 
 {-# INLINE arrayBits #-}
 arrayBits :: Int -> NumBits
-arrayBits = (8*) . arrayChunks
+arrayBits = (8 *) . arrayChunks
 
 {-# INLINE arrayChunks #-}
 arrayChunks :: Int -> NumBits
-arrayChunks = (1+) . numBlks 255
+arrayChunks = (1 +) . numBlks 255
 
 {-# INLINE blobBits #-}
 blobBits :: Int -> NumBits
-blobBits numBytes = 16 -- initial filler + final 0
-                    + blksBits numBytes
+blobBits numBytes =
+  16 -- initial filler + final 0
+   +
+  blksBits numBytes
 
 {-# INLINE blkBitsBS #-}
 blkBitsBS :: B.ByteString -> NumBits
@@ -175,4 +182,4 @@ blkBitsBS = blksBits . B.length
 
 {-# INLINE blksBits #-}
 blksBits :: Int -> NumBits
-blksBits numBytes = 8*(numBytes + numBlks 255 numBytes)
+blksBits numBytes = 8 * (numBytes + numBlks 255 numBytes)

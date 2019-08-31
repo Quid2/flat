@@ -1,29 +1,32 @@
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE CPP          #-}
+
 -- |Strict Decoder
-module Data.Flat.Decoder.Strict (
-    decodeArrayWith,
-    decodeListWith,
-    dByteString,
-    dLazyByteString,
-    dShortByteString,
-    dShortByteString_,
-    dUTF16,
-    dUTF8,
-    dInteger,
-    dNatural,
-    dChar,
-    dWord8,
-    dWord16,
-    dWord32,
-    dWord64,
-    dWord,
-    dInt8,
-    dInt16,
-    dInt32,
-    dInt64,
-    dInt,
-    ) where
+module Data.Flat.Decoder.Strict
+  ( decodeArrayWith
+  , decodeListWith
+  , dByteString
+  , dLazyByteString
+  , dShortByteString
+  , dShortByteString_
+  #ifndef ghcjs_HOST_OS
+  , dUTF16
+  #endif
+  , dUTF8
+  , dInteger
+  , dNatural
+  , dChar
+  , dWord8
+  , dWord16
+  , dWord32
+  , dWord64
+  , dWord
+  , dInt8
+  , dInt16
+  , dInt32
+  , dInt64
+  , dInt
+  ) where
 
 import           Data.Bits
 import qualified Data.ByteString                as B
@@ -43,10 +46,7 @@ import           Data.Word
 import           Data.ZigZag
 import           GHC.Base                       (unsafeChr)
 import           Numeric.Natural
-
 #include "MachDeps.h"
-
-
 {-# INLINE decodeListWith #-}
 decodeListWith :: Get a -> Get [a]
 decodeListWith dec = go
@@ -64,17 +64,16 @@ decodeArrayWith dec = DL.toList <$> getAsL_ dec
 --  getAsL_ :: Flat a => Get (DL.DList a)
 getAsL_ :: Get a -> Get (DL.DList a)
 getAsL_ dec = do
-    tag <- dWord8
-    case tag of
-         0 -> return DL.empty
-         _ -> do
-           h <- gets tag
-           t <- getAsL_ dec
-           return (DL.append h t)
-
+  tag <- dWord8
+  case tag of
+    0 -> return DL.empty
+    _ -> do
+      h <- gets tag
+      t <- getAsL_ dec
+      return (DL.append h t)
   where
     gets 0 = return DL.empty
-    gets n = DL.cons <$> dec <*> gets (n-1)
+    gets n = DL.cons <$> dec <*> gets (n - 1)
 
 {-# INLINE dNatural #-}
 dNatural :: Get Natural
@@ -82,38 +81,36 @@ dNatural = fromInteger <$> dUnsigned
 
 {-# INLINE dInteger #-}
 dInteger :: Get Integer
-dInteger = zzDecodeInteger <$> (dUnsigned::Get Integer)
+dInteger = zzDecodeInteger <$> (dUnsigned :: Get Integer)
 
-{-# INLINE dWord  #-}
-{-# INLINE dInt  #-}
+{-# INLINE dWord #-}
+{-# INLINE dInt #-}
 dWord :: Get Word
 dInt :: Get Int
-
 #if WORD_SIZE_IN_BITS == 64
 dWord = (fromIntegral :: Word64 -> Word) <$> dWord64
-dInt = (fromIntegral :: Int64 -> Int) <$> dInt64
 
+dInt = (fromIntegral :: Int64 -> Int) <$> dInt64
 #elif WORD_SIZE_IN_BITS == 32
 dWord = (fromIntegral :: Word32 -> Word) <$> dWord32
-dInt = (fromIntegral :: Int32 -> Int) <$> dInt32
 
+dInt = (fromIntegral :: Int32 -> Int) <$> dInt32
 #else
 #error expected WORD_SIZE_IN_BITS to be 32 or 64
 #endif
-
-{-# INLINE dInt8  #-}
+{-# INLINE dInt8 #-}
 dInt8 :: Get Int8
 dInt8 = zzDecode8 <$> dWord8
 
-{-# INLINE dInt16  #-}
+{-# INLINE dInt16 #-}
 dInt16 :: Get Int16
 dInt16 = zzDecode16 <$> dWord16
 
-{-# INLINE dInt32  #-}
+{-# INLINE dInt32 #-}
 dInt32 :: Get Int32
 dInt32 = zzDecode32 <$> dWord32
 
-{-# INLINE dInt64  #-}
+{-# INLINE dInt64 #-}
 dInt64 :: Get Int64
 dInt64 = zzDecode64 <$> dWord64
 
@@ -127,13 +124,29 @@ dWord32 = wordStep 0 (wordStep 7 (wordStep 14 (wordStep 21 (lastStep 28)))) 0
 
 -- {-# INLINE dWord64  #-}
 dWord64 :: Get Word64
-dWord64 = wordStep 0 (wordStep 7 (wordStep 14 (wordStep 21 (wordStep 28 (wordStep 35 (wordStep 42 (wordStep 49 (wordStep 56 (wordStep 63 (wordStep 70 (lastStep 77))))))))))) 0
-
+dWord64 =
+  wordStep
+    0
+    (wordStep
+       7
+       (wordStep
+          14
+          (wordStep
+             21
+             (wordStep
+                28
+                (wordStep
+                   35
+                   (wordStep
+                      42
+                      (wordStep
+                         49
+                         (wordStep 56 (wordStep 63 (wordStep 70 (lastStep 77)))))))))))
+    0
 
 {-# INLINE dChar #-}
 dChar :: Get Char
 -- dChar = chr . fromIntegral <$> dWord32
-
 -- Not really faster than the simpler version above
 dChar = charStep 0 (charStep 7 (lastCharStep 14)) 0
 
@@ -155,16 +168,15 @@ lastCharStep !shl !n = do
   let !v = n .|. (w `shift` shl)
   if tw == w
     then if v > 0x10FFFF
-         then charErr v
-         else return $ unsafeChr v
+           then charErr v
+           else return $ unsafeChr v
     else charErr v
 
 charErr :: (Show a1, Monad m) => a1 -> m a
-charErr v = fail $ concat ["Unexpected extra byte or non unicode char",show v]
+charErr v = fail $ concat ["Unexpected extra byte or non unicode char", show v]
 
 {-# INLINE wordStep #-}
-wordStep
-  :: (Bits a, Num a) => Int -> (a -> Get a) -> a -> Get a
+wordStep :: (Bits a, Num a) => Int -> (a -> Get a) -> a -> Get a
 wordStep shl k n = do
   tw <- fromIntegral <$> dWord8
   let w = tw .&. 127
@@ -182,18 +194,24 @@ lastStep shl n = do
   let v = n .|. (w `shift` shl)
   if tw == w
     then if countLeadingZeros w < shl
-         then wordErr v
-         else return v
+           then wordErr v
+           else return v
     else wordErr v
 
 wordErr :: (Show a1, Monad m) => a1 -> m a
-wordErr v = fail $ concat ["Unexpected extra byte in unsigned integer",show v]
+wordErr v = fail $ concat ["Unexpected extra byte in unsigned integer", show v]
 
 -- {-# INLINE dUnsigned #-}
 dUnsigned :: (Num b, Bits b) => Get b
 dUnsigned = do
-  (v,shl) <- dUnsigned_ 0 0
-  maybe (return v) (\s -> if shl>= s then fail "Unexpected extra data in unsigned integer" else return v) $ bitSizeMaybe v
+  (v, shl) <- dUnsigned_ 0 0
+  maybe
+    (return v)
+    (\s ->
+       if shl >= s
+         then fail "Unexpected extra data in unsigned integer"
+         else return v) $
+    bitSizeMaybe v
 
 -- {-# INLINE dUnsigned_ #-}
 dUnsigned_ :: (Bits t, Num t) => Int -> t -> Get (t, Int)
@@ -202,12 +220,11 @@ dUnsigned_ shl n = do
   let w = tw .&. 127
   let v = n .|. (fromIntegral w `shift` shl)
   if tw == w
-    then return (v,shl)
-    else dUnsigned_ (shl+7) v
-
+    then return (v, shl)
+    else dUnsigned_ (shl + 7) v
 --encode = encode . blob UTF8Encoding . L.fromStrict . T.encodeUtf8
 --decode = T.decodeUtf8 . L.toStrict . (unblob :: BLOB UTF8Encoding -> L.ByteString) <$> decode
-
+#ifndef ghcjs_HOST_OS
 -- BLOB UTF16Encoding
 dUTF16 :: Get T.Text
 dUTF16 = do
@@ -215,9 +232,9 @@ dUTF16 = do
   -- Checked decoding
   -- T.decodeUtf16LE <$> dByteString_
   -- Unchecked decoding
-  (ByteArray array,lengthInBytes) <- dByteArray_
+  (ByteArray array, lengthInBytes) <- dByteArray_
   return (T.Text (TA.Array array) 0 (lengthInBytes `div` 2))
-
+#endif
 dUTF8 :: Get T.Text
 dUTF8 = do
   _ <- dFiller
@@ -238,7 +255,7 @@ dShortByteString = dFiller >> dShortByteString_
 
 dShortByteString_ :: Get SBS.ShortByteString
 dShortByteString_ = do
-  (ByteArray array,_) <- dByteArray_
+  (ByteArray array, _) <- dByteArray_
   return $ SBS.SBS array
 
 dByteString :: Get B.ByteString
