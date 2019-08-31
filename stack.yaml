@@ -1,8 +1,8 @@
 #resolver: lts-6.35
 #resolver: lts-9.21
 #resolver: lts-11.22
-#resolver: lts-12.26
-resolver: lts-13.21
+resolver: lts-12.26
+#resolver: lts-14.0
 
 #allow-newer: true
 
