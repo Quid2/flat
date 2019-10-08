@@ -9,9 +9,9 @@ module Data.Flat.Decoder.Strict
   , dLazyByteString
   , dShortByteString
   , dShortByteString_
-  #ifndef ghcjs_HOST_OS
+#ifndef ghcjs_HOST_OS
   , dUTF16
-  #endif
+#endif
   , dUTF8
   , dInteger
   , dNatural
