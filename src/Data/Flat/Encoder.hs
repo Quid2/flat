@@ -57,9 +57,9 @@ module Data.Flat.Encoder (
     sBytes,
     sLazyBytes,
     sShortBytes,
-    #ifndef ghcjs_HOST_OS
+#ifndef ghcjs_HOST_OS
     sUTF16,
-    #endif
+#endif
     sFillerMax,
     sBool,
     sUTF8Max,
