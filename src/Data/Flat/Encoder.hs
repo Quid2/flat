@@ -23,9 +23,9 @@ module Data.Flat.Encoder (
     eTrue,
     eFalse,
     eBytes,
-    #ifndef ghcjs_HOST_OS
+#ifndef ghcjs_HOST_OS
     eUTF16,
-    #endif
+#endif
     eLazyBytes,
     eShortBytes,
     eInt,
