@@ -1,14 +1,13 @@
 #resolver: lts-6.35
 #resolver: lts-9.21
 #resolver: lts-11.22
-resolver: lts-12.26
-#resolver: lts-14.0
-
+#resolver: lts-12.26
+resolver: lts-14.7
 #allow-newer: true
 
 # extra-deps:
 # - inspection-testing-0.4.1.1
-  #- QuickCheck-2.12.6.1@sha256:95b4e3b01033bf7d2ad21d0085266dba378477ac88e3d11ff238fc9db2575e6d
+#- QuickCheck-2.12.6.1@sha256:95b4e3b01033bf7d2ad21d0085266dba378477ac88e3d11ff238fc9db2575e6d
 
 # Required to avoid problem with Natural instance in QuickCheck
 #- QuickCheck-2.11.3@sha256:e4c56f52532c993fc4460aeac7a2543dc03a68fba36eff420f3294d4d2622416
@@ -21,7 +20,6 @@ resolver: lts-12.26
 # - criterion-1.5.3.0
 # - base-compat-batteries-0.10.5@sha256:480e82200ededcb1cb71ce5dd3b215b8eeb5728ae62f5ab026e2db39f76cf5f3
 # - criterion-measurement-0.1.1.0@sha256:0da66385db923fee5265ad9c42d1deb3d58d2d7b5a36ab40308007380f8d51b5
-
 
 # - base-compat-batteries-0.10.5@sha256:480e82200ededcb1cb71ce5dd3b215b8eeb5728ae62f5ab026e2db39f76cf5f3
 # - criterion-measurement-0.1.1.0@sha256:0da66385db923fee5265ad9c42d1deb3d58d2d7b5a36ab40308007380f8d51b5
