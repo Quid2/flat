@@ -12,9 +12,9 @@ module Data.Flat.Encoder.Prim
   , eBitsF
   , eFloatF
   , eDoubleF
-  #ifndef ghcjs_HOST_OS
+#ifndef ghcjs_HOST_OS
   , eUTF16F
-  #endif
+#endif
   , eUTF8F
   , eCharF
   , eNaturalF
