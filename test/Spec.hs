@@ -343,14 +343,14 @@ flatUnflatRT = testGroup "unflat (flat v) == v"
     ,rt "Integer" (prop_Flat_roundtrip:: RT Integer)
     ,rt "Float" (prop_Flat_roundtrip:: RT Float)
     ,rt "Double" (prop_Flat_roundtrip:: RT Double)
-    #ifndef ghcjs_HOST_OS
+#ifndef ghcjs_HOST_OS
     ,rt "Text" (prop_Flat_roundtrip:: RT T.Text)
-    #endif
+#endif
 
     ,rt "UTF8 Text" (prop_Flat_roundtrip:: RT UTF8Text)
-    #ifndef ghcjs_HOST_OS
+#ifndef ghcjs_HOST_OS
     ,rt "UTF16 Text" (prop_Flat_roundtrip:: RT UTF16Text)
-    #endif
+#endif
     ,rt "ByteString" (prop_Flat_roundtrip:: RT B.ByteString)
     ,rt "Lazy ByteString" (prop_Flat_roundtrip:: RT L.ByteString)
 #ifndef ghcjs_HOST_OS
