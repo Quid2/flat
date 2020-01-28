@@ -74,9 +74,6 @@ instance (Flat a, Flat b, Ord a) => Flat (Map a b) where
 {-|
 Data.Sequence.Seq is encoded as a list
 
->>> asList Data.Sequence.fromList []
-True
-
 >>> asList Data.Sequence.fromList [3::Word8,4,7]
 True
 -}
@@ -87,9 +84,6 @@ instance Flat a => Flat (Seq a) where
 
 {-|
 Data.Set is encoded as a list
-
->>> asList (Data.Set.fromList []::Set())
-True
 
 >>> asList Data.Set.fromList [3::Word8,4,7]
 True

@@ -21,6 +21,7 @@ deriving instance Generic (Complex a)
 #endif
 
 -- $setup
+-- >>> :set -XNegativeLiterals
 -- >>> import Data.Flat.Run(flat,unflat)
 -- >>> import Data.Flat.Bits(bits)
 -- >>> import Text.PrettyPrint.HughesPJClass(prettyShow)
