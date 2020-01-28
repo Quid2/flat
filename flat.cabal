@@ -101,6 +101,7 @@ library
     , text
     , unordered-containers
     , vector
+    , semigroups
     -- , semigroups >=0.8.4 && <0.17
 
   -- if impl(ghc <8.2)
