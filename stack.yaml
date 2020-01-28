@@ -8,7 +8,7 @@
 resolver: nightly-2020-01-25
 
 extra-deps:
-
+  - semigroups-0.17.0.1@sha256:4b7bb9961d9d6bdc9f966d18f89a64fb7549de15212b2a5565b4e54fb393a809
 #   - containers-0.6.2.1@sha256:bbc3d2d5eef59a5d26383fb4b727c968390f2b6e9bd413d29aa875175bb16f8b,2460
 #   - binary-0.8.7.0@sha256:ae3e6cca723ac55c54bbb3fa771bcf18142bc727afd57818e66d6ee6c8044f12,7705
 
