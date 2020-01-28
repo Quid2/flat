@@ -76,5 +76,5 @@ import           Data.Flat.Encoder.Types
 
 #if ! MIN_VERSION_base(4,8,0)
 import           Data.Monoid((<>))
-(<>) = mappend
+-- (<>) = mappend
 #endif
