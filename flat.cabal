@@ -87,7 +87,8 @@ library
 
   build-depends:
       array                 >=0.5.1.0
-    , base                  >=4.8.2.0 && <5
+    -- , base                  >=4.8.2.0 && <5
+    , base                  >=4.9 && <5
     , bytestring            >=0.10.6
     , containers
     , deepseq               >=1.4
@@ -100,7 +101,7 @@ library
     , text
     , unordered-containers
     , vector
-    , semigroups >=0.8.4 && <0.17
+    -- , semigroups >=0.8.4 && <0.17
 
   -- if impl(ghc <8.2)
   --   build-depends: semigroups >=0.8.4 && <0.17
