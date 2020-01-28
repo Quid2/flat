@@ -4,6 +4,9 @@ import Data.Word
 import Data.Int
 import Data.Bits
 
+-- $setup
+-- >>> :set -XNegativeLiterals -XScopedTypeVariables
+
 {-# SPECIALIZE INLINE zzEncode :: Int8 -> Word8 #-}
 {-# SPECIALIZE INLINE zzEncode :: Int16 -> Word16 #-}
 {-# SPECIALIZE INLINE zzEncode :: Int32 -> Word32 #-}
@@ -27,10 +30,46 @@ zzEncode w = fromIntegral ((w `shiftL` 1) `xor` (w `shiftR` (finiteBitSize w -1)
 -- zzEncode64 :: Int64 -> Word64
 -- zzEncode64 x = fromIntegral ((x `shiftL` 1) `xor` (x `shiftR` 63))
 
+--   prop> \(n::Int16) -> n == (fromIntegral n :: Integer)
+-- prop> \(n::Integer) -> n == n
+-- 
+
 {-# INLINE zzEncodeInteger #-}
+{-|
+>>> zzEncodeInteger (0::Integer)
+0
+
+>>> zzEncodeInteger (-1::Integer)
+1
+
+>>> zzEncodeInteger (1::Integer)
+2
+
+>>> zzEncodeInteger (-2::Integer)
+3
+
+>>> zzEncodeInteger (2::Integer)
+4
+
+>>> zzEncodeInteger (-50::Integer)
+99
+
+>>> zzEncodeInteger (50::Integer)
+100
+
+>>> zzEncodeInteger (-256::Integer)
+511
+
+>>> zzEncodeInteger (256::Integer)
+512
+-}
 zzEncodeInteger :: Integer -> Integer
 zzEncodeInteger x | x>=0      = x `shiftL` 1
                   | otherwise = negate (x `shiftL` 1) - 1
+
+{-# INLINE zzDecodeInteger #-}
+zzDecodeInteger :: Integer -> Integer
+zzDecodeInteger = zzDecode
 
 -- {-# SPECIALIZE INLINE zzDecode :: Word8 -> Int8 #-}
 -- {-# SPECIALIZE INLINE zzDecode :: Word16 -> Int16 #-}
@@ -59,8 +98,5 @@ zzDecode32 = zzDecode
 zzDecode64 :: Word64 -> Int64
 zzDecode64 = zzDecode
 
-{-# INLINE zzDecodeInteger #-}
-zzDecodeInteger :: Integer -> Integer
-zzDecodeInteger = zzDecode
 
 

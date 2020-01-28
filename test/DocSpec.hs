@@ -15,7 +15,7 @@ main = do
   print args
   files <- if length args > 0
     then return $ map
-      (T.unpack . (T.append ".hs") . ("src/" `T.append`) . T.replace "." "/" . T.pack)
+      (T.unpack . (`T.append` ".hs") . ("src/" `T.append`) . T.replace "." "/" . T.pack)
       args
     else find always ((extension ==? ".hs") &&? exceptFiles []) "src"
   print files

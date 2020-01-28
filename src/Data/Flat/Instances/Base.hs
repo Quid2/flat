@@ -275,8 +275,20 @@ Integers are encoded just as the fixed size Ints.
 >>> tst (-1::Integer)
 (True,8,"00000001")
 
->>> tst (-2^120::Integer)
+>>> tst (1::Integer)
+(True,8,"00000010")
+
+>>> tst (-(2^4)::Integer)
+(True,8,"00011111")
+
+>>> tst (2^4::Integer)
+(True,8,"00100000")
+
+>>> tst (-(2^120)::Integer)
 (True,144,"11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111 00000011")
+
+>>> tst (2^120::Integer)
+(True,144,"10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 00000100")
 -}
 instance Flat Integer where
     size = sInteger
@@ -292,7 +304,7 @@ instance Flat Integer where
 >>> tst (127::Int8)
 (True,8,"11111110")
 
->>> tst ((-128)::Int8)
+>>> tst (-128::Int8)
 (True,8,"11111111")
 -}
 instance Flat Int8 where
@@ -306,11 +318,21 @@ instance Flat Int8 where
 >>> tst (0::Int16)
 (True,8,"00000000")
 
+>>> tst (1::Int16)
+(True,8,"00000010")
+
+>>> tst (-1::Int16)
+(True,8,"00000001")
+
 >>> tst (minBound::Int16)
 (True,24,"11111111 11111111 00000011")
 
+equivalent to 0b1111111111111111
+
 >>> tst (maxBound::Int16)
 (True,24,"11111110 11111111 00000011")
+
+equivalent to 0b1111111111111110
 -}
 instance Flat Int16 where
     size = sInt16

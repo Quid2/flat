@@ -2,7 +2,7 @@
 include ../Makefile
 
 dev: 
-	stack test :doc --file-watch --fast --test-arguments="Data.Flat.Instances Data.Flat.Instances.Containers"
+	stack test :doc --file-watch --fast --test-arguments="Data.ZigZag Data.Flat.Instances Data.Flat.Instances.Base"
 
 dev2: 
 	stack test :spec --file-watch --fast
