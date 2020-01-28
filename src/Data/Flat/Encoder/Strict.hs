@@ -15,6 +15,8 @@ import           Data.Flat.Memory
 import           Data.Flat.Types
 import           Data.Foldable
 
+import           Data.Semigroup          (Semigroup (..))
+
 #if !MIN_VERSION_base(4,9,0)
 import           Data.Semigroup          (Semigroup (..))
 #endif
