@@ -74,9 +74,9 @@ import           Data.Flat.Encoder.Size(arrayBits)
 import           Data.Flat.Encoder.Strict
 import           Data.Flat.Encoder.Types
 
-import           Data.Semigroup((<>))
-
--- #if ! MIN_VERSION_base(4,8,0)
 -- import           Data.Semigroup((<>))
--- -- (<>) = mappend
--- #endif
+
+#if ! MIN_VERSION_base(4,9,0)
+import           Data.Semigroup((<>))
+-- (<>) = mappend
+#endif
