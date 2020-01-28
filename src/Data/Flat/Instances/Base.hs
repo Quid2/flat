@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances ,StandaloneDeriving #-}
 -- | Flat instances for the base library
 module Data.Flat.Instances.Base where
 
