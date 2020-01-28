@@ -18,9 +18,7 @@ import           Data.Foldable
 -- import           Data.Semigroup
 -- import           Data.Semigroup          (Semigroup (..))
 
-#if !MIN_VERSION_base(4,9,0)
-import           Data.Semigroup          (Semigroup (..))
-LOW LOW LOW
+#if !MIN_VERSION_base(4,11,0)
 #endif
 
 #ifdef ETA_VERSION
