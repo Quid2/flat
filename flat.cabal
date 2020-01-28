@@ -122,7 +122,10 @@ test-suite spec
   cpp-options:
     -DLIST_BIT 
   -- -DENUM_LARGE -DTEST_DECBITS 
+  -- -DETA_VERSION -Dghcjs_HOST_OS
+    
 
+  ghc-options:      -O1
   hs-source-dirs:   test
   other-modules:
     Test.Data
@@ -221,7 +224,7 @@ benchmark miniBench
     Test.E.Flat
 
   default-language: Haskell2010
-  ghc-options:      -O2 -O2
+  ghc-options:      -O2
   build-depends:
       base
     , flat
