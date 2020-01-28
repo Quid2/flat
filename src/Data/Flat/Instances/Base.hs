@@ -291,7 +291,7 @@ instance Flat Integer where
 >>> tst (127::Int8)
 (True,8,"11111110")
 
->>> tst (-128::Int8)
+>>> tst ((-128)::Int8)
 (True,8,"11111111")
 -}
 instance Flat Int8 where

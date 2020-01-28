@@ -88,7 +88,7 @@ instance Flat a => Flat (Seq a) where
 {-|
 Data.Set is encoded as a list
 
->>> asList Data.Set.fromList []
+>>> asList (Data.Set.fromList []::Set())
 True
 
 >>> asList Data.Set.fromList [3::Word8,4,7]
