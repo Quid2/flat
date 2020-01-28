@@ -15,9 +15,11 @@ import           Data.Flat.Memory
 import           Data.Flat.Types
 import           Data.Foldable
 
-#if !MIN_VERSION_base(4,9,0)
 import           Data.Semigroup          (Semigroup (..))
-#endif
+
+-- #if !MIN_VERSION_base(4,9,0)
+-- import           Data.Semigroup          (Semigroup (..))
+-- #endif
 
 #ifdef ETA_VERSION
 -- import Data.Function(trampoline)
