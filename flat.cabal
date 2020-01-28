@@ -104,7 +104,7 @@ library
   if impl(ghc <8.2)
     build-depends:
         mono-traversable
-      , semigroups <0.18
+      , semigroups
       , text
 
 executable listTest
