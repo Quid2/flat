@@ -17,7 +17,7 @@ import qualified Data.List.NonEmpty as B
 #endif
 
 #if !MIN_VERSION_base(4,9,0)
-deriving instance Generic (B.Complex a)
+deriving instance Generic (Complex a)
 #endif
 
 -- $setup

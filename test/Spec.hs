@@ -68,7 +68,7 @@ instance Arbitrary UTF8Text where
 instance Arbitrary UTF16Text where
     arbitrary = UTF16Text <$> arbitrary
     shrink t = UTF16Text <$> shrink (unUTF16 t)
-  
+
 -- instance Flat [Int16]
 -- instance Flat [Word8]
 -- instance Flat [Bool]
@@ -677,3 +677,9 @@ prop_common_unsigned n _ = let n2 :: h = fromIntegral n
 
 
 
+ 
+ 
+ 
+ 
+ 
+ 

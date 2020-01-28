@@ -1,6 +1,10 @@
 # For internal testing only
+include ../Makefile
 
 dev: 
+	stack test :doc --file-watch --fast --test-arguments="Data.Flat.Instances Data.Flat.Instances.Containers"
+
+dev2: 
 	stack test :spec --file-watch --fast
 
 clean:
@@ -9,17 +13,11 @@ clean:
 	 cd test;find . -name "*.o" -delete;find . -name "*.hi" -delete;find . -name "*.dyn_*" -delete
 
 
+
 opt=2 -DENUM_LARGE
 
 speed : cspeed rspeed
 
-cspeed:
-	# /usr/bin/time -l stack build :compy
-	# touch test/Test/E.hs
-	# touch test/Test/E/Binary.hs
-	touch test/Test/E/Flat.hs
-	#cd test;/usr/bin/time -l stack ghc -- -cpp -i../src -O$(opt) Test.E;/usr/bin/time -l stack ghc -- -i../src -cpp  -O$(opt) Test.E.Binary;/usr/bin/time -l stack ghc -- -i../src -cpp -O$(opt) Test.E.Flat
-	cd test;/usr/bin/time -l stack ghc -- -cpp -i../src -O$(opt) Test.E;/usr/bin/time -l stack ghc -- -i../src -cpp -O$(opt) Test.E.Flat	
 
 tspeed:
 	cd test;/usr/bin/time -l stack ghc -- -cpp -i../src -O$(opt) Spec;
@@ -30,6 +28,29 @@ tst:
 jtst:
 	stack test :spec --fast
 
+cspeed:
+	# /usr/bin/time -l stack build :compy
+	# touch test/Test/E.hs
+	# touch test/Test/E/Binary.hs
+	echo " " >> test/Spec.hs;/usr/bin/time -l stack test :spec --resolver lts-14.22
+	#echo " " >> test/Spec.hs;stack test :spec
+	#cd test;/usr/bin/time -l stack ghc -- -cpp -i../src -O$(opt) Test.E;/usr/bin/time -l stack ghc -- -i../src -cpp  -O$(opt) Test.E.Binary;/usr/bin/time -l stack ghc -- -i../src -cpp -O$(opt) Test.E.Flat
+	#cd test;/usr/bin/time -l stack ghc -- -cpp -i../src -O$(opt) Test.E;/usr/bin/time -l stack ghc -- -i../src -cpp -O$(opt) Test.E.Flat	
+
+# 8.0.2 1m56s
+# 8.4.4
+# 8.6.5 (flat 0.37) 2m51 (flat 0.4) 5m1
+# 8.8.2  
+# 8.6.5
+ver = lts-14.22 
+# 8.4.4
+#ver = lts-12.26
+# 8.8.2
+#ver = nightly-2020-01-25
+cspeed:	
+	# touch test/Spec.hs;time stack test :spec
+	echo " " >> test/Spec.hs;/usr/bin/time -l stack test :spec --resolver $(ver)
+
 rspeed: 
 	stack bench :sbench
 	ls -l /tmp/dump/test/Test/E/Flat.dump-simpl
@@ -37,7 +58,38 @@ rspeed:
 bench: 
 	stack bench :miniBench  --file-watch
 
+# in /Users/titto/workspace/top-apps-ghcjs/reflex-platform/try-reflex
+js:
+	stack build --system-ghc --stack-yaml=stack-ghcjs.yaml -v
+	# -v 
+	#cabal new-build --ghcjs
+
+#  /Users/titto/workspace/flat/.stack-work/dist/x86_64-osx/Cabal-1.24.2.0_ghcjs/build/spec/spec:9065
+#      h$currentThread.interruptible = true;
+#                                    
+# TypeError: Cannot set property 'interruptible' of null
+jstest7:
+	#cp ~/.local/bin/cabal-1.24.0.2 ~/.local/bin/cabal
+	#cp ~/.local/bin/stack-1.9.3 ~/.local/bin/stack
+	stack-1.9.3 clean
+	stack-1.9.3 test --fast --file-watch --stack-yaml=stack-ghcjs.yaml  
+	# --ghc-options "-UENUM_LARGE -UTEST_DECBITS"
+	#cp ~/.local/bin/cabal-2.4.1.0 ~/.local/bin/cabal
+	#cp ~/.local/bin/stack-2.1.3.1 ~/.local/bin/stack
+
+#/Users/titto/workspace/flat/.stack-work/dist/x86_64-osx/Cabal-1.24.2.0_ghcjs/build/spec/spec:9101
+#      h$currentThread.interruptible = true;
+jstest9:
+	#stack	 clean
+	stack build --stack-yaml=stack-ghcjs.yaml  
+	stack test --fast --file-watch --stack-yaml=stack-ghcjs-9.21.yaml  
+
+# :spec TOO SLOW (or even get stuck)
+# :doc won't compile
 jstest:
+		nix-shell -A env --run 'cabal new-test :spec --constraint "tasty -clock" --ghcjs'
+
+jstests:
 	stack clean;stack test --fast --file-watch --stack-yaml=stack-ghcjs-9.21.yaml  --ghc-options "-UENUM_LARGE -UTEST_DECBITS"
 
 jsbench:
@@ -47,8 +99,6 @@ jsprof:
 	node --prof /Users/titto/workspace/flat/.stack-work/dist/x86_64-osx/Cabal-1.24.2.0_ghcjs/build/spec/spec
 	node --prof-process isolate-0x102801c00-v8.log > processed.txt
 
-docs:
-	stack haddock --no-haddock-deps --open
 
 cab:
 	cabal sandbox init

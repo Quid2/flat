@@ -2,11 +2,16 @@
 #resolver: lts-9.21
 #resolver: lts-11.22
 #resolver: lts-12.26
-resolver: lts-14.7
-#allow-newer: true
-
+#resolver: lts-14.20
+# allow-newer: true
+#resolver: nightly-2020-01-08
+resolver: nightly-2020-01-25
+# 9.21
 # extra-deps:
-# - inspection-testing-0.4.1.1
+#   - containers-0.6.2.1@sha256:bbc3d2d5eef59a5d26383fb4b727c968390f2b6e9bd413d29aa875175bb16f8b,2460
+#   - binary-0.8.7.0@sha256:ae3e6cca723ac55c54bbb3fa771bcf18142bc727afd57818e66d6ee6c8044f12,7705
+
+# - inspection-testing-0a.4.1.1
 #- QuickCheck-2.12.6.1@sha256:95b4e3b01033bf7d2ad21d0085266dba378477ac88e3d11ff238fc9db2575e6d
 
 # Required to avoid problem with Natural instance in QuickCheck

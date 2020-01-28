@@ -1,16 +1,21 @@
 # GHCJS version used for testing
 
-# Requires cabal 1.24.2.0 to build correctly
-resolver: lts-7.19
-compiler: ghcjs-0.2.1.9007019_ghc-8.0.1
-compiler-check: match-exact
-setup-info:
-  ghcjs:
-    source:
-      ghcjs-0.2.1.9007019_ghc-8.0.1:
-           url: http://ghcjs.tolysz.org/ghc-8.0-2017-02-05-lts-7.19-9007019.tar.gz
-           sha1: d2cfc25f9cda32a25a87d9af68891b2186ee52f9
+#reflex
+#resolver: ghcjs-8.6.0.1_ghc-8.6.5
 
+#miso
+resolver: ghcjs-8.6.0.1_ghc-8.6.2
+
+# Requires cabal 1.24.2.0 to build correctly
+# resolver: lts-7.19
+# compiler: ghcjs-0.2.1.9007019_ghc-8.0.1
+# compiler-check: match-exact
+# setup-info:
+#   ghcjs:
+#     source:
+#       ghcjs-0.2.1.9007019_ghc-8.0.1:
+#            url: http://ghcjs.tolysz.org/ghc-8.0-2017-02-05-lts-7.19-9007019.tar.gz
+#            sha1: d2cfc25f9cda32a25a87d9af68891b2186ee52f9
 
 # Requires cabal 1.24.2.0 to build correctly
 # resolver: lts-8.11
@@ -21,10 +26,10 @@ setup-info:
 #     source:
 #       ghcjs-0.2.1.9008011_ghc-8.0.2:
 #         url: https://github.com/matchwood/ghcjs-stack-dist/raw/master/ghcjs-0.2.1.9008011.tar.gz
-#         sha1: a72a5181124baf64bcd0e68a8726e65914473b3b                    
+#         sha1: a72a5181124baf64bcd0e68a8726e65914473b3b
 
 packages:
-- '.'
+  - "."
 
 # - location: ..
 #   extra-dep: true
@@ -35,17 +40,25 @@ packages:
 #   extra-dep: true
 
 extra-deps:
-- happy-1.19.5 # required to avoid a stack bug
-- QuickCheck-2.11.3
-- tasty-1.1.0.4
-- tasty-quickcheck-0.10
-- optparse-applicative-0.14.3.0
-- wcwidth-0.0.2
-- benchpress-0.2.2.12
+  - happy-1.19.5 # required to avoid a stack bug
+  - QuickCheck-2.11.3
+  - tasty-1.1.0.4
+  - tasty-quickcheck-0.10
+  - optparse-applicative-0.14.3.0
+  - wcwidth-0.0.2
+  - benchpress-0.2.2.12
+
+  # reflex
+  # - mono-traversable-1.0.12.0@sha256:29313db6d5113d68948e26c74dd6cf270f4e09bee4fac486919388e432687a16
+  # - vector-algorithms-0.8.0.1@sha256:8496dd4b5e79c37c064e69ce20c5bb31048dfb4b59ce43de6a01b5d0fa384457
 
 # - gauge-0.2.4
 # - basement-0.0.8@sha256:5eaa84a8395afc00751918adbde4db66b05e7126caf20779c0ddf4b94c23bc00
 
+# for miso
+#   - vector-0.12.0.3
+#   - dlist-0.8.0.6
+
 flags:
-   tasty:
+  tasty:
     clock: false
