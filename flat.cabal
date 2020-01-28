@@ -120,8 +120,8 @@ test-suite spec
   type:             exitcode-stdio-1.0
   main-is:          Spec.hs
   cpp-options:
-    -DLIST_BIT -DENUM_LARGE -DTEST_DECBITS -DLIST_BIT -DENUM_LARGE
-    -DTEST_DECBITS
+    -DLIST_BIT 
+  -- -DENUM_LARGE -DTEST_DECBITS 
 
   hs-source-dirs:   test
   other-modules:
