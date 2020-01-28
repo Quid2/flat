@@ -1,6 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Trustworthy #-}
+
 -- | Primitives to convert between Float/Double and Word32/Word64
 -- | This code was copied from `binary`
 -- | This module was written based on
@@ -8,31 +9,18 @@
 --
 --   Implements casting via a 1-element STUArray, as described in
 --   <http://stackoverflow.com/a/7002812/263061>.
-module Data.FloatCast
-  ( floatToWord
-  , wordToFloat
-  , doubleToWord
-  , wordToDouble
-  )
-where
+module Data.FloatCast (floatToWord, wordToFloat, doubleToWord, wordToDouble) where
 
-import           Data.Word                      ( Word32
-                                                , Word64
-                                                )
-import           Data.Array.ST                  ( newArray
-                                                , readArray
-                                                , MArray
-                                                , STUArray
-                                                )
-import           Data.Array.Unsafe              ( castSTUArray )
-import           GHC.ST                         ( runST
-                                                , ST
-                                                )
+import           Data.Word (Word32, Word64)
+import           Data.Array.ST (newArray, readArray, MArray, STUArray)
+import           Data.Array.Unsafe (castSTUArray)
+import           GHC.ST (runST, ST)
 import           Data.Flat.Endian
 
 -- | Reinterpret-casts a `Float` to a `Word32`.
 floatToWord :: Float -> Word32
 floatToWord x = runST (cast x)
+
 {-# INLINE floatToWord #-}
 
 -- | Reinterpret-casts a `Double` to a `Word64`.
@@ -48,12 +36,12 @@ doubleToWord x = fix64 $ runST (cast x)
 -- #else
 -- doubleToWord x = runST (cast x)
 -- #endif
-
 {-# INLINE doubleToWord #-}
 
 -- | Reinterpret-casts a `Word32` to a `Float`.
 wordToFloat :: Word32 -> Float
 wordToFloat x = runST (cast x)
+
 {-# INLINE wordToFloat #-}
 
 -- | Reinterpret-casts a `Word64` to a `Double`.
@@ -66,8 +54,9 @@ wordToDouble x = runST (cast $ fix64 x)
 -- #else
 -- wordToDouble x = runST (cast x) 
 -- #endif
-
-cast
-  :: (MArray (STUArray s) a (ST s), MArray (STUArray s) b (ST s)) => a -> ST s b
+cast :: (MArray (STUArray s) a (ST s), MArray (STUArray s) b (ST s))
+     => a
+     -> ST s b
 cast x = newArray (0 :: Int, 0) x >>= castSTUArray >>= flip readArray 0
+
 {-# INLINE cast #-}
