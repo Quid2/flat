@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP       #-}
 module Data.Flat.Encoder (
     Encoding,
-    (<>),
+    -- (<>),
     NumBits,
     encodersS,
     mempty,
@@ -74,6 +74,6 @@ import           Data.Flat.Encoder.Size(arrayBits)
 import           Data.Flat.Encoder.Strict
 import           Data.Flat.Encoder.Types
 
-#if ! MIN_VERSION_base(4,9,0)
-import           Data.Monoid((<>))
-#endif
+-- #if MIN_VERSION_base(4,9,0)
+-- import           Data.Monoid((<>))
+-- #endif
