@@ -4,7 +4,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE StandaloneDeriving ,DeriveGeneric #-}
 
 {-# LANGUAGE CPP #-}
 -- |Instances for the containers library

@@ -19,16 +19,13 @@ matrix:
     - env: IMG=quid2/x64-ubuntu-stack-lts-6.35 CMD="stack test --resolver lts-6.35"
 
     # ghc 8.0.2
-    - env: IMG=quid2/x64-ubuntu-stack-lts-9.21 CMD="stack test --resolver lts-9.21"
+    #- env: IMG=quid2/x64-ubuntu-stack-lts-9.21 CMD="stack test --resolver lts-9.21"
     # ghc 8.2.2
-    - env: IMG=quid2/x64-ubuntu-stack-lts-11.22 CMD="stack test --resolver lts-11.22"
-
+    #- env: IMG=quid2/x64-ubuntu-stack-lts-11.22 CMD="stack test --resolver lts-11.22"
     # ghc 8.4.4
-    - env: IMG=quid2/x64-ubuntu-stack-lts-12.26 CMD="stack test --resolver lts-12.26"
-    
+    #- env: IMG=quid2/x64-ubuntu-stack-lts-12.26 CMD="stack test --resolver lts-12.26"
     # ghc 8.6.5
     #- env: IMG=quid2/x64-ubuntu-stack-lts-14.7 CMD="stack test --resolver lts-14.22"
-
     # ghc 8.8.2 (FAIL: too much memory)
     #- env: IMG=quid2/x64-ubuntu-stack-nightly-2020-01-25 CMD="stack test --resolver nightly-2020-01-25"
 
