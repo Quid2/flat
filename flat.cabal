@@ -102,10 +102,7 @@ library
     , vector
 
   if impl(ghc <8.2)
-    build-depends:
-        mono-traversable
-      , semigroups <0.17
-      , text
+    build-depends: semigroups <0.17
 
 executable listTest
   main-is:          ListTest.hs
