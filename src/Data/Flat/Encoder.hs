@@ -75,6 +75,6 @@ import           Data.Flat.Encoder.Strict
 import           Data.Flat.Encoder.Types
 
 #if ! MIN_VERSION_base(4,8,0)
-import           Data.Monoid((<>))
+import           Data.Semigroup((<>))
 -- (<>) = mappend
 #endif
