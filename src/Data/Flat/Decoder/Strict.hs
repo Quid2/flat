@@ -171,8 +171,8 @@ lastCharStep !shl !n = do
            then charErr v
            else return $ unsafeChr v
     else charErr v
-
-charErr v = fail $ concat ["Unexpected extra byte or non unicode char", show v]
+ where 
+  charErr v = fail $ concat ["Unexpected extra byte or non unicode char", show v]
 
 {-# INLINE wordStep #-}
 wordStep :: (Bits a, Num a) => Int -> (a -> Get a) -> a -> Get a
@@ -196,8 +196,8 @@ lastStep shl n = do
            then wordErr v
            else return v
     else wordErr v
-
-wordErr v = fail $ concat ["Unexpected extra byte in unsigned integer", show v]
+ where 
+   wordErr v = fail $ concat ["Unexpected extra byte in unsigned integer", show v]
 
 -- {-# INLINE dUnsigned #-}
 dUnsigned :: (Num b, Bits b) => Get b

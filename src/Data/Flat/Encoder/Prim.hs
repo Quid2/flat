@@ -230,6 +230,7 @@ low7 t = fromIntegral t .&. 0x7F
 -- PROB: encodeUtf8 calls a C primitive, not compatible with GHCJS
 eUTF8F :: T.Text -> Prim
 eUTF8F = eBytesF . TE.encodeUtf8
+
 -- PROB: Not compatible with GHCJS
 -- | Encode text as UTF16 and encode the result as an array of bytes
 -- Efficient, as Text is already internally encoded as UTF16.

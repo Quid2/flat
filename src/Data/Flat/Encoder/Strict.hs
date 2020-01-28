@@ -14,7 +14,11 @@ import           Data.Flat.Encoder.Types
 import           Data.Flat.Memory
 import           Data.Flat.Types
 import           Data.Foldable
+
+#if ! MIN_VERSION_base(4,9,0)
 import           Data.Semigroup          (Semigroup (..))
+#endif
+
 #ifdef ETA_VERSION
 -- import Data.Function(trampoline)
 import           GHC.IO                  (trampolineIO)
@@ -24,6 +28,7 @@ trampolineEncoding (Encoding op) = Encoding (\s -> trampolineIO (op s))
 
 -- trampolineIO = id
 #endif
+
 -- |Strict encoder
 strictEncoder :: NumBits -> Encoding -> B.ByteString
 strictEncoder numBits (Encoding op) =
@@ -78,7 +83,7 @@ encodeListWith enc = go
   where
     go []     = eFalse
     go (x:xs) = eTrue <> enc x <> go xs
-
+ 
 -- {-# INLINE encodeList #-}
 -- encodeList :: (Foldable t, Flat a) => t a -> Encoding
 -- encodeList l = F.foldl' (\acc a -> acc <> eTrue <> encode a) mempty l <> eFalse

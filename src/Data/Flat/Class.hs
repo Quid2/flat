@@ -32,7 +32,7 @@ import           Data.Word
 import           GHC.Generics
 import           GHC.TypeLits
 import           Prelude           hiding (mempty)
-import Data.Proxy
+-- import Data.Proxy
 -- External and Internal inlining
 #define INL 2
 -- Internal inlining

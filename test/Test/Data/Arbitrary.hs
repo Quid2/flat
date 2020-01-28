@@ -16,15 +16,15 @@ import qualified Data.List.NonEmpty as BI
 
 import Numeric.Natural (Natural)
 
-#if MIN_VERSION_base(4,9,0)  
+#if MIN_VERSION_base(4,9,0) && MIN_VERSION_QuickCheck(2,10,0)
 instance Arbitrary a => Arbitrary (BI.NonEmpty a) where
   arbitrary = BI.fromList . getNonEmpty <$> (arbitrary :: Gen (NonEmptyList a))
   shrink xs = BI.fromList <$> shrink (BI.toList xs)
-#endif
 
 instance Arbitrary Natural where
   arbitrary = arbitrarySizedNatural
   shrink    = shrinkIntegral
+#endif
 
 -- Copied from quickcheck-instances (not used directly as it requires old-time that is incompatible with ghcjs)
 
