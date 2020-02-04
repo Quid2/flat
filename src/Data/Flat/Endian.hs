@@ -14,9 +14,9 @@ module Data.Flat.Endian
 
 import Data.Word
 
-#ifdef ghcjs_HOST_OS
-import Data.Bits
-#endif
+-- #ifdef ghcjs_HOST_OS
+-- import Data.Bits
+-- #endif
 
 isBigEndian :: Bool
 isBigEndian =
