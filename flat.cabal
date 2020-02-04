@@ -239,11 +239,11 @@ benchmark miniBench
       , deepseq            ==1.4.3.0
       , directory          ==1.3.1.0
       , filepath           ==1.4.1.1
-      , mono-traversable
       , process            ==1.6.2.0
       , statistics         ==0.14.0.2
       , text               ==1.2.3.0
       , vector-algorithms  ==0.7.0.1
+      , mono-traversable == 1.0.1
 
   else
     build-depends:
