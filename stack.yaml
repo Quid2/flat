@@ -2,10 +2,10 @@
 #resolver: lts-9.21
 #resolver: lts-11.22
 #resolver: lts-12.26
-#resolver: lts-14.20
+resolver: lts-14.22
 # allow-newer: true
 #resolver: nightly-2020-01-08
-resolver: nightly-2020-01-25
+#resolver: nightly-2020-01-25
 
 allow-newer: true
 #extra-deps:

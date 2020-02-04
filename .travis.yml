@@ -7,9 +7,8 @@ services:
 
 matrix:
   include:
-    # FAIL Cannot compile mono-traversable
-    - env: IMG=quid2/eta CMD="etlas update;etlas build;etlas test :spec"
-
+    # FAIL Cannot compile some dependencies
+    #- env: IMG=quid2/eta CMD="etlas update;etlas build;etlas test :spec"
     # FAIL: incorr
     # No setup information found for ghcjs-8.6.0.1_ghc-8.6.2 on your platform.
     # This probably means a GHC bindist has not yet been added for OS key 'source'.
@@ -28,7 +27,7 @@ matrix:
     # ghc 8.4.4 OK
     # - env: IMG=quid2/x64-ubuntu-stack-lts-12.26 CMD="stack test --resolver lts-12.26"
     # ghc 8.6.5 OK
-    # - env: IMG=quid2/x64-ubuntu-stack-lts-14.7 CMD="stack test --resolver lts-14.7"
+    # - env: IMG=quid2/x64-ubuntu-stack-lts-14.22 CMD="stack test --resolver lts-14.7"
     # ghc 8.8.2 (OK, with some changes to tests)
     # - env: IMG=quid2/x64-ubuntu-stack-nightly-2020-01-25 CMD="stack test --resolver nightly-2020-01-25"
 

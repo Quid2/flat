@@ -42,11 +42,11 @@ cspeed:
 # 8.6.5 (flat 0.37) 2m51 (flat 0.4) 5m1
 # 8.8.2  
 # 8.6.5
-ver = lts-14.22 
+#ver = lts-14.22 
 # 8.4.4
 #ver = lts-12.26
-# 8.8.2
-#ver = nightly-2020-01-25
+# 8.8.2 (O1 no BIG 221s)
+ver = nightly-2020-01-25
 cspeed:	
 	# touch test/Spec.hs;time stack test :spec
 	echo " " >> test/Spec.hs;/usr/bin/time -l stack test :spec --resolver $(ver)
@@ -59,8 +59,8 @@ bench:
 	stack bench :miniBench  --file-watch
 
 # in /Users/titto/workspace/top-apps-ghcjs/reflex-platform/try-reflex
-js:
-	stack build --system-ghc --stack-yaml=stack-ghcjs.yaml -v
+# js:
+# 	stack build --system-ghc --stack-yaml=stack-ghcjs.yaml -v
 	# -v 
 	#cabal new-build --ghcjs
 

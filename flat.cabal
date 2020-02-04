@@ -88,9 +88,11 @@ library
   if impl(eta -any)
     build-depends:
         array             ==0.5.2.0
+      , base
       , bytestring        ==0.10.8.2
       , containers        ==0.5.9.1
       , deepseq           ==1.4.3.0
+      , dlist
       , filepath          ==1.4.1.1
       , HUnit             ==1.6.0.0
       , mono-traversable
