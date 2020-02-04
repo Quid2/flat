@@ -121,7 +121,8 @@ test-suite spec
   main-is:          Spec.hs
   cpp-options:
     -DLIST_BIT -DTEST_DECBITS 
-  -- -DENUM_LARGE 
+  if impl(ghc <8.6) 
+    cpp-options: -DENUM_LARGE 
   -- -DETA_VERSION -Dghcjs_HOST_OS
 
   ghc-options:      -O1
@@ -159,6 +160,7 @@ test-suite spec
       , QuickCheck        ==2.10
       , tasty             ==1.1.0.3
       , text              ==1.2.3.0
+      , mono-traversable == 1.0.1
 
   else
     build-depends:
