@@ -52,10 +52,11 @@ toBE16 = byteSwap16
 
 -- | Fix issue with `ghcjs` (different order of 32 bit halves of 64 values with respect to `ghc`)
 fix64 :: Word64 -> Word64
-#ifdef ghcjs_HOST_OS
-fix64 = (`rotateR` 32)
-{-# NOINLINE fix64 #-}
-#else
 fix64 = id
-{-# INLINE fix64 #-}
-#endif
+-- #ifdef ghcjs_HOST_OS
+-- fix64 = (`rotateR` 32)
+-- {-# NOINLINE fix64 #-}
+-- #else
+-- fix64 = id
+-- {-# INLINE fix64 #-}
+-- #endif

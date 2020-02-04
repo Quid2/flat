@@ -12,7 +12,7 @@ matrix:
     # ghcjs
     - env: IMG=quid2/ghcjs-8.4.0.1 CMD="cabal --ghcjs new-build;cabal --ghcjs new-test spec"
     # FAIl compiling doctest-0.11.4
-    - env: IMG=quid2/x64-ubuntu-ghcjs-9.21 CMD="stack test :spec --stack-yaml stack-ghcjs-9.21.yaml"
+    # - env: IMG=quid2/x64-ubuntu-ghcjs-9.21 CMD="stack test :spec --stack-yaml stack-ghcjs-9.21.yaml"
     # cabal OK
     # - env: IMG=quid2/x32-ubuntu-cabal CMD="cabal v2-update;cabal v2-build --only-dependencies --enable-tests;cabal v2-build;cabal v2-test"
     # ghc 7.10.3 OK
