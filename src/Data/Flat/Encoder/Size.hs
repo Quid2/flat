@@ -13,7 +13,9 @@ import           Data.Flat.Encoder.Prim         (w7l)
 import           Data.Flat.Encoder.Types
 import           Data.Flat.Types
 import qualified Data.Text                      as T
-import qualified Data.Text.Internal             as T
+#ifndef ghcjs_HOST_OS
+import qualified Data.Text.Internal             as TI
+#endif
 import           Data.ZigZag
 #include "MachDeps.h"
 -- A filler can take anything from 1 to 8 bits
