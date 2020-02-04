@@ -39,9 +39,11 @@ import           Data.Flat.Decoder.Types
 import           Data.Int
 import           Data.Primitive.ByteArray
 import qualified Data.Text                      as T
-import qualified Data.Text.Array                as TA
 import qualified Data.Text.Encoding             as T
+#ifndef ghcjs_HOST_OS
+import qualified Data.Text.Array                as TA
 import qualified Data.Text.Internal             as T
+#endif
 import           Data.Word
 import           Data.ZigZag
 import           GHC.Base                       (unsafeChr)
