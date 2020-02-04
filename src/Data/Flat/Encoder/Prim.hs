@@ -60,9 +60,9 @@ import           Data.Primitive.ByteArray
 import qualified Data.Text                      as T
 #ifndef ghcjs_HOST_OS
 import qualified Data.Text.Array                as TA
+import qualified Data.Text.Internal             as TI
 #endif
 import qualified Data.Text.Encoding             as TE
-import qualified Data.Text.Internal             as TI
 import           Data.ZigZag
 import           Foreign
 -- import Debug.Trace
