@@ -85,23 +85,38 @@ library
     -Wall -O2 -funbox-strict-fields -fno-warn-orphans
     -fno-warn-name-shadowing -Werror
 
-  build-depends:
-      array                 >=0.5.1.0
-    -- , base                  >=4.8.2.0 && <5
-    , base                  >=4.9 && <5
-    , bytestring            >=0.10.6
-    , containers
-    , deepseq               >=1.4
-    , dlist                 >=0.6
-    , ghc-prim
-    , hashable
-    , mono-traversable
-    , pretty                >=1.1.2
-    , primitive
-    , text
-    , unordered-containers
-    , vector
-    , semigroups
+  if impl(eta -any)
+    build-depends:
+        array             ==0.5.2.0
+      , bytestring        ==0.10.8.2
+      , containers        ==0.5.9.1
+      , deepseq           ==1.4.3.0
+      , filepath          ==1.4.1.1
+      , HUnit             ==1.6.0.0
+      , mono-traversable
+      , QuickCheck        ==2.10
+      , tasty             ==1.1.0.3
+      , text              ==1.2.3.0
+      , mono-traversable == 1.0.1
+
+  else
+    build-depends:
+        array                 >=0.5.1.0
+      -- , base                  >=4.8.2.0 && <5
+      , base                  >=4.9 && <5
+      , bytestring            >=0.10.6
+      , containers
+      , deepseq               >=1.4
+      , dlist                 >=0.6
+      , ghc-prim
+      , hashable
+      , mono-traversable
+      , pretty                >=1.1.2
+      , primitive
+      , text
+      , unordered-containers
+      , vector
+      , semigroups
 
   -- if impl(ghc <8.2)
   --   build-depends: semigroups >=0.8.4 && <0.17
