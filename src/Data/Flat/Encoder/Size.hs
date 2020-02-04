@@ -139,6 +139,7 @@ sLazyBytes bs = 16 + L.foldrChunks (\b l -> blkBitsBS b + l) 0 bs
 {-# INLINE sShortBytes #-}
 sShortBytes :: SBS.ShortByteString -> NumBits
 sShortBytes = blobBits . SBS.length
+
 #ifndef ghcjs_HOST_OS
 -- We are not interested in the number of unicode chars (returned by T.length, an O(n) operation)
 -- just the number of bytes
@@ -148,8 +149,9 @@ sShortBytes = blobBits . SBS.length
 -- 4
 {-# INLINE textBytes #-}
 textBytes :: T.Text -> Int
-textBytes !(T.Text _ _ w16Len) = w16Len * 2
+textBytes !(TI.Text _ _ w16Len) = w16Len * 2
 #endif
+
 {-# INLINE bitsToBytes #-}
 bitsToBytes :: Int -> Int
 bitsToBytes = numBlks 8

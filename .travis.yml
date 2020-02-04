@@ -9,13 +9,10 @@ matrix:
   include:
     # FAIL Cannot compile some dependencies
     #- env: IMG=quid2/eta CMD="etlas update;etlas build;etlas test :spec"
-    # FAIL: incorr
-    # No setup information found for ghcjs-8.6.0.1_ghc-8.6.2 on your platform.
-    # This probably means a GHC bindist has not yet been added for OS key 'source'.
-    # Supported versions: ghcjs-0.1.0.20150924_ghc-7.10.2
-    #- env: IMG=quid2/x64-ubuntu-ghcjs CMD="stack test --stack-yaml stack-ghcjs.yaml"
+    # ghcjs
+    - env: IMG=quid2/ghcjs-8.4.0.1 CMD="cabal --ghcjs new-build;cabal --ghcjs new-test spec"
     # FAIl compiling doctest-0.11.4
-    #- env: IMG=quid2/x64-ubuntu-ghcjs-9.21 CMD="stack test --stack-yaml stack-ghcjs-9.21.yaml"
+    - env: IMG=quid2/x64-ubuntu-ghcjs-9.21 CMD="stack test spec --stack-yaml stack-ghcjs-9.21.yaml"
     # cabal OK
     # - env: IMG=quid2/x32-ubuntu-cabal CMD="cabal v2-update;cabal v2-build --only-dependencies --enable-tests;cabal v2-build;cabal v2-test"
     # ghc 7.10.3 OK
