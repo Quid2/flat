@@ -33,4 +33,4 @@ before_install:
   - docker pull $IMG
 
 script:
-  - docker run -it $IMG bash -c "git clone https://github.com/Quid2/$PKG;cd $PKG;$CMD"
+  - docker run -it $IMG bash -c "rm -r $PKG;git clone https://github.com/Quid2/$PKG;cd $PKG;$CMD"
