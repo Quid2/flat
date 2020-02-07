@@ -1,6 +1,6 @@
-# equivalent to:
-# cabal --ghcjs --constraint "tasty -clock"
-compiler: ghcjs
+-- equivalent to:
+-- cabal --ghcjs --constraint "tasty -clock"
+-- compiler: ghcjs
 
-package tasty:
-    flags: clock=false
+--package tasty:
+--    flags: clock=false
