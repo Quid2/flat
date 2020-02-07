@@ -10,10 +10,11 @@ import qualified Data.ByteString.Lazy          as L
 import qualified Data.ByteString.Short         as SBS
 
 -- $setup
+-- >>> import Data.Flat.Instances.Test
 -- >>> import Data.Flat.Instances.Base
--- >>> import Data.Flat.Run(flat,unflat)
--- >>> import Data.Flat.Bits(bits,asBytes)
--- >>> let tst v = (unflat (flat v) == Right v,size v 0,asBytes . bits $ v) 
+-- >>> import qualified Data.ByteString               as B
+-- >>> import qualified Data.ByteString.Lazy          as L
+-- >>> import qualified Data.ByteString.Short         as SBS
 
 {-|
 ByteString, ByteString.Lazy and ByteString.Short are all encoded as Prealigned Arrays:

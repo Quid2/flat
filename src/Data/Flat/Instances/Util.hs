@@ -1,13 +1,11 @@
 {-# LANGUAGE TupleSections ,ViewPatterns ,NoMonomorphismRestriction ,BangPatterns ,ScopedTypeVariables #-}
 
 module Data.Flat.Instances.Util
-    ( 
-        module F
+    ( module F
     --     sizeList
     -- , decodeList
     -- , encodeList
     , encodeArray
-    
     )
 where
 
@@ -18,7 +16,7 @@ import           Data.Flat.Types               as F
 -- import           Data.List
 -- import GHC.Exts(IsList)
 
--- $setup
+-- -- $setup
 -- >>> import Data.Flat.Instances.Base()
 -- >>> import Data.Flat.Instances.Test
 -- >>> let test = tstBits

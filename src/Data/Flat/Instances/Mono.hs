@@ -43,13 +43,10 @@ import qualified Data.Foldable                 as F
 
 -- $setup
 -- >>> import Data.Flat.Instances.Base()
--- >>> import Data.Flat.Run(flat,unflat)
--- >>> import Data.Flat.Bits(bits,asBytes)
+-- >>> import Data.Flat.Instances.Test
 -- >>> import Data.Word    
--- >>> import Text.PrettyPrint.HughesPJClass(prettyShow)
 -- >>> import qualified Data.Set
 -- >>> import qualified Data.Map
--- >>> let tst v = (unflat (flat v) == Right v,Data.Flat.Class.size v 0,asBytes . bits $ v) 
 
 {-|
 Sequences are defined as Arrays:
@@ -69,13 +66,13 @@ List a ≡  Nil
 
 The AsList/AsArray wrappers can be used to serialise sequences as Lists or Arrays
 
->>> tst $ AsArray []
+>>> tst $ AsArray ([]::[()])
 (True,8,[0])
 
 >>> tst $ AsArray [11::Word8,22,33]
 (True,40,[3,11,22,33,0])
 
->>> tst $ AsList []
+>>> tst $ AsList ([]::[()])
 (True,1,[0])
 
 >>> tst (AsList [11::Word8,22,33])
@@ -170,7 +167,7 @@ decodeSet = setFromList <$> decodeList
 {-|
 Maps are saved as lists of (key,value) tuples.
 
->>> tst (AsMap (Data.Map.fromList []))
+>>> tst (AsMap (Data.Map.fromList ([]::[(Word8,())])))
 (True,1,[0])
 
 >>> tst (AsMap (Data.Map.fromList [(3::Word,9::Word)]))

@@ -46,10 +46,6 @@ import           GHC.Exts          (inline)
 
 -- import           Data.Proxy
 
--- $setup
--- >>> {-# LANGUAGE DataKinds                 #-}
--- >>> import           Data.Proxy
-
 -- |Calculate the maximum size in bits of the serialisation of the value
 getSize :: Flat a => a -> NumBits
 getSize a = size a 0

@@ -22,15 +22,20 @@ deriving instance Generic (Complex a)
 
 -- $setup
 -- >>> :set -XNegativeLiterals
--- >>> import Data.Flat.Run(flat,unflat)
--- >>> import Data.Flat.Bits(bits)
--- >>> import Text.PrettyPrint.HughesPJClass(prettyShow)
--- >>> let tst v = (unflat (flat v) == Right v,size v 0,prettyShow . bits $ v) 
+-- >>> import Data.Flat.Instances.Test
+-- >>> import Data.Fixed
+-- >>> import Data.Int
+-- >>> import Data.Complex(Complex(..))
+-- >>> import Numeric.Natural
+-- >>> import Data.Word
+-- >>> import Data.Ratio
+-- >>> import qualified Data.List.NonEmpty as B
+-- >>> let test = tstBits
 
 {- |
 `()`, as all data types with a single constructor, has a zero-length encoding.
 
->>> tst ()
+>>> test ()
 (True,0,"")
 -}
 instance Flat () where
@@ -43,10 +48,10 @@ instance Flat () where
 {-|
 One bit is plenty for a Bool.
 
->>> tst False
+>>> test False
 (True,1,"0")
 
->>> tst True
+>>> test True
 (True,1,"1")
 -}
 instance Flat Bool where
@@ -61,15 +66,15 @@ Char's are mapped to Word32 and then encoded.
 
 For ascii characters, the encoding is standard ascii. 
 
->>> tst 'a'
+>>> test 'a'
 (True,8,"01100001")
 
 For unicode characters, the encoding is non standard.
 
->>> tst 'È'
+>>> test 'È'
 (True,16,"11001000 00000001")
 
->>> tst "\x1F600"
+>>> test "\x1F600"
 (True,26,"11000000 01110110 00000011 10")
 -}
 instance Flat Char where
@@ -80,28 +85,28 @@ instance Flat Char where
     decode = dChar
 
 {- |
->>> tst (Nothing::Maybe Bool)
+>>> test (Nothing::Maybe Bool)
 (True,1,"0")
 
->>> tst (Just False::Maybe Bool)
+>>> test (Just False::Maybe Bool)
 (True,2,"10")
 -}
 instance Flat a => Flat (Maybe a)
 
 {-|
->>> tst (Left False::Either Bool ())
+>>> test (Left False::Either Bool ())
 (True,2,"00")
 
->>> tst (Right ()::Either Bool ())
+>>> test (Right ()::Either Bool ())
 (True,1,"1")
 -}
 instance ( Flat a, Flat b ) => Flat (Either a b)
 
 {-|
->>> tst (MkFixed 123 :: Fixed E0)
+>>> test (MkFixed 123 :: Fixed E0)
 (True,16,"11110110 00000001")
 
->>> tst (MkFixed 123 :: Fixed E0) == tst (MkFixed 123 :: Fixed E2)
+>>> test (MkFixed 123 :: Fixed E0) == test (MkFixed 123 :: Fixed E2)
 True
 -}
 instance Flat (Fixed a) where
@@ -114,10 +119,10 @@ instance Flat (Fixed a) where
 {- |
 Word8 always take 8 bits.
 
->>> tst (0::Word8)
+>>> test (0::Word8)
 (True,8,"00000000")
 
->>> tst (255::Word8)
+>>> test (255::Word8)
 (True,8,"11111111")
 -}
 instance Flat Word8 where
@@ -161,22 +166,22 @@ Values between as 0 and 127 fit in a single byte.
 
 127 (0b1111111) is represented as Elem V127 and encoded as: Elem=0 127=1111111
 
->>> tst (127::Word) 
+>>> test (127::Word) 
 (True,8,"01111111")
 
 254 (0b11111110) is represented as Cons V126 (Elem V1) (254=128+126) and encoded as: Cons=1 V126=1111110 (Elem=0 V1=0000001):
 
->>> tst (254::Word)
+>>> test (254::Word)
 (True,16,"11111110 00000001")
 
 Another example, 32768 (Ob1000000000000000 = 0000010 0000000 0000000):
 
->>> tst (32768::Word32)
+>>> test (32768::Word32)
 (True,24,"10000000 10000000 00000010")
 
 As this is a variable length encoding, values are encoded in the same way, whatever their type:
 
->>> all (tst (3::Word) ==) [tst (3::Word16),tst (3::Word32),tst (3::Word64)]
+>>> all (test (3::Word) ==) [test (3::Word16),test (3::Word32),test (3::Word64)]
 True
 -}
 instance Flat Word where
@@ -189,10 +194,10 @@ instance Flat Word where
 {- |
 Naturals are encoded just as the fixed size Words. 
 
->>> tst (0::Natural)
+>>> test (0::Natural)
 (True,8,"00000000")
 
->>> tst (2^120::Natural)
+>>> test (2^120::Natural)
 (True,144,"10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 00000010")
 -}
 instance Flat Natural where
@@ -244,19 +249,19 @@ ZigZag a ≡ ZigZag a
 
 ZigZag encoding alternates between positive and negative numbers, so that numbers whose absolute value is small can be encoded efficiently:
 
->>> tst (0::Int)
+>>> test (0::Int)
 (True,8,"00000000")
 
->>> tst (-1::Int)
+>>> test (-1::Int)
 (True,8,"00000001")
 
->>> tst (1::Int)
+>>> test (1::Int)
 (True,8,"00000010")
 
->>> tst (-2::Int)
+>>> test (-2::Int)
 (True,8,"00000011")
 
->>> tst (2::Int)
+>>> test (2::Int)
 (True,8,"00000100")
 -}
 instance Flat Int where
@@ -269,25 +274,25 @@ instance Flat Int where
 {- |
 Integers are encoded just as the fixed size Ints. 
 
->>> tst (0::Integer)
+>>> test (0::Integer)
 (True,8,"00000000")
 
->>> tst (-1::Integer)
+>>> test (-1::Integer)
 (True,8,"00000001")
 
->>> tst (1::Integer)
+>>> test (1::Integer)
 (True,8,"00000010")
 
->>> tst (-(2^4)::Integer)
+>>> test (-(2^4)::Integer)
 (True,8,"00011111")
 
->>> tst (2^4::Integer)
+>>> test (2^4::Integer)
 (True,8,"00100000")
 
->>> tst (-(2^120)::Integer)
+>>> test (-(2^120)::Integer)
 (True,144,"11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111 00000011")
 
->>> tst (2^120::Integer)
+>>> test (2^120::Integer)
 (True,144,"10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 10000000 00000100")
 -}
 instance Flat Integer where
@@ -298,13 +303,13 @@ instance Flat Integer where
     decode = dInteger
 
 {-|
->>> tst (0::Int8)
+>>> test (0::Int8)
 (True,8,"00000000")
 
->>> tst (127::Int8)
+>>> test (127::Int8)
 (True,8,"11111110")
 
->>> tst (-128::Int8)
+>>> test (-128::Int8)
 (True,8,"11111111")
 -}
 instance Flat Int8 where
@@ -315,21 +320,21 @@ instance Flat Int8 where
     size = sInt8
 
 {- |
->>> tst (0::Int16)
+>>> test (0::Int16)
 (True,8,"00000000")
 
->>> tst (1::Int16)
+>>> test (1::Int16)
 (True,8,"00000010")
 
->>> tst (-1::Int16)
+>>> test (-1::Int16)
 (True,8,"00000001")
 
->>> tst (minBound::Int16)
+>>> test (minBound::Int16)
 (True,24,"11111111 11111111 00000011")
 
 equivalent to 0b1111111111111111
 
->>> tst (maxBound::Int16)
+>>> test (maxBound::Int16)
 (True,24,"11111110 11111111 00000011")
 
 equivalent to 0b1111111111111110
@@ -342,13 +347,13 @@ instance Flat Int16 where
     decode = dInt16
 
 {- |
->>> tst (0::Int32)
+>>> test (0::Int32)
 (True,8,"00000000")
 
->>> tst (minBound::Int32)
+>>> test (minBound::Int32)
 (True,40,"11111111 11111111 11111111 11111111 00001111")
 
->>> tst (maxBound::Int32)
+>>> test (maxBound::Int32)
 (True,40,"11111110 11111111 11111111 11111111 00001111")
 -}
 instance Flat Int32 where
@@ -359,13 +364,13 @@ instance Flat Int32 where
     decode = dInt32
 
 {- |
->>> tst (0::Int64)
+>>> test (0::Int64)
 (True,8,"00000000")
 
->>> tst (minBound::Int64)
+>>> test (minBound::Int64)
 (True,80,"11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111 00000001")
 
->>> tst (maxBound::Int64)
+>>> test (maxBound::Int64)
 (True,80,"11111110 11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111 00000001")
 -}
 instance Flat Int64 where
@@ -385,13 +390,13 @@ IEEE_754_binary32 ≡ IEEE_754_binary32 {sign :: Sign,
                                         fraction :: MostSignificantFirst Bits23}
 @
 
->>> tst (0::Float)
+>>> test (0::Float)
 (True,32,"00000000 00000000 00000000 00000000")
 
->>> tst (1.4012984643E-45::Float)
+>>> test (1.4012984643E-45::Float)
 (True,32,"00000000 00000000 00000000 00000001")
 
->>> tst (1.1754942107E-38::Float)
+>>> test (1.1754942107E-38::Float)
 (True,32,"00000000 01111111 11111111 11111111")
 -}
 instance Flat Float where
@@ -418,7 +423,7 @@ instance Flat Double where
     decode = dDouble
 
 {-|
->>> tst (4 :+ 2 :: Complex Word8)
+>>> test (4 :+ 2 :: Complex Word8)
 (True,16,"00000100 00000010")
 -}
 instance Flat a => Flat (Complex a)
@@ -426,7 +431,7 @@ instance Flat a => Flat (Complex a)
 {-|
 Ratios are encoded as tuples of (numerator,denominator)
 
->>> tst (3%4::Ratio Word8)
+>>> test (3%4::Ratio Word8)
 (True,16,"00000011 00000100")
 -}
 instance ( Integral a, Flat a ) => Flat (Ratio a) where
@@ -438,10 +443,10 @@ instance ( Integral a, Flat a ) => Flat (Ratio a) where
     decode = liftM2 (%) decode decode
 
 {-|
->>> tst ([]::[Bool])
+>>> test ([]::[Bool])
 (True,1,"0")
 
->>> tst [False,False]
+>>> test [False,False]
 (True,5,"10100")
 -}
 instance {-# OVERLAPPABLE #-}Flat a => Flat [ a ]
@@ -466,10 +471,10 @@ instance {-# OVERLAPPABLE #-}Flat a => Flat [ a ]
 {- |
 For better encoding/decoding performance, it is useful to declare instances of concrete list types, such as [Char].
 
->>> tst ""
+>>> test ""
 (True,1,"0")
 
->>> tst "aaa"
+>>> test "aaa"
 (True,28,"10110000 11011000 01101100 0010")
 -}
 instance {-# OVERLAPPING #-}Flat [ Char ]
@@ -477,10 +482,10 @@ instance {-# OVERLAPPING #-}Flat [ Char ]
 
 #if MIN_VERSION_base(4,9,0)
 {-|
->>> tst (B.fromList [True])
+>>> test (B.fromList [True])
 (True,2,"10")
 
->>> tst (B.fromList [False,False])
+>>> test (B.fromList [False,False])
 (True,4,"0100")
 -}
 instance {-# OVERLAPPABLE #-}Flat a => Flat (B.NonEmpty a)
@@ -489,19 +494,19 @@ instance {-# OVERLAPPABLE #-}Flat a => Flat (B.NonEmpty a)
 {- |
 Tuples are supported up to 7 elements.
 
->>> tst (False,())
+>>> test (False,())
 (True,1,"0")
 
->>> tst ((),())
+>>> test ((),())
 (True,0,"")
 
 "7 elements tuples ought to be enough for anybody" (Bill Gates - apocryphal)
 
->>> tst (False,True,True,True,False,True,True)
+>>> test (False,True,True,True,False,True,True)
 (True,7,"0111011")
 
->>> tst (1::Int,2,3,4,5,6,7,8)
-...
+tst (1::Int,"2","3","4","5","6","7","8")
+...error
 -}
 
 -- Not sure if these should be OVERLAPPABLE

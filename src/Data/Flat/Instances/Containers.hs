@@ -24,6 +24,11 @@ import Data.Sequence
 
 -- $setup
 -- >>> import Data.Flat.Instances.Test
+-- >>> import Data.Set
+-- >>> import Data.Sequence
+-- >>> import Data.IntMap
+-- >>> import Data.Map 
+-- >>> import Data.Tree      
 
 {-|
 Maps are defined as a list of (Key,Value) tuples:
@@ -36,7 +41,7 @@ List a = Nil | Cons a (List a)
 -}
 
 {-|
->>> tst $ Data.IntMap.empty
+>>> tst (Data.IntMap.empty :: IntMap ())
 (True,1,[0])
 
 >>> asList Data.IntMap.fromList [(1,"a"),(2,"b")]
@@ -50,20 +55,20 @@ instance Flat a => Flat (IntMap a) where
 {-|
 Maps are encoded as lists:
 
->>> tst $ Data.Map.empty
+>>> tst (Data.Map.empty :: Map () ())
 (True,1,[0])
 
->>>  asList Data.Map.fromList [(1,"a"),(2,"b")]
+>>>  asList Data.Map.fromList [("a","aa"),("b","bb")]
 True
 
 Key/Values are encoded in order:
 
->>> let l = [(2,"b"),(1,"a")] in tst (Data.Map.fromList l) == tst (Data.Map.fromList $ Prelude.reverse l)
+>>> let l = [("a","aa"),("b","bb")] in tst (Data.Map.fromList l) == tst (Data.Map.fromList $ Prelude.reverse l)
 True
 
 IntMap and Map are encoded in the same way:
 
->>> let l = [(2,"b"),(1,"a")] in tst (Data.IntMap.fromList l) == tst (Data.Map.fromList l)
+>>> let l = [(2::Int,"b"),(1,"a")] in tst (Data.IntMap.fromList l) == tst (Data.Map.fromList l)
 True
 -}
 instance (Flat a, Flat b, Ord a) => Flat (Map a b) where

@@ -37,6 +37,7 @@ import           Foreign
 
 -- $setup
 -- >>> :set -XBinaryLiterals
+-- >>> import Data.Word
 -- >>> import Data.Flat.Run
 
 -- |A special state, optimised for constructor decoding, consists of:

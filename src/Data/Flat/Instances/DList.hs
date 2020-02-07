@@ -7,6 +7,7 @@ import Data.DList
 -- $setup
 -- >>> import Data.Flat.Instances.Test
 -- >>> import Data.Flat.Instances.Base()
+-- >>> import Data.DList
 -- >>> let test = tstBits
 
 {-|
