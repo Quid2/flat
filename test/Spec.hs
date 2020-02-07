@@ -65,9 +65,11 @@ instance Arbitrary UTF8Text where
   arbitrary = UTF8Text <$> arbitrary
   shrink t = UTF8Text <$> shrink (unUTF8 t)
 
+#ifndef ghcjs_HOST_OS
 instance Arbitrary UTF16Text where
     arbitrary = UTF16Text <$> arbitrary
     shrink t = UTF16Text <$> shrink (unUTF16 t)
+#endif
 
 -- instance Flat [Int16]
 -- instance Flat [Word8]
