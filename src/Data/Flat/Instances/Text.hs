@@ -1,7 +1,12 @@
 {-# LANGUAGE CPP #-}
 
 -- | Flat instances for the text library
-module Data.Flat.Instances.Text(UTF8Text(..),UTF16Text(..)) where
+module Data.Flat.Instances.Text(
+  UTF8Text(..)
+#ifndef ghcjs_HOST_OS
+  ,UTF16Text(..)
+#endif
+) where
 
 import           Data.Flat.Instances.Util
 import qualified Data.Text             as T
