@@ -206,7 +206,7 @@ test-suite doc
     , directory
     , megaparsec
 
--- static tests
+-- static doctests (useful for ghcjs)
 test-suite docs
   type:             exitcode-stdio-1.0
   main-is:          DocTests.hs
