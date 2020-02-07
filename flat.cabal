@@ -191,20 +191,21 @@ test-suite spec
       , tasty
       , text
 
-test-suite doc
-  type:             exitcode-stdio-1.0
-  main-is:          DocSpec.hs
-  hs-source-dirs:   test
-  default-language: Haskell2010
-  build-depends:
-      base
-    , doctest == 0.16.3   
-    -- >=0.11.2
-    , filemanip  >=0.3.6.3
-    , text
-    , filepath
-    , directory
-    , megaparsec
+-- incompatible with ghcjs
+-- test-suite doc
+--   type:             exitcode-stdio-1.0
+--   main-is:          DocSpec.hs
+--   hs-source-dirs:   test
+--   default-language: Haskell2010
+--   build-depends:
+--       base
+--     , doctest == 0.16.3   
+--     -- >=0.11.2
+--     , filemanip  >=0.3.6.3
+--     , text
+--     , filepath
+--     , directory
+--     , megaparsec
 
 -- static doctests (useful for ghcjs)
 test-suite docs
