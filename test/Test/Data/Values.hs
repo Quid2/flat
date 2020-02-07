@@ -188,7 +188,10 @@ longAsciiStrT = ("asciiStr", longS english )
 asciiTextT = ("asciiText", T.pack $ longS english )
 
 unicodeTextUTF8T = ("unicodeTextUTF8",UTF8Text unicodeText)
+
+#ifndef ghcjs_HOST_OS
 unicodeTextUTF16T = ("unicodeTextUTF16",UTF16Text unicodeText)
+#endif
 
 unicodeTextT = ("unicodeText",unicodeText)
 unicodeText = T.pack unicodeStr

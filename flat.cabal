@@ -207,29 +207,28 @@ test-suite spec
 --     , megaparsec
 
 -- static doctests (useful for ghcjs)
--- test-suite docs
---   type:             exitcode-stdio-1.0
---   main-is:          DocTests.hs
---   hs-source-dirs:   test
---   other-modules:  
---         DocTest
---         DocTest.Data.Flat.Instances.ByteString
---         DocTest.Data.Flat.Instances.DList
---         DocTest.Data.Flat.Decoder.Prim
---         DocTest.Data.Flat.Instances.Base
---         DocTest.Data.Flat.Instances.Containers
---         DocTest.Data.Flat.Instances.Mono
---         DocTest.Data.Flat.Instances.Text
---         DocTest.Data.Flat.Instances.Unordered
---         DocTest.Data.Flat.Instances.Vector
---         DocTest.Data.FloatCast
---         DocTest.Data.ZigZag
---   default-language: Haskell2010
---   build-depends:
---       base
---     -- , tasty-hunit,tasty>=1.2.3, 
---     , hunit,text
---     , flat , bytestring,dlist,pretty,containers,unordered-containers,vector  
+test-suite docs
+  type:             exitcode-stdio-1.0
+  main-is:          DocTests.hs
+  hs-source-dirs:   test
+  other-modules:  
+        DocTest
+        DocTest.Data.Flat.Instances.ByteString
+        DocTest.Data.Flat.Instances.DList
+        DocTest.Data.Flat.Decoder.Prim
+        DocTest.Data.Flat.Instances.Base
+        DocTest.Data.Flat.Instances.Containers
+        DocTest.Data.Flat.Instances.Mono
+        DocTest.Data.Flat.Instances.Text
+        DocTest.Data.Flat.Instances.Unordered
+        DocTest.Data.Flat.Instances.Vector
+        DocTest.Data.FloatCast
+        DocTest.Data.ZigZag
+  default-language: Haskell2010
+  build-depends:
+      base
+      , tasty-hunit,tasty, 
+      , text , flat , bytestring,dlist,pretty,containers,unordered-containers,vector  
   
 
 benchmark microBench
