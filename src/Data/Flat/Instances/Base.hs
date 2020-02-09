@@ -74,8 +74,10 @@ For unicode characters, the encoding is non standard.
 >>> test 'È'
 (True,16,"11001000 00000001")
 
+#ifndef ETA
 >>> test "\x1F600"
 (True,26,"11000000 01110110 00000011 10")
+#endif
 -}
 instance Flat Char where
     size = sChar
