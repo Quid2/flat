@@ -20,13 +20,7 @@ instance Show a => Print (IO a) where
 instance {-# OVERLAPPABLE #-} Show a => Print a where
     asPrint a = return (show a)
 
-
--- test :: [String] -> IO String -> IO ()
--- test exp valIO = print $ testR exp (lines val)
-
--- testR exp val | exp == val = "OK"
---               | otherwise = unwords ["FAIL, expected",unlines exp,"but got",unlines val]
-
+test :: TestName -> [String] -> IO String -> IO TestTree
 test loc exp valIO = do
     val <- lines <$> valIO
     return $ testCase loc (val @=? exp)
