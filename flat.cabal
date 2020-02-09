@@ -198,6 +198,7 @@ test-suite spec
       , tasty
       , text
 
+  if ! impl(ghcjs) && ! impl(eta -any) 
 test-suite doc
     type:             exitcode-stdio-1.0
     main-is:          DocSpec.hs
@@ -207,8 +208,7 @@ test-suite doc
         base
       , text
       , filepath
-    if ! impl(ghcjs) && ! impl(eta -any) 
-      build-depends: doctest >= 0.11.2  , megaparsec, director, filemanip  >=0.3.6.3
+      , doctest >= 0.11.2  , megaparsec, filemanip  >=0.3.6.3, directory
 
 -- static doctests (useful for ghcjs)
 test-suite docs
