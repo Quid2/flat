@@ -1,6 +1,8 @@
 packages:
   - "."
 
+allow-newer: true
+
 # Requires cabal-2.0.1.1 (or later?) to build correctly
 resolver: lts-9.21
 compiler: ghcjs-0.2.1.9009021_ghc-8.0.2
