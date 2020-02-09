@@ -34,12 +34,14 @@ Text (and Data.Text.Lazy) is encoded as a byte aligned array of bytes correspond
 >>> tst $ T.pack "日日日"
 (True,120,[1,9,230,151,165,230,151,165,230,151,165,0])
 
+#ifndef ETA
 >>> tst $ T.pack "𐍈𐍈𐍈"
 (True,120,[1,12,240,144,141,136,240,144,141,136,240,144,141,136,0])
+#endif
 
 Strict and Lazy Text has the same encoding:
 
->>> tst (T.pack "𐍈𐍈𐍈") == tst (TL.pack "𐍈𐍈𐍈")
+>>> tst (T.pack "abc") == tst (TL.pack "abc")
 True
 -}
 instance Flat T.Text where
@@ -72,8 +74,10 @@ instance Flat UTF8Text where
 >>> tst (UTF16Text $ T.pack "aaa")
 (True,72,[1,6,97,0,97,0,97,0,0])
 
+#ifndef ETA
 >>> tst (UTF16Text $ T.pack "𐍈𐍈𐍈")
 (True,120,[1,12,0,216,72,223,0,216,72,223,0,216,72,223,0])
+#endif
 -}
 -- |A wrapper to encode/decode Text as UTF16 (faster but bigger)
 newtype UTF16Text = UTF16Text {unUTF16::T.Text} deriving (Eq,Ord,Show)

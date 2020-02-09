@@ -59,6 +59,7 @@ extra-deps:
 #   - vector-0.12.0.3
 #   - dlist-0.8.0.6
 
+# for ghcjs
 flags:
   tasty:
     clock: false
