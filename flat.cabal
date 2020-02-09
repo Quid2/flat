@@ -102,6 +102,8 @@ library
       , mono-traversable == 1.0.1
       , vector >= 0.11.0.0 && <= 0.12.0.1
       , unordered-containers >= 0.2.7.1 && <= 0.2.9.0
+      , pretty >= 1.1.3.4 && <= 1.1.3.6 
+      , primitive >= 0.6.1.0 && <= 0.6.4.0
 
   else
     build-depends:
