@@ -1,7 +1,7 @@
 
 -- Example of code equivalent to doctest
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE FlexibleInstances,UndecidableInstances,FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances,UndecidableInstances #-}
 module DocTest
     ( asPrint
     , test
