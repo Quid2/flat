@@ -25,7 +25,7 @@ import           Data.Semigroup          (Semigroup (..))
 #ifdef ETA_VERSION
 -- import Data.Function(trampoline)
 import           GHC.IO                  (trampolineIO)
-
+trampolineEncoding :: Encoding -> Encoding
 trampolineEncoding (Encoding op) = Encoding (\s -> trampolineIO (op s))
 #else
 
