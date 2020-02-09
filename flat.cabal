@@ -198,19 +198,20 @@ test-suite spec
       , tasty
       , text
 
-  if ! impl(ghcjs) && ! impl(eta -any) 
-test-suite doc
-    type:             exitcode-stdio-1.0
-    main-is:          DocSpec.hs
-    hs-source-dirs:   test
-    default-language: Haskell2010
-    build-depends:
-        base
-      , text
-      , filepath
-      , doctest >= 0.11.2  , megaparsec, filemanip  >=0.3.6.3, directory
+--  if ! impl(ghcjs) && ! impl(eta -any) {
+-- test-suite doc
+--     type:             exitcode-stdio-1.0
+--     main-is:          DocSpec.hs
+--     hs-source-dirs:   test
+--     default-language: Haskell2010
+--     build-depends:
+--         base
+--       , text
+--       , filepath
+--       , doctest >= 0.11.2  , megaparsec, filemanip  >=0.3.6.3, directory
 
--- static doctests (useful for ghcjs)
+
+-- static doctests (useful for ghcjs and eta)
 test-suite docs
   type:             exitcode-stdio-1.0
   main-is:          DocTests.hs
