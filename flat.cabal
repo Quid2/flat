@@ -201,12 +201,9 @@ test-suite doc
       , filemanip  >=0.3.6.3
       , text
       , filepath
-      , directory
-      , megaparsec
-    -- incompatible with ghcjs  
-    if !impl(ghcjs)  
-      build-depends: doctests
-       -- == 0.16.3  
+      , director
+    if ! impl(ghcjs) && ! impl(eta -any) 
+      build-depends: doctest >= 0.11.2  , megaparsec
 
 -- static doctests (useful for ghcjs)
 test-suite docs
