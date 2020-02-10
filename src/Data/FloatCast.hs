@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE Trustworthy ,NoMonomorphismRestriction#-}
 
 -- | Primitives to convert between Float/Double and Word32/Word64
 -- | This code was copied from `binary`
@@ -14,6 +14,7 @@ module Data.FloatCast
     , wordToFloat
     , doubleToWord
     , wordToDouble
+    , runST,cast
     )
 where
 
@@ -35,13 +36,13 @@ import           Data.Flat.Endian
 
 -- | Reinterpret-casts a `Word32` to a `Float`.
 {-|
+prop> \f -> wordToFloat (floatToWord f ) == f
+
 >>> floatToWord (-0.15625)
 3189768192
 
 >>> wordToFloat 3189768192
 -0.15625
-
-prop> \f -> wordToFloat (floatToWord f ) == f
 -}
 wordToFloat :: Word32 -> Float
 wordToFloat x = runST (cast x)
@@ -55,13 +56,13 @@ floatToWord x = runST (cast x)
 
 -- | Reinterpret-casts a `Double` to a `Word64`.
 {-|
+prop> \f -> wordToDouble (doubleToWord f ) == f
+
 >>> doubleToWord (-0.15625)
 13818169556679524352
 
 >>> wordToDouble 13818169556679524352
 -0.15625
-
-prop> \f -> wordToDouble (doubleToWord f ) == f
 -}
 doubleToWord :: Double -> Word64
 doubleToWord x = fix64 $ runST (cast x)
@@ -78,6 +79,16 @@ doubleToWord x = fix64 $ runST (cast x)
 {-# INLINE wordToDouble #-}
 wordToDouble :: Word64 -> Double
 wordToDouble x = runST (cast $ fix64 x)
+
+-- $setup
+-- >>> import Data.Word
+
+
+{- | 
+>>> runST (cast (0xF0F1F2F3F4F5F6F7::Word64)) == (0xF0F1F2F3F4F5F6F7::Word64)
+True
+-}
+-- runCast x = runST (cast x)
 
 -- #ifdef ghcjs_HOST_OS
 -- wordToDouble x = runST (cast $ x `rotateR` 32) 
