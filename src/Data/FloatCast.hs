@@ -66,7 +66,7 @@ floatToWord x = runST (cast x)
 prop> \f -> wordToDouble (doubleToWord f ) == f
 
 >>> showHex (doubleToWord 1.0000000000000004) ""
-3ff0000000000002
+"3ff0000000000002"
 
 >>> doubleToWord 1.0000000000000004 == 0x3FF0000000000002
 True
