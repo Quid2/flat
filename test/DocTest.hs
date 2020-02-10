@@ -25,7 +25,7 @@ instance {-# OVERLAPPABLE #-} Show a => Print a where
 test :: TestName -> [String] -> IO String -> IO TestTree
 test loc exp valIO = do
     val <- lines <$> valIO
-    return $ testCase loc (val @=? exp)
+    return $ testCase loc (unlines exp @=? unlines val)
 
--- testProp :: TestName -> String -> IO TestTree
+testProp :: Testable t => TestName -> t -> IO TestTree
 testProp loc = return . testProperty loc
