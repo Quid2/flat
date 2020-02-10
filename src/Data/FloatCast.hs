@@ -43,6 +43,9 @@ prop> \f -> wordToFloat (floatToWord f ) == f
 
 >>> wordToFloat 3189768192
 -0.15625
+
+>>> floatToWord (-5.828125) == 0xC0BA8000
+True
 -}
 wordToFloat :: Word32 -> Float
 wordToFloat x = runST (cast x)
@@ -54,9 +57,19 @@ floatToWord x = runST (cast x)
 {-# INLINE floatToWord #-}
 
 
+-- $setup
+-- >>> import Numeric (showHex)
+
+
 -- | Reinterpret-casts a `Double` to a `Word64`.
 {-|
 prop> \f -> wordToDouble (doubleToWord f ) == f
+
+>>> showHex (doubleToWord 1.0000000000000004) ""
+3ff0000000000002
+
+>>> doubleToWord 1.0000000000000004 == 0x3FF0000000000002
+True
 
 >>> doubleToWord (-0.15625)
 13818169556679524352
