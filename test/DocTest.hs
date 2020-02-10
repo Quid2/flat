@@ -5,11 +5,13 @@
 module DocTest
     ( asPrint
     , test
+    , testProp
     )
 where
 import qualified Data.Text                     as T
 import           Test.Tasty
 import           Test.Tasty.HUnit
+import           Test.Tasty.QuickCheck
 
 class Print f where
     asPrint :: f -> IO String
@@ -24,3 +26,6 @@ test :: TestName -> [String] -> IO String -> IO TestTree
 test loc exp valIO = do
     val <- lines <$> valIO
     return $ testCase loc (val @=? exp)
+
+-- testProp :: TestName -> String -> IO TestTree
+testProp loc = return . testProperty loc
