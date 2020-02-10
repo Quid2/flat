@@ -56,10 +56,9 @@ floatToWord :: Float -> Word32
 floatToWord x = runST (cast x)
 {-# INLINE floatToWord #-}
 
-
 -- $setup
 -- >>> import Numeric (showHex)
-
+-- >>> import Data.Word
 
 -- | Reinterpret-casts a `Double` to a `Word64`.
 {-|
@@ -92,10 +91,6 @@ doubleToWord x = fix64 $ runST (cast x)
 {-# INLINE wordToDouble #-}
 wordToDouble :: Word64 -> Double
 wordToDouble x = runST (cast $ fix64 x)
-
--- $setup
--- >>> import Data.Word
-
 
 {- | 
 >>> runST (cast (0xF0F1F2F3F4F5F6F7::Word64)) == (0xF0F1F2F3F4F5F6F7::Word64)
