@@ -547,6 +547,8 @@ flatTests = testGroup "flat/unflat Unit tests" $ concat [
   ,[trip longBS,trip longLBS]
 #ifndef ghcjs_HOST_OS
   ,[trip longSBS]
+#endif
+#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
   ,[trip unicodeTextUTF16T]
 #endif
   ]
