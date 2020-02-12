@@ -58,7 +58,7 @@ import           Data.Flat.Types
 import           Data.FloatCast
 import           Data.Primitive.ByteArray
 import qualified Data.Text                      as T
-#ifndef ghcjs_HOST_OS
+#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
 import qualified Data.Text.Array                as TA
 import qualified Data.Text.Internal             as TI
 #endif
