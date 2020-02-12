@@ -14,7 +14,8 @@ module Data.FloatCast
     , wordToFloat
     , doubleToWord
     , wordToDouble
-    , runST,cast
+    , runST
+    , cast
     )
 where
 
@@ -70,10 +71,13 @@ prop> \f -> wordToDouble (doubleToWord f ) == f
 >>> doubleToWord 1.0000000000000004 == 0x3FF0000000000002
 True
 
+>>> doubleToWord (-0.15625)
+13818169556679524352
+
 >>> showHex (doubleToWord (-0.15625)) ""
 "bfc4000000000000"
 
->>> wordToDouble 13818169556679524352
+>>> wordToDouble 0xbfc4000000000000
 -0.15625
 -}
 doubleToWord :: Double -> Word64

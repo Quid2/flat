@@ -130,12 +130,12 @@ testFlat = testGroup "flat/unflat" [
 
 -- Data.Flat.Endian tests (to run, need to modify imports and cabal file)
 testEndian = testGroup "Endian" [
-   conv toBE16 (2^10 + 3)  (2^9+2^8+4)
-  ,conv toBE32 (2^18 + 3)  50332672
-  ,conv toBE64 (2^34 + 3)  216172782180892672
-  ,conv toBE16 0x1234 0x3412
-  ,conv toBE32 0x11223344 0x44332211
-  ,conv toBE64 0x0123456789ABCDEF 0xEFCDAB8967452301
+   convBE toBE16 (2^10 + 3)  (2^9+2^8+4)
+  ,convBE toBE32 (2^18 + 3)  50332672
+  ,convBE toBE64 (2^34 + 3)  216172782180892672
+  ,convBE toBE16 0x1234 0x3412
+  ,convBE toBE32 0x11223344 0x44332211
+  ,convBE toBE64 0x0123456789ABCDEF 0xEFCDAB8967452301
   ]
 
 testFloatingConvert = testGroup "Floating conversions" [
@@ -146,6 +146,12 @@ testFloatingConvert = testGroup "Floating conversions" [
   ,rt "floatToWord" (prop_float_conv :: RT Float)
   ,rt "doubleToWord" (prop_double_conv :: RT Double)
  ]
+
+convBE f v littleEndianE = 
+  let e = if isBigEndian then v else littleEndianE
+  in testCase (unwords ["conv BigEndian",sshow v,"to",sshow e]) $ f v @?= e
+
+conv f v e = testCase (unwords ["conv",sshow v,showB . flat $ v,"to",sshow e]) $ f v @?= e
 
 -- ghcjs bug on shiftR 0, see: https://github.com/ghcjs/ghcjs/issues/706
 testShifts = testGroup "Shifts" $ map tst [0..33]
@@ -181,7 +187,6 @@ testEncodingPrim = testGroup "Encoding Primitives" [
     encRawWith sz enc exp = testCase (unwords ["encode raw with size",show sz]) $ flatRawWith sz enc @?= exp
 
 
-conv f v e = testCase (unwords ["conv",sshow v,showB . flat $ v,"to",sshow e]) $ f v @?= e
 
 testDecodingPrim = testGroup "Decoding Primitives" [
    dec ((,,,) <$> dropBits 13 <*> dBool <*> dBool <*> dBool) [0b10111110,0b10011010] ((),False,True,False)
