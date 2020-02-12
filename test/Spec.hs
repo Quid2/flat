@@ -65,7 +65,7 @@ instance Arbitrary UTF8Text where
   arbitrary = UTF8Text <$> arbitrary
   shrink t = UTF8Text <$> shrink (unUTF8 t)
 
-#ifndef ghcjs_HOST_OS
+#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
 instance Arbitrary UTF16Text where
     arbitrary = UTF16Text <$> arbitrary
     shrink t = UTF16Text <$> shrink (unUTF16 t)
@@ -284,7 +284,7 @@ testSize = testGroup "Size" $ concat [
 #endif
   ,sz tx utf8Size
   ,sz (UTF8Text tx) utf8Size
-#ifndef ghcjs_HOST_OS
+#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
   ,sz (UTF16Text tx) utf16Size
 #endif
  ]
@@ -355,7 +355,7 @@ flatUnflatRT = testGroup "unflat (flat v) == v"
 #endif
 
     ,rt "UTF8 Text" (prop_Flat_roundtrip:: RT UTF8Text)
-#ifndef ghcjs_HOST_OS
+#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
     ,rt "UTF16 Text" (prop_Flat_roundtrip:: RT UTF16Text)
 #endif
     ,rt "ByteString" (prop_Flat_roundtrip:: RT B.ByteString)
