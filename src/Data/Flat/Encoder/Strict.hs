@@ -135,7 +135,7 @@ encodeArrayWith f ws = Encoding $ go ws
 {-# INLINE eFalse #-}
 eChar :: Char -> Encoding
 eChar = Encoding . eCharF
-#ifndef ghcjs_HOST_OS
+#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
 {-# INLINE eUTF16 #-}
 eUTF16 :: Text -> Encoding
 eUTF16 = Encoding . eUTF16F
