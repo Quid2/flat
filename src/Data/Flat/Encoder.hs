@@ -23,7 +23,7 @@ module Data.Flat.Encoder (
     eTrue,
     eFalse,
     eBytes,
-#ifndef ghcjs_HOST_OS
+#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
     eUTF16,
 #endif
     eLazyBytes,
