@@ -9,7 +9,7 @@ module Data.Flat.Decoder.Strict
   , dLazyByteString
   , dShortByteString
   , dShortByteString_
-#ifndef ghcjs_HOST_OS
+#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
   , dUTF16
 #endif
   , dUTF8
@@ -40,7 +40,7 @@ import           Data.Int
 import           Data.Primitive.ByteArray
 import qualified Data.Text                      as T
 import qualified Data.Text.Encoding             as T
-#ifndef ghcjs_HOST_OS
+#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
 import qualified Data.Text.Array                as TA
 import qualified Data.Text.Internal             as T
 #endif
