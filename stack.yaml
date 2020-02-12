@@ -2,15 +2,14 @@
 #resolver: lts-9.21
 #resolver: lts-11.22
 #resolver: lts-12.26
-resolver: lts-14.22
-# allow-newer: true
+resolver: lts-14.25
 #resolver: nightly-2020-01-08
-#resolver: nightly-2020-01-25
+#resolver: lts-15
 
 packages:
   - .
   - ../EXTERNAL/doctest
-#allow-newer: true
+# allow-newer: true
 #extra-deps:
 # - semigroups-0.15.4
 # - deepseq-1.3.0.2@sha256:4d513aff21f43be3d3ab166f6cd19b29e2eaad487ce2eca59159c61d91d72f3e

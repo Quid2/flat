@@ -3,7 +3,7 @@
 -- | Flat instances for the text library
 module Data.Flat.Instances.Text(
   UTF8Text(..)
-#ifndef ghcjs_HOST_OS
+#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION) && ! defined (ETA) 
   ,UTF16Text(..)
 #endif
 ) where
@@ -68,17 +68,15 @@ instance Flat UTF8Text where
   encode (UTF8Text t) = eUTF8 t
   decode = UTF8Text <$> dUTF8
 
-#ifndef ghcjs_HOST_OS
-
+#if ! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION) && ! defined (ETA) 
 {-|
 >>> tst (UTF16Text $ T.pack "aaa")
 (True,72,[1,6,97,0,97,0,97,0,0])
 
-#ifndef ETA
 >>> tst (UTF16Text $ T.pack "𐍈𐍈𐍈")
 (True,120,[1,12,0,216,72,223,0,216,72,223,0,216,72,223,0])
-#endif
 -}
+
 -- |A wrapper to encode/decode Text as UTF16 (faster but bigger)
 newtype UTF16Text = UTF16Text {unUTF16::T.Text} deriving (Eq,Ord,Show)
 

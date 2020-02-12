@@ -224,7 +224,7 @@ dUnsigned_ shl n = do
     else dUnsigned_ (shl + 7) v
 --encode = encode . blob UTF8Encoding . L.fromStrict . T.encodeUtf8
 --decode = T.decodeUtf8 . L.toStrict . (unblob :: BLOB UTF8Encoding -> L.ByteString) <$> decode
-#ifndef ghcjs_HOST_OS
+#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
 -- BLOB UTF16Encoding
 dUTF16 :: Get T.Text
 dUTF16 = do

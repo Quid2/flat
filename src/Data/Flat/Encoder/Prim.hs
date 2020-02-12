@@ -12,7 +12,7 @@ module Data.Flat.Encoder.Prim
   , eBitsF
   , eFloatF
   , eDoubleF
-#ifndef ghcjs_HOST_OS
+#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
   , eUTF16F
 #endif
   , eUTF8F
@@ -233,10 +233,10 @@ low7 t = fromIntegral t .&. 0x7F
 eUTF8F :: T.Text -> Prim
 eUTF8F = eBytesF . TE.encodeUtf8
 
--- PROB: Not compatible with GHCJS
+-- PROB: Not compatible with GHCJS or ETA (that is big endian and writes contents in reverse order)
 -- | Encode text as UTF16 and encode the result as an array of bytes
 -- Efficient, as Text is already internally encoded as UTF16.
-#ifndef ghcjs_HOST_OS
+#if ! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
 eUTF16F :: T.Text -> Prim
 eUTF16F t = eFillerF >=> eUTF16F_ t
   where
