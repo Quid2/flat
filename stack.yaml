@@ -2,13 +2,12 @@
 #resolver: lts-9.21
 #resolver: lts-11.22
 #resolver: lts-12.26
-resolver: lts-14.25
-#resolver: nightly-2020-01-08
-#resolver: lts-15
+resolver: lts-14.27
+#resolver: lts-15.0
 
 packages:
   - .
-  - ../EXTERNAL/doctest
+  # - ../EXTERNAL/doctest
 # allow-newer: true
 #extra-deps:
 # - semigroups-0.15.4
