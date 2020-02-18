@@ -16,7 +16,7 @@ matrix:
     # cabal OK
     # - env: IMG=quid2/x32-ubuntu-cabal CMD="cabal v2-update;cabal v2-build --only-dependencies --enable-tests;cabal v2-build;cabal v2-test"
     # ghc 7.10.3 OK
-    - env: IMG=quid2/x64-ubuntu-stack-lts-6.35 CMD="stack test --resolver lts-6.35"
+    # - env: IMG=quid2/x64-ubuntu-stack-lts-6.35 CMD="stack test --resolver lts-6.35"
     # ghc 8.0.2 OK
     # - env: IMG=quid2/x64-ubuntu-stack-lts-9.21 CMD="stack test --resolver lts-9.21"
     # ghc 8.2.2 OK
@@ -24,9 +24,9 @@ matrix:
     # ghc 8.4.4 OK
     # - env: IMG=quid2/x64-ubuntu-stack-lts-12.26 CMD="stack test --resolver lts-12.26"
     # ghc 8.6.5 OK
-    # - env: IMG=quid2/x64-ubuntu-stack-lts-14.22 CMD="stack test --resolver lts-14.7"
+    # - env: IMG=quid2/x64-ubuntu-stack-lts-14.22 CMD="stack test --resolver lts-14.27"
     # ghc 8.8.2 (OK, with some changes to tests)
-    # - env: IMG=quid2/x64-ubuntu-stack-nightly-2020-01-25 CMD="stack test --resolver nightly-2020-01-25"
+    - env: IMG=quid2/x64-ubuntu-stack-lts-15.0 CMD="stack test --resolver lts-15.0"
 
 before_install:
   - PKG=${PWD##*/}

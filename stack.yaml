@@ -7,7 +7,7 @@ resolver: lts-14.27
 
 packages:
   - .
-  # - ../EXTERNAL/doctest
+# - ../EXTERNAL/doctest
 # allow-newer: true
 #extra-deps:
 # - semigroups-0.15.4

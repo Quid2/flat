@@ -23,8 +23,8 @@ Let's see some code, we need a couple of extensions:
 
 Import the Flat library:
 
-> import Data.Flat
->> import Data.Flat.Bits(bits,paddedBits)
+> import Flat
+>> import Flat.Bits(bits,paddedBits)
 >> import Text.PrettyPrint.HughesPJClass(prettyShow)
 >> import READMEUtil
 
@@ -44,7 +44,7 @@ For the decoding to work correctly, you will naturally need to know the type of 
 
  A set of primitives are available to define `Flat` instances for abstract or primitive types.
 
- Instances for some common, primitive or abstract data types (Bool,Words,Int,String,Text,ByteStrings,Tuples, Lists, Sequences, Maps ..) are already defined in [Data.Flat.Instances](https://github.com/Quid2/flat/blob/master/src/Data/Flat/Instances.hs).
+ Instances for some common, primitive or abstract data types (Bool,Words,Int,String,Text,ByteStrings,Tuples, Lists, Sequences, Maps ..) are already defined in [Flat.Instances](https://github.com/Quid2/flat/blob/master/src/Data/Flat/Instances.hs).
 
  #### Optimal Bit-Encoding
 

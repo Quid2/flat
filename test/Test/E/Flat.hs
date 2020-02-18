@@ -3,9 +3,9 @@
 {-# LANGUAGE StandaloneDeriving #-}
 module Test.E.Flat() where
 
-import           Data.Flat
-import           Data.Flat.Decoder()
-import           Data.Flat.Encoder()
+import           Flat
+import           Flat.Decoder()
+import           Flat.Encoder()
 import           Test.E
 
 t = putStrLn $ gen 4

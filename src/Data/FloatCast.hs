@@ -31,7 +31,7 @@ import           Data.Array.Unsafe              ( castSTUArray )
 import           GHC.ST                         ( runST
                                                 , ST
                                                 )
-import           Data.Flat.Endian
+import           Flat.Endian
 
 
 

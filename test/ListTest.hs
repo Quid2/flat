@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP #-}
 module Main where
 
-import           Data.Flat
+import           Flat
 
 #ifdef ETA_VERSION    
 import Data.Function(trampoline)

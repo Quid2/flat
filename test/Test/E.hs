@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveGeneric, DeriveAnyClass ,CPP #-}
 module Test.E where
 
-import           Data.Flat
+import           Flat
 import           Data.List
 import           Control.DeepSeq
 -- import Data.Proxy

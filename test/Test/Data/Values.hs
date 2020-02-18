@@ -10,7 +10,7 @@ import qualified Data.ByteString                as B
 import qualified Data.ByteString.Lazy           as L
 import qualified Data.ByteString.Short.Internal as SBS
 import           Data.Char
-import           Data.Flat
+import           Flat
 import           Data.Foldable
 import           Data.Int
 import qualified Data.IntMap                    as IM

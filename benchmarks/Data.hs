@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
 module Data where
-import Data.Flat
+import Flat
 
 ggg = encode (Uno,Due,Tre)
 

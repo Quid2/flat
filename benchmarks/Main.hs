@@ -151,8 +151,8 @@ import           Criterion.IO
 import           Criterion.Types
 -- import           Statistics.Resampling.Bootstrap
 import qualified Data.Map as M
-import qualified Data.Flat as F
-import qualified Data.Flat.Encoder as F
+import qualified Flat as F
+import qualified Flat.Encoder as F
 import System.Directory
 import Report
 import Weigh

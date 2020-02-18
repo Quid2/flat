@@ -1,5 +1,11 @@
 Significant and compatibility-breaking changes.
 
+Version 0.4:
+	- Changed namespace from Data.Flat to Flat
+	- Addtional Flat Instances for some common packages: array, base, bytestring, containers, dlist, text, unordered-containers, vector
+	- Additional doctests, with a static version that can run without ghci and therefore also under ghcjs/eta (run them with stack test :docs)
+	- Many minor changes
+
 Version 0.3.6:
     - Added instances for base, containers, array, vector ...
 	- ? Fixed GHCJS bug
