@@ -1,16 +1,12 @@
-{-# LANGUAGE OverloadedStrings
-             , NoMonomorphismRestriction, FlexibleContexts, ViewPatterns #-}
+{-# LANGUAGE OverloadedStrings, NoMonomorphismRestriction, FlexibleContexts, ViewPatterns #-}
 
 module Main where
 
 import           Data.List (isSuffixOf)
-import           System.FilePath
 import           System.FilePath.Find
 import           Test.DocTest
 import           System.Environment
-import           DocSpec.Static (genTests)
 import qualified Data.Text as T
-
 t = main
 
 -- e.g.: stack test :doc --file-watch --fast --test-arguments="Data.ZigZag Flat.Instances Flat.Instances.Base"
