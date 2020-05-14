@@ -2,21 +2,26 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Trustworthy ,NoMonomorphismRestriction#-}
 
--- | Primitives to convert between Float/Double and Word32/Word64
--- | This code was copied from `binary`
--- | This module was written based on
---   <http://hackage.haskell.org/package/reinterpret-cast-0.1.0/docs/src/Data-ReinterpretCast-Internal-ImplArray.html>.
---
---   Implements casting via a 1-element STUArray, as described in
---   <http://stackoverflow.com/a/7002812/263061>.
+{- | Primitives to convert between Float\/Double and Word32\/Word64.
+
+Code copied from <https://hackage.haskell.org/package/binary binary>.
+
+This module was written based on:
+
+<http://hackage.haskell.org/package/reinterpret-cast-0.1.0/docs/src/Data-ReinterpretCast-Internal-ImplArray.html>..
+
+Implements casting via a 1-element STUArray, as described in
+
+<http://stackoverflow.com/a/7002812/263061>.
+-}
 module Data.FloatCast
-    ( floatToWord
-    , wordToFloat
-    , doubleToWord
-    , wordToDouble
-    , runST
-    , cast
-    )
+  ( floatToWord
+  , wordToFloat
+  , doubleToWord
+  , wordToDouble
+  , runST
+  , cast
+  )
 where
 
 import           Data.Word                      ( Word32
@@ -31,7 +36,7 @@ import           Data.Array.Unsafe              ( castSTUArray )
 import           GHC.ST                         ( runST
                                                 , ST
                                                 )
-import           Flat.Endian
+-- import           Flat.Endian
 
 
 
@@ -77,37 +82,34 @@ True
 >>> wordToDouble 0xbfc4000000000000
 -0.15625
 -}
-doubleToWord :: Double -> Word64
-doubleToWord x = fix64 $ runST (cast x)
-
--- #ifdef ghcjs_HOST_OS
--- doubleToWord x = (`rotateR` 32) $ runST (cast x)
--- #else
--- doubleToWord x = runST (cast x)
--- #endif
 {-# INLINE doubleToWord #-}
-
+doubleToWord :: Double -> Word64
+doubleToWord x = runST (cast x)
+-- doubleToWord x = fix64 $ runST (cast x)
 
 -- | Reinterpret-casts a `Word64` to a `Double`.
 {-# INLINE wordToDouble #-}
 wordToDouble :: Word64 -> Double
-wordToDouble x = runST (cast $ fix64 x)
+wordToDouble x = runST (cast x)
+-- wordToDouble x = runST (cast $ fix64 x)
 
 {- | 
 >>> runST (cast (0xF0F1F2F3F4F5F6F7::Word64)) == (0xF0F1F2F3F4F5F6F7::Word64)
 True
 -}
--- runCast x = runST (cast x)
+cast
+  :: (MArray (STUArray s) a (ST s), MArray (STUArray s) b (ST s)) => a -> ST s b
+cast x = newArray (0 :: Int, 0) x >>= castSTUArray >>= flip readArray 0
+{-# INLINE cast #-}
 
+-- Required for older versions of ghcjs
+-- #ifdef ghcjs_HOST_OS
+-- doubleToWord x = (`rotateR` 32) $ runST (cast x)
+-- #else
+-- doubleToWord x = runST (cast x)
+-- #endif
 -- #ifdef ghcjs_HOST_OS
 -- wordToDouble x = runST (cast $ x `rotateR` 32) 
 -- #else
 -- wordToDouble x = runST (cast x) 
 -- #endif
-cast
-    :: (MArray (STUArray s) a (ST s), MArray (STUArray s) b (ST s))
-    => a
-    -> ST s b
-cast x = newArray (0 :: Int, 0) x >>= castSTUArray >>= flip readArray 0
-
-{-# INLINE cast #-}

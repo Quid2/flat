@@ -55,7 +55,9 @@ instance Flat TL.Text where
   decode = TL.fromStrict <$> dUTF8
 
 {-|
-The desired encoding can be specified using the wrappers UTF8Text and UTF16Text:
+The desired text encoding can be explicitly specified using the wrappers UTF8Text and UTF16Text.
+
+The default encoding is UTF8:
 
 >>> tst (UTF8Text $ T.pack "日日日") == tst (T.pack "日日日")
 True
