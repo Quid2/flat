@@ -12,7 +12,7 @@ module Flat.Encoder.Prim
   , eBitsF
   , eFloatF
   , eDoubleF
-#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
+#if ! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
   , eUTF16F
 #endif
   , eUTF8F
@@ -106,23 +106,23 @@ eIntF = eInt32F . (fromIntegral :: Int -> Int32)
 #endif
 {-# INLINE eInt8F #-}
 eInt8F :: Int8 -> Prim
-eInt8F = eWord8F . zzEncode
+eInt8F = eWord8F . zigZag
 
 {-# INLINE eInt16F #-}
 eInt16F :: Int16 -> Prim
-eInt16F = eWord16F . zzEncode
+eInt16F = eWord16F . zigZag
 
 {-# INLINE eInt32F #-}
 eInt32F :: Int32 -> Prim
-eInt32F = eWord32F . zzEncode
+eInt32F = eWord32F . zigZag
 
 {-# INLINE eInt64F #-}
 eInt64F :: Int64 -> Prim
-eInt64F = eWord64F . zzEncode
+eInt64F = eWord64F . zigZag
 
 {-# INLINE eIntegerF #-}
 eIntegerF :: Integer -> Prim
-eIntegerF = eIntegralF . zzEncodeInteger
+eIntegerF = eIntegralF . zigZag
 
 {-# INLINE eNaturalF #-}
 eNaturalF :: Natural -> Prim
@@ -387,7 +387,8 @@ pokeW conv op t = poke (castPtr op) (conv t)
 
 {-# INLINE poke64 #-}
 poke64 :: (t -> Word64) -> Ptr a -> t -> IO ()
-poke64 conv op t = poke (castPtr op) (fix64 . conv $ t)
+poke64 conv op t = poke (castPtr op) (conv t)
+-- poke64 conv op t = poke (castPtr op) (fix64 . conv $ t)
 
 {-# INLINE skipByte #-}
 skipByte :: Monad m => Ptr a -> m S

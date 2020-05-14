@@ -62,15 +62,15 @@ sInt = sInt32 . fromIntegral
 -- TODO: optimize ints sizes
 {-# INLINE sInt16 #-}
 sInt16 :: Int16 -> NumBits
-sInt16 = sWord16 . zzEncode
+sInt16 = sWord16 . zigZag
 
 {-# INLINE sInt32 #-}
 sInt32 :: Int32 -> NumBits
-sInt32 = sWord32 . zzEncode
+sInt32 = sWord32 . zigZag
 
 {-# INLINE sInt64 #-}
 sInt64 :: Int64 -> NumBits
-sInt64 = sWord64 . zzEncode
+sInt64 = sWord64 . zigZag
 
 {-# INLINE sWord16 #-}
 sWord16 :: Word16 -> NumBits
@@ -104,7 +104,7 @@ sWord64 w
 
 {-# INLINE sInteger #-}
 sInteger :: Integer -> NumBits
-sInteger = sIntegral . zzEncodeInteger
+sInteger = sIntegral . zigZag
 
 {-# INLINE sNatural #-}
 sNatural :: Natural -> NumBits

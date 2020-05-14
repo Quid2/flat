@@ -7,7 +7,7 @@ module Flat.Endian
     , toBE64
     , toBE16
     , isBigEndian
-    , fix64
+    -- , fix64
     ) where
 
 #include "MachDeps.h"
@@ -69,9 +69,10 @@ toBE16 = id
 toBE16 = byteSwap16
 #endif
 
+-- Required for older versions of ghcjs
 -- | Fix issue with `ghcjs` (different order of 32 bit halves of 64 values with respect to `ghc`)
-fix64 :: Word64 -> Word64
-fix64 = id
+-- fix64 :: Word64 -> Word64
+-- fix64 = id
 
 -- #ifdef ghcjs_HOST_OS
 -- fix64 = (`rotateR` 32)

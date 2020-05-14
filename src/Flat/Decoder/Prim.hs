@@ -40,7 +40,8 @@ import           Foreign
 -- >>> import Data.Word
 -- >>> import Flat.Run
 
--- |A special state, optimised for constructor decoding, consists of:
+-- |A special state, optimised for constructor decoding.
+-- It consists of:
 -- The bits to parse, top bit being the first to parse (could use a Word16 instead, no difference in performance)
 -- The number of decoded bits
 -- Supports up to 512 constructors (9 bits)
@@ -91,7 +92,7 @@ consBool cs =  (0/=) <$> consBits cs 1
 -- consBool (ConsState w usedBits) = (ConsState (w `unsafeShiftL` 1) (1+usedBits),0 /= 32768 .&. w)
 
 -- |Decode from 1 to 3 bits
--- This could read more bits that are available, but it doesn't matter, errors will be checked in consClose
+-- It could read more bits that are available, but it doesn't matter, errors will be checked in consClose
 consBits :: ConsState -> Int -> (ConsState, Word)
 consBits cs 3 = consBits_ cs 3 7
 consBits cs 2 = consBits_ cs 2 3
@@ -154,8 +155,9 @@ dropBits_ s n =
   --   bits = n' .|. 7
   in S {currPtr=currPtr s `plusPtr` bytes,usedBits=bits}
 
-{-# INLINE dBool #-}
--- {-# INLINE dBool #-} -- INLINE Massively increases compilation time and decreases run time by a third
+{-# INLINE dBool #-} 
+-- Inlining dBool Massively increases compilation time and decreases run time by a third
+-- TODO: test dBool inlining for 8.8.3
 -- |Decode a boolean
 dBool :: Get Bool
 dBool = Get $ \endPtr s ->
@@ -338,7 +340,8 @@ dBE64 = Get $ \endPtr s -> do
     where
       -- {-# INLINE peek64 #-}
       peek64 :: Ptr Word64 -> IO Word64
-      peek64 ptr = fix64 <$> peek ptr
+      peek64 = peek
+      -- peek64 ptr = fix64 <$> peek ptr
 
 {-# INLINE dFloat #-}
 -- |Decode a Float

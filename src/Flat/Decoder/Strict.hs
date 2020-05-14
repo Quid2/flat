@@ -40,15 +40,19 @@ import           Data.Int
 import           Data.Primitive.ByteArray
 import qualified Data.Text                      as T
 import qualified Data.Text.Encoding             as T
+
 #if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
 import qualified Data.Text.Array                as TA
 import qualified Data.Text.Internal             as T
 #endif
+
 import           Data.Word
 import           Data.ZigZag
 import           GHC.Base                       (unsafeChr)
 import           Numeric.Natural
+
 #include "MachDeps.h"
+
 {-# INLINE decodeListWith #-}
 decodeListWith :: Get a -> Get [a]
 decodeListWith dec = go
@@ -79,11 +83,11 @@ getAsL_ dec = do
 
 {-# INLINE dNatural #-}
 dNatural :: Get Natural
-dNatural = fromInteger <$> dUnsigned
+dNatural = dUnsigned
 
 {-# INLINE dInteger #-}
 dInteger :: Get Integer
-dInteger = zzDecodeInteger <$> (dUnsigned :: Get Integer)
+dInteger = zagZig <$> dUnsigned
 
 {-# INLINE dWord #-}
 {-# INLINE dInt #-}
@@ -100,21 +104,22 @@ dInt = (fromIntegral :: Int32 -> Int) <$> dInt32
 #else
 #error expected WORD_SIZE_IN_BITS to be 32 or 64
 #endif
+
 {-# INLINE dInt8 #-}
 dInt8 :: Get Int8
-dInt8 = zzDecode8 <$> dWord8
+dInt8 = zagZig <$> dWord8
 
 {-# INLINE dInt16 #-}
 dInt16 :: Get Int16
-dInt16 = zzDecode16 <$> dWord16
+dInt16 = zagZig <$> dWord16
 
 {-# INLINE dInt32 #-}
 dInt32 :: Get Int32
-dInt32 = zzDecode32 <$> dWord32
+dInt32 = zagZig <$> dWord32
 
 {-# INLINE dInt64 #-}
 dInt64 :: Get Int64
-dInt64 = zzDecode64 <$> dWord64
+dInt64 = zagZig <$> dWord64
 
 -- {-# INLINE dWord16  #-}
 dWord16 :: Get Word16
