@@ -1,0 +1,207 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">{- |
+&lt;https://travis-ci.org/Quid2/flat Build Status&gt;
+&lt;http://hackage.haskell.org/package/flat Hackage version&gt;
+
+Haskell implementation of &lt;http://quid2.org/docs/Flat.pdf Flat&gt;, a
+principled, portable and efficient binary data format
+(&lt;http://quid2.org specs&gt;).
+
+=== How To Use It For Fun and Profit
+#how-to-use-it-for-fun-and-profit#
+
+To (de)serialise a data type, make it an instance of the 'Flat.Class.Flat' class.
+
+There is &quot;Generics&quot; based support to automatically derive instances of
+additional types.
+
+Let&#8217;s see some code, we need a couple of extensions:
+
+
+&gt;&gt;&gt; \{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
+
+Import the Flat library:
+
+@
+import Flat
+@
+
+Define a couple of custom data types, deriving Generic and Flat:
+
+@
+data Direction = North | South | Center | East | West deriving (Show,Generic,Flat)
+BB
+data List a = Nil | Cons a (List a) deriving (Show,Generic,Flat)
+@
+
+For encoding, use 'flat', for decoding, use @unflat@:
+
+&gt;&gt;&gt; unflat . flat $ Cons North (Cons South Nil) :: Decoded (List Direction)
+Right (Cons North (Cons South Nil))
+
+For the decoding to work correctly, you will naturally need to know the
+type of the serialised data. This is ok for applications that do not
+require long-term storage and that do not need to communicate across
+independently evolving agents. For those who do, you will need to
+supplement @flat@ with something like &lt;https://github.com/Quid2/zm zm&gt;.
+
+==== Define Instances for Abstract\/Primitive types
+#define-instances-for-abstractprimitive-types#
+
+A set of primitives are available to define @Flat@ instances for
+abstract or primitive types.
+
+Instances for some common, primitive or abstract data types
+(Bool,Words,Int,String,Text,ByteStrings,Tuples, Lists, Sequences, Maps
+..) are already defined in
+&lt;https://github.com/Quid2/flat/blob/master/src/Data/Flat/Instances.hs Data.Flat.Instances&gt;.
+
+==== Optimal Bit-Encoding
+#optimal-bit-encoding#
+
+A pecularity of Flat is that it uses an optimal bit-encoding rather than
+the usual byte-oriented one.
+
+To see this, let&#8217;s define a pretty printing function: @bits@ encodes a
+value as a sequence of bits, @prettyShow@ displays it nicely:
+
+&gt; p :: Flat a =&gt; a -&gt; String
+&gt; p = prettyShow . bits
+
+Now some encodings:
+
+&gt; p West
+&gt; -&gt; &quot;111&quot;
+
+&gt; p (Nil::List Direction)
+&gt; -&gt; &quot;0&quot;
+
+&gt; aList = Cons North (Cons South (Cons Center (Cons East (Cons West Nil))))
+&gt; p aList
+&gt; -&gt; &quot;10010111 01110111 10&quot;
+
+As you can see, @aList@ fits in less than 3 bytes rather than 11 as
+would be the case with other Haskell byte oriented serialisation
+packages like @binary@ or @store@.
+
+For the serialisation to work with byte-oriented devices or storage, we
+need to add some padding:
+
+&gt; f :: Flat a =&gt; a -&gt; String
+&gt; f = prettyShow . paddedBits
+
+&gt; f West
+&gt; -&gt; &quot;11100001&quot;
+
+&gt; f (Nil::List Direction)
+&gt; -&gt; &quot;00000001&quot;
+
+&gt; f $ Cons North (Cons South (Cons Center (Cons East (Cons West Nil))))
+&gt; -&gt; &quot;10010111 01110111 10000001&quot;
+
+The padding is a sequence of 0s terminated by a 1 running till the next
+byte boundary (if we are already at a byte boundary it will add an
+additional byte of value 1, that&#8217;s unfortunate but there is a good
+reason for this, check the &lt;http://quid2.org/docs/Flat.pdf specs&gt;).
+
+Byte-padding is automatically added by the function @flat@ and removed
+by @unflat@.
+
+=== Performance
+#performance#
+
+For some hard data, see this
+&lt;https://github.com/haskell-perf/serialization comparison of the major haskell serialisation libraries&gt;.
+
+Briefly: * Size: @flat@ produces significantly smaller binaries than all
+other libraries (3\/4 times usually) * Serialization: @store@, @persist@
+and @flat@ are faster * Deserialization: @store@, @flat@, @persist@ and
+@cereal@ are faster * Transfer time (serialisation time + transport time
+on the network + deserialisation at the receiving end): @flat@ is
+usually faster for all but the highest network speeds
+
+=== Compatibility
+#compatibility#
+
+==== &lt;https://www.haskell.org/ghc/ GHC&gt;
+#ghc#
+
+Tested with: * &lt;https://www.haskell.org/ghc/ ghc&gt; 7.10.3, 8.0.2, 8.2.2,
+8.4.4 and 8.6.3 (x64)
+
+Should also work with (not recently tested): *
+&lt;https://www.haskell.org/ghc/ ghc&gt; 7.10.3\/LLVM 3.5.2 (Arm7)
+
+==== &lt;https://github.com/ghcjs/ghcjs GHCJS&gt;
+#ghcjs#
+
+Passes all tests in the @flat@ testsuite, except for those relative to
+short bytestrings (Data.ByteString.Short) that are unsupported by
+@ghcjs@.
+
+Check
+&lt;https://github.com/Quid2/flat/blob/master/stack-ghcjs.yaml stack-ghcjs.yaml&gt;
+to see with what versions of @ghcjs@ it has been tested.
+
+If you use a different version of @ghcjs@, you might want to run the
+test suite by setting your compiler in
+&lt;https://github.com/Quid2/flat/blob/master/stack-ghcjs.yaml stack-ghcjs.yaml&gt;
+and then running:
+
+@stack test --stack-yaml=stack-ghcjs.yaml@
+
+NOTE: Versions prior to 0.33 encode @Double@ values incorrectly when
+they are not aligned with a byte boundary.
+
+NOTE: A native
+&lt;https://github.com/Quid2/ts TypeScript\/JavaScript version&gt; of @flat@
+is under development.
+
+==== &lt;https://eta-lang.org/ ETA&gt;
+#eta#
+
+It builds (with etlas 1.5.0.0 and eta eta-0.8.6b2) but currently fails
+the test suite.
+
+=== Installation
+#installation#
+
+Get the latest stable version from
+&lt;https://hackage.haskell.org/package/flat hackage&gt;.
+
+=== Known Bugs and Infelicities
+#known-bugs-and-infelicities#
+
+==== Longish compilation times
+#longish-compilation-times#
+
+&#8217;flat\` relies more than other serialisation libraries on extensive
+inlining for its good performance, this unfortunately leads to longer
+compilation times.
+
+If you have many data types or very large ones this might become an
+issue.
+
+A couple of good practices that will eliminate or mitigate this problem
+are:
+
+-   During development, turn optimisations off (@stack --fast@ or @-O0@
+    in the cabal file).
+
+-   Keep your serialisation code in a separate module(s).
+
+==== Data types with more than 512 constructors are currently unsupported
+#data-types-with-more-than-512-constructors-are-currently-unsupported#
+
+See also the
+&lt;https://github.com/Quid2/flat/issues full list of open issues&gt;.
+
+=== Acknowledgements
+#acknowledgements#
+
+@flat@ reuses ideas and readapts code from various packages, mainly:
+@store@, @binary-bits@ and @binary@ and includes contributions from
+Justus Sagem&#252;ller.
+-}</span><span>
+</span><a name="line-205"></a><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Flat.Tutorial</span><span> </span><span class="hs-keyword">where</span><span>
+</span><a name="line-206"></a><span>
+</span><a name="line-207"></a></pre></body></html>
