@@ -1,0 +1,47 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TupleSections ,ViewPatterns ,NoMonomorphismRestriction ,BangPatterns ,ScopedTypeVariables #-}</span><span>
+</span><a name="line-2"></a><span>
+</span><a name="line-3"></a><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Flat.Instances.Util</span><span>
+</span><a name="line-4"></a><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">F</span><span>
+</span><a name="line-5"></a><span>    </span><span class="hs-comment">--     sizeList</span><span>
+</span><a name="line-6"></a><span>    </span><span class="hs-comment">-- , decodeList</span><span>
+</span><a name="line-7"></a><span>    </span><span class="hs-comment">-- , encodeList</span><span>
+</span><a name="line-8"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="Flat.Instances.Util.html#encodeArray"><span class="hs-identifier hs-var">encodeArray</span></a><span>
+</span><a name="line-9"></a><span>    </span><span class="hs-special">)</span><span>
+</span><a name="line-10"></a><span class="hs-keyword">where</span><span>
+</span><a name="line-11"></a><span>
+</span><a name="line-12"></a><span class="hs-keyword">import</span><span>           </span><a href="Flat.Class.html"><span class="hs-identifier">Flat.Class</span></a><span>               </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">F</span><span>
+</span><a name="line-13"></a><span class="hs-keyword">import</span><span>           </span><a href="Flat.Decoder.html"><span class="hs-identifier">Flat.Decoder</span></a><span>             </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">F</span><span>
+</span><a name="line-14"></a><span class="hs-keyword">import</span><span>           </span><a href="Flat.Encoder.html"><span class="hs-identifier">Flat.Encoder</span></a><span>             </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">F</span><span>
+</span><a name="line-15"></a><span class="hs-keyword">import</span><span>           </span><a href="Flat.Types.html"><span class="hs-identifier">Flat.Types</span></a><span>               </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">F</span><span>
+</span><a name="line-16"></a><span class="hs-comment">-- import           Data.List</span><span>
+</span><a name="line-17"></a><span class="hs-comment">-- import GHC.Exts(IsList)</span><span>
+</span><a name="line-18"></a><span>
+</span><a name="line-19"></a><span class="hs-comment">-- -- $setup</span><span>
+</span><a name="line-20"></a><span class="hs-comment">-- &gt;&gt;&gt; import Flat.Instances.Base()</span><span>
+</span><a name="line-21"></a><span class="hs-comment">-- &gt;&gt;&gt; import Flat.Instances.Test</span><span>
+</span><a name="line-22"></a><span class="hs-comment">-- &gt;&gt;&gt; let test = tstBits</span><span>
+</span><a name="line-23"></a><span>
+</span><a name="line-24"></a><span class="hs-comment">-- {-|</span><span>
+</span><a name="line-25"></a><span class="hs-comment">-- &gt;&gt;&gt; test []</span><span>
+</span><a name="line-26"></a><span class="hs-comment">-- (True,1,&quot;0&quot;)</span><span>
+</span><a name="line-27"></a><span>
+</span><a name="line-28"></a><span class="hs-comment">-- &gt;&gt;&gt; test [1::Word8]</span><span>
+</span><a name="line-29"></a><span class="hs-comment">-- (True,10,&quot;10000000 10&quot;)</span><span>
+</span><a name="line-30"></a><span class="hs-comment">-- -}</span><span>
+</span><a name="line-31"></a><span>
+</span><a name="line-32"></a><span class="hs-comment">-- {-# INLINE sizeList #-}</span><span>
+</span><a name="line-33"></a><span class="hs-comment">-- sizeList :: Flat a =&gt; [a] -&gt; NumBits -&gt; NumBits</span><span>
+</span><a name="line-34"></a><span class="hs-comment">-- sizeList l sz = foldl' (\s e -&gt; size e (s + 1)) (sz + 1) l </span><span>
+</span><a name="line-35"></a><span>
+</span><a name="line-36"></a><span class="hs-comment">-- {-# INLINE encodeList #-}</span><span>
+</span><a name="line-37"></a><span class="hs-comment">-- encodeList :: Flat a =&gt; [a] -&gt; Encoding</span><span>
+</span><a name="line-38"></a><span class="hs-comment">-- encodeList = encodeListWith encode</span><span>
+</span><a name="line-39"></a><span>
+</span><a name="line-40"></a><span class="hs-comment">-- {-# INLINE decodeList #-}</span><span>
+</span><a name="line-41"></a><span class="hs-comment">-- decodeList :: Flat a =&gt; Get [a]</span><span>
+</span><a name="line-42"></a><span class="hs-comment">-- decodeList = decodeListWith decode</span><span>
+</span><a name="line-43"></a><span>
+</span><a name="line-44"></a><span class="hs-pragma">{-# INLINE</span><span> </span><span class="hs-pragma">encodeArray</span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><a name="line-45"></a><span class="hs-identifier">encodeArray</span><span> </span><span class="hs-glyph">::</span><span> </span><a href="Flat.Class.html#Flat"><span class="hs-identifier hs-type">Flat</span></a><span> </span><a href="#local-6989586621679070605"><span class="hs-identifier hs-type">a</span></a><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><a href="#local-6989586621679070605"><span class="hs-identifier hs-type">a</span></a><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><a href="Flat.Encoder.Strict.html#Encoding"><span class="hs-identifier hs-type">Encoding</span></a><span>
+</span><a name="line-46"></a><a name="encodeArray"><a href="Flat.Instances.Util.html#encodeArray"><span class="hs-identifier">encodeArray</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a href="Flat.Encoder.Strict.html#encodeArrayWith"><span class="hs-identifier hs-var">encodeArrayWith</span></a><span> </span><a href="Flat.Class.html#encode"><span class="hs-identifier hs-var">encode</span></a><span>
+</span><a name="line-47"></a></pre></body></html>
