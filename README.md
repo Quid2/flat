@@ -19,7 +19,7 @@ Let's see some code, we need a couple of extensions:
 Import the Flat library:
 
 ```haskell
-import Data.Flat
+import Flat
 ```
 
 Define a couple of custom data types, deriving Generic and Flat:

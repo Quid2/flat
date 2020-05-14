@@ -94,7 +94,7 @@ Briefly:
 
 Successfully tested with:
 
-* [GHC](https://www.haskell.org/ghc/) 7.10.3, 8.0.2, 8.2.2, 8.4.4 and 8.6.3 (x64)
+* [GHC](https://www.haskell.org/ghc/) 7.10.3, 8.0.2, 8.2.2, 8.4.4, 8.6.5 and 8.8.3 (x64)
 
 * [GHC](https://www.haskell.org/ghc/) 7.10.3/LLVM 3.5.2 (Arm7)
   * Caveat: not recently tested
@@ -140,7 +140,7 @@ A couple of good practices that will eliminate or mitigate this problem are:
 
 * During development, turn optimisations off (`stack --fast` or `-O0` in the cabal file).
 
-* Keep your serialisation code in a separate module(s).
+* Keep your serialisation code in a separate module or modules.
 
 #### Data types with more than 512 constructors are currently unsupported
 
