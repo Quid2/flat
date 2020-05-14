@@ -1,0 +1,84 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE CPP #-}</span><span>
+</span><a name="line-2"></a><span class="hs-comment">-- | Endian utilities</span><span>
+</span><a name="line-3"></a><span class="hs-comment">-- Exported for testing purposes, but not meant to be used outside this package.</span><span>
+</span><a name="line-4"></a><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Flat.Endian</span><span>
+</span><a name="line-5"></a><span>    </span><span class="hs-special">(</span><span>
+</span><a name="line-6"></a><span>    </span><a href="Flat.Endian.html#toBE32"><span class="hs-identifier hs-var">toBE32</span></a><span>
+</span><a name="line-7"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="Flat.Endian.html#toBE64"><span class="hs-identifier hs-var">toBE64</span></a><span>
+</span><a name="line-8"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="Flat.Endian.html#toBE16"><span class="hs-identifier hs-var">toBE16</span></a><span>
+</span><a name="line-9"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="Flat.Endian.html#isBigEndian"><span class="hs-identifier hs-var">isBigEndian</span></a><span>
+</span><a name="line-10"></a><span>    </span><span class="hs-comment">-- , fix64</span><span>
+</span><a name="line-11"></a><span>    </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><a name="line-12"></a><span>
+</span><a name="line-13"></a><span class="hs-cpp">#include &quot;MachDeps.h&quot;
+</span><span>
+</span><a name="line-15"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data.Word</span><span>
+</span><a name="line-16"></a><span>
+</span><a name="line-17"></a><span class="hs-comment">-- #ifdef ghcjs_HOST_OS</span><span>
+</span><a name="line-18"></a><span class="hs-comment">-- import Data.Bits</span><span>
+</span><a name="line-19"></a><span class="hs-comment">-- #endif</span><span>
+</span><a name="line-20"></a><span>
+</span><a name="line-21"></a><span class="hs-comment">-- $setup</span><span>
+</span><a name="line-22"></a><span class="hs-comment">-- &gt;&gt;&gt; import Numeric (showHex)</span><span>
+</span><a name="line-23"></a><span>
+</span><a name="line-24"></a><span class="hs-identifier">isBigEndian</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Bool</span><span>
+</span><a name="line-25"></a><a name="isBigEndian"><a href="Flat.Endian.html#isBigEndian"><span class="hs-identifier">isBigEndian</span></a></a><span> </span><span class="hs-glyph">=</span><span>
+</span><a name="line-26"></a><span class="hs-cpp">#if defined(WORDS_BIGENDIAN) || defined(ETA_VERSION)
+</span><span>    </span><span class="hs-identifier">True</span><span>
+</span><a name="line-28"></a><span class="hs-cpp">#else
+</span><span>    </span><span class="hs-identifier hs-var">False</span><span>
+</span><a name="line-30"></a><span class="hs-cpp">#endif
+</span><span>
+</span><a name="line-32"></a><span>
+</span><a name="line-33"></a><span class="hs-comment">{- |
+Convert a 64 bit value in cpu endianess to big endian
+
+&gt;&gt;&gt; toBE64 0xF0F1F2F3F4F5F6F7 == if isBigEndian then 0xF0F1F2F3F4F5F6F7 else 0xF7F6F5F4F3F2F1F0
+True
+-}</span><span>
+</span><a name="line-39"></a><span class="hs-identifier">toBE64</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Word64</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">Word64</span><span>
+</span><a name="line-40"></a><span class="hs-cpp">#if defined(WORDS_BIGENDIAN) || defined(ETA_VERSION)
+</span><span class="hs-identifier">toBE64</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">id</span><span>
+</span><a name="line-42"></a><span class="hs-cpp">#else
+</span><a name="toBE64"><a href="Flat.Endian.html#toBE64"><span class="hs-identifier">toBE64</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">byteSwap64</span><span>
+</span><a name="line-44"></a><span class="hs-cpp">#endif
+</span><span>
+</span><a name="line-46"></a><span class="hs-comment">{- |
+Convert a 32 bit value in cpu endianess to big endian
+
+&gt;&gt;&gt; toBE32 0xF0F1F2F3 == if isBigEndian then 0xF0F1F2F3 else 0xF3F2F1F0
+True
+-}</span><span>
+</span><a name="line-52"></a><span class="hs-identifier">toBE32</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Word32</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">Word32</span><span>
+</span><a name="line-53"></a><span class="hs-cpp">#if defined(WORDS_BIGENDIAN) || defined(ETA_VERSION)
+</span><span class="hs-identifier">toBE32</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">id</span><span>
+</span><a name="line-55"></a><span class="hs-cpp">#else
+</span><a name="toBE32"><a href="Flat.Endian.html#toBE32"><span class="hs-identifier">toBE32</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">byteSwap32</span><span>
+</span><a name="line-57"></a><span class="hs-cpp">#endif
+</span><span>
+</span><a name="line-59"></a><span class="hs-comment">{- |
+Convert a 16 bit value in cpu endianess to big endian
+
+&gt;&gt;&gt; toBE16 0xF0F1 == if isBigEndian then 0xF0F1 else 0xF1F0
+True
+-}</span><span>
+</span><a name="line-65"></a><span class="hs-identifier">toBE16</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Word16</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">Word16</span><span>
+</span><a name="line-66"></a><span class="hs-cpp">#if defined(WORDS_BIGENDIAN) || defined(ETA_VERSION)
+</span><span class="hs-identifier">toBE16</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">id</span><span>
+</span><a name="line-68"></a><span class="hs-cpp">#else
+</span><a name="toBE16"><a href="Flat.Endian.html#toBE16"><span class="hs-identifier">toBE16</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">byteSwap16</span><span>
+</span><a name="line-70"></a><span class="hs-cpp">#endif
+</span><span>
+</span><a name="line-72"></a><span class="hs-comment">-- Required for older versions of ghcjs</span><span>
+</span><a name="line-73"></a><span class="hs-comment">-- | Fix issue with `ghcjs` (different order of 32 bit halves of 64 values with respect to `ghc`)</span><span>
+</span><a name="line-74"></a><span class="hs-comment">-- fix64 :: Word64 -&gt; Word64</span><span>
+</span><a name="line-75"></a><span class="hs-comment">-- fix64 = id</span><span>
+</span><a name="line-76"></a><span>
+</span><a name="line-77"></a><span class="hs-comment">-- #ifdef ghcjs_HOST_OS</span><span>
+</span><a name="line-78"></a><span class="hs-comment">-- fix64 = (`rotateR` 32)</span><span>
+</span><a name="line-79"></a><span class="hs-comment">-- {-# NOINLINE fix64 #-}</span><span>
+</span><a name="line-80"></a><span class="hs-comment">-- #else</span><span>
+</span><a name="line-81"></a><span class="hs-comment">-- fix64 = id</span><span>
+</span><a name="line-82"></a><span class="hs-comment">-- {-# INLINE fix64 #-}</span><span>
+</span><a name="line-83"></a><span class="hs-comment">-- #endif</span><span>
+</span><a name="line-84"></a></pre></body></html>
