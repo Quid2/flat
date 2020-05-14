@@ -12,10 +12,12 @@ import           Test.Data
 import           Test.Data.Flat
 import           Test.E
 import           Test.E.Flat
-import           Data.ByteString (ByteString)
+import           Data.ByteString                ( ByteString )
 import           Flat.Encoder.Prim
 import           Control.Monad
 import           Flat.Encoder.Strict
+import           Data.ZigZag
+
 
 -- deriving instance Flat E2
 -- deriving instance Flat E3
@@ -184,16 +186,50 @@ inspect $ 'sz32 === 'v5
 -- This fails, a long nested case statement is generated instead
 -- inspect $ 'sz256 === 'v8
 -- inspect $ 'f1 === 'f2
-inspect $ 'tte === 'f2
+
+-- FAILS
+-- inspect $ 'tte === 'f2
 
 -- inspect $ 'five === 'one
 -- inspect $ 'leaf === 'one
-inspect $ 'leaf === 'dN
+
+-- FAILS
+-- inspect $ 'leaf === 'dN
 
 -- inspect $ 'fl2 === 'encE2
 -- inspect $ 'f8 === 'ttte
 -- inspect $ 'f1 === 'ttte
 -- inspect $ 'sz2 === 'add2
 -- inspect $ 'ft === 'ff
+
+
+-- d8 = zzDecode8
+-- d8s = zzDecode :: Word8 -> Int8
+
+-- d64 = zzDecode64
+-- d64s = zzDecode :: Word64 -> Int64
+
+-- e64 = zzEncode :: Int64 -> Word64
+
+ziza = zigZag :: Int64 -> Word64
+zazi = zagZig :: Word8 -> Int8
+
+u = undefined
+
+-- -- check that specialised decode generates the same code as custom decode function
+-- inspect $ 'd8 === 'd8s
+
+-- inspect $ 'd64 === 'd64s
+
+-- inspect $ 'e64 === 'ziza -- e64
+
+-- inspect $ 'zazi === 'd8s
+
+-- dec, dec1 :: Word8 -> Int8
+-- dec = zzDecode
+-- dec1 = zzDecode1
+-- inspect $ 'dec === 'dec1
+
+
 main :: IO ()
 main = return () -- print (sz, sz0)

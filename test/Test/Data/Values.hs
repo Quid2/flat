@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-missing-signatures #-}
 {-# LANGUAGE CPP                       #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
@@ -14,8 +15,8 @@ import           Flat
 import           Data.Foldable
 import           Data.Int
 import qualified Data.IntMap                    as IM
-import qualified Data.IntSet                    as IS
-import           Data.List
+-- import qualified Data.IntSet                    as IS
+-- import           Data.List
 import qualified Data.Map                       as M
 import qualified Data.Sequence                  as Seq
 import qualified Data.Text                      as T
@@ -76,7 +77,8 @@ lb2 = L.fromChunks $ replicate 100 $ B.replicate 400 33
 s1 = "a"
 s2 = "中文版本"
 s3 = ['A'..'z']
-s4 = Prelude.concatMap show [1..400]
+s4 :: [Char]
+s4 = Prelude.concatMap show [1::Int ..400]
 
 t1 = T.pack s1
 t2 = T.pack s2
@@ -96,10 +98,10 @@ l2L (x:xs) = C x (l2L xs)
 l1 = l2L $ take 11 [11::Word8,22..33]
 
 lBool :: List Bool
-lBool = l2L $ map odd [1..99]
+lBool = l2L $ map odd [1::Int ..99]
 
 lBool2 :: List Bool
-lBool2 = l2L $ map odd [1..1000]
+lBool2 = l2L $ map odd [1::Int ..1000]
 
 lBool0 = C False (C True (C True (C False (C False (C False (C True (C False (C True (C False (C True (C True (C False (C False (C False N))))))))))))))
 
@@ -157,7 +159,7 @@ treeNNNLarge = mkTree asN3 largeSize
 treeN33Large :: Tree ((N,N,N),(N,N,N),(N,N,N))
 treeN33Large = mkTree asN33 largeSize
 
-treeVarious = mkTree (const v2) 100
+treeVarious = mkTree (const v2) (100::Int)
 
 mkTreeOf :: forall a. (Enum a ,Bounded a)=> Int -> Tree a
 mkTreeOf = let l = fromEnum (maxBound :: a) +1

@@ -2,17 +2,20 @@
 {-# LANGUAGE UndecidableInstances, DeriveGeneric
              , FlexibleContexts, FlexibleInstances, StandaloneDeriving #-}
 
-module Test.Data.Flat (module Test.Data) where
+module Test.Data.Flat
+  ( module Test.Data
+  )
+where
 
 import           Flat
-import           Flat.Encoder
-import           Flat.Decoder
+-- import           Flat.Encoder
+-- import           Flat.Decoder
 import           Test.Data
-import           Test.Data2.Flat ()
-import           Data.Word
-import           Data.Foldable
-import           Data.Int
-import           GHC.Generics
+import           Test.Data2.Flat                ( )
+-- import           Data.Word
+-- import           Data.Foldable
+-- import           Data.Int
+-- import           GHC.Generics
 
 {-
 Compilation times:

@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP                #-}
 {-# LANGUAGE DeriveAnyClass     #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# OPTIONS_GHC -Wno-unused-top-binds -Wno-type-defaults  #-}
 module Test.E.Flat() where
 
 import           Flat
@@ -8,7 +9,7 @@ import           Flat.Decoder()
 import           Flat.Encoder()
 import           Test.E
 
-t = putStrLn $ gen 4
+-- t = putStrLn $ gen 4
 
 -- Test only, incorrect instances
 -- Not faster than generated ones (at least up to E16)
