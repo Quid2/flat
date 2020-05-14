@@ -1,102 +1,104 @@
-module Data.ZigZag(zzEncode,zzEncodeInteger,zzDecode8,zzDecode16,zzDecode32,zzDecode64,zzDecodeInteger,zzDecode) where
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE MultiParamTypeClasses  #-}
+-- | ZigZag encoding of signed integrals (see https://gist.github.com/mfuerstenau/ba870a29e16536fdbaba).
+module Data.ZigZag
+  ( ZigZag(..)
+  )
+where
 
-import Data.Word
-import Data.Int
-import Data.Bits
+import           Data.Word
+import           Data.Int
+import           Data.Bits
+import           Numeric.Natural
 
 -- $setup
--- >>> :set -XNegativeLiterals -XScopedTypeVariables
+-- >>> :set -XNegativeLiterals -XScopedTypeVariables -XFlexibleContexts
+-- >>> import Data.Word
+-- >>> import Data.Int
+-- >>> import Numeric.Natural
+-- >>> import Test.QuickCheck.Instances.Natural
 
-{-# SPECIALIZE INLINE zzEncode :: Int8 -> Word8 #-}
-{-# SPECIALIZE INLINE zzEncode :: Int16 -> Word16 #-}
-{-# SPECIALIZE INLINE zzEncode :: Int32 -> Word32 #-}
-{-# SPECIALIZE INLINE zzEncode :: Int64 -> Word64 #-}
-zzEncode :: (Num b, Integral a, FiniteBits a) => a -> b
-zzEncode w = fromIntegral ((w `shiftL` 1) `xor` (w `shiftR` (finiteBitSize w -1)))
-
---{-# INLINE zzEncode8 #-}
---zzEncode8 :: Int8 -> Word8
--- zzEncode8 x = fromIntegral ((x `shiftL` 1) `xor` (x `shiftR` 7))
-
--- {-# INLINE zzEncode16 #-}
--- zzEncode16 :: Int16 -> Word16
--- zzEncode16 x = fromIntegral ((x `shiftL` 1) `xor` (x `shiftR` 15))
-
--- {-# INLINE zzEncode32 #-}
--- zzEncode32 :: Int32 -> Word32
--- zzEncode32 x = fromIntegral ((x `shiftL` 1) `xor` (x `shiftR` 31))
-
--- {-# INLINE zzEncode64 #-}
--- zzEncode64 :: Int64 -> Word64
--- zzEncode64 x = fromIntegral ((x `shiftL` 1) `xor` (x `shiftR` 63))
-
---   prop> \(n::Int16) -> n == (fromIntegral n :: Integer)
--- prop> \(n::Integer) -> n == n
--- 
-
-{-# INLINE zzEncodeInteger #-}
 {-|
->>> zzEncodeInteger (0::Integer)
+Convert between a signed integral and the corresponding ZigZag encoded unsigned integral (e.g. between Int8 and Word8 or Integral and Natural).
+
+Invalid conversions produce a type error:
+
+>>> zigZag (-1::Int64) :: Word32 
+...
+... Couldn't match type ...
+...
+
+>>> zigZag (0::Int8)
 0
 
->>> zzEncodeInteger (-1::Integer)
+>>> zigZag (-1::Int16)
 1
 
->>> zzEncodeInteger (1::Integer)
+>>> zigZag (1::Int32)
 2
 
->>> zzEncodeInteger (-2::Integer)
+>>> zigZag (-2::Int16)
 3
 
->>> zzEncodeInteger (2::Integer)
-4
-
->>> zzEncodeInteger (-50::Integer)
+>>> zigZag (-50::Integer)
 99
 
->>> zzEncodeInteger (50::Integer)
+>>> zigZag (50::Integer)
 100
 
->>> zzEncodeInteger (-256::Integer)
+>>> zigZag (64::Integer)
+128
+
+>>> zigZag (-256::Integer)
 511
 
->>> zzEncodeInteger (256::Integer)
+>>> zigZag (256::Integer)
 512
+
+>>> map zigZag [-3..3::Integer]
+[5,3,1,0,2,4,6]
+
+>>> map zagZig [0..6::Word8]
+[0,-1,1,-2,2,-3,3]
+
+prop> \(f::Integer) -> zagZig (zigZag f) == f
+
+prop> \(f::Natural) -> zigZag (zagZig f) == f
+
+prop> \(f::Int8) -> zagZig (zigZag f) == f
+prop> \(f::Word8) -> zigZag (zagZig f) == f
+prop> \(s::Int8) -> zigZag s == fromIntegral (zigZag (fromIntegral s :: Integer))
+prop> \(u::Word8) -> zagZig u == fromIntegral (zagZig (fromIntegral u :: Natural))
+
+prop> \(f::Int64) -> zagZig (zigZag f) == f
+prop> \(f::Word64) -> zigZag (zagZig f) == f
+prop> \(s::Int64) -> zigZag s == fromIntegral (zigZag (fromIntegral s :: Integer))
+prop> \(u::Word64) -> zagZig u == fromIntegral (zagZig (fromIntegral u :: Natural))
 -}
-zzEncodeInteger :: Integer -> Integer
-zzEncodeInteger x | x>=0      = x `shiftL` 1
-                  | otherwise = negate (x `shiftL` 1) - 1
 
-{-# INLINE zzDecodeInteger #-}
-zzDecodeInteger :: Integer -> Integer
-zzDecodeInteger = zzDecode
+-- Allow conversion only between compatible types
+class (Integral signed,Integral unsigned) => ZigZag signed unsigned | unsigned -> signed,signed -> unsigned where
+  zigZag :: signed -> unsigned
+  default zigZag :: FiniteBits signed => signed -> unsigned
+  zigZag s = fromIntegral ((s `shiftL` 1) `xor` (s `shiftR` (finiteBitSize s - 1)))
+  {-# INLINE zigZag #-}
 
--- {-# SPECIALIZE INLINE zzDecode :: Word8 -> Int8 #-}
--- {-# SPECIALIZE INLINE zzDecode :: Word16 -> Int16 #-}
--- {-# SPECIALIZE INLINE zzDecode :: Word32 -> Int32 #-}
--- {-# SPECIALIZE INLINE zzDecode :: Word64 -> Int64 #-}
--- {-# SPECIALIZE INLINE zzDecode :: Integer -> Integer #-}
+  zagZig :: unsigned -> signed
+  default zagZig :: (Bits unsigned) => unsigned -> signed
+  zagZig u = fromIntegral ((u `shiftR` 1) `xor` (negate (u .&. 1)))
 
-{-# INLINE zzDecode #-}
-zzDecode :: (Num a, Integral a1, Bits a1) => a1 -> a
-zzDecode w = fromIntegral ((w `shiftR` 1) `xor` (negate (w .&. 1)))
--- zzDecode w = (fromIntegral (w `shiftR` 1)) `xor` (negate (fromIntegral (w .&. 1)))
+  -- default zagZig :: (Bits signed) => unsigned -> signed
+  -- zagZig u = let (s::signed) = fromIntegral u in ((s `shiftR` 1) `xor` (negate (s .&. 1)))
+  {-# INLINE zagZig #-}
 
-{-# INLINE zzDecode8 #-}
-zzDecode8 :: Word8 -> Int8
-zzDecode8 = zzDecode
-
-{-# INLINE zzDecode16 #-}
-zzDecode16 :: Word16 -> Int16
-zzDecode16 = zzDecode
-
-{-# INLINE zzDecode32 #-}
-zzDecode32 :: Word32 -> Int32
-zzDecode32 = zzDecode
-
-{-# INLINE zzDecode64 #-}
-zzDecode64 :: Word64 -> Int64
-zzDecode64 = zzDecode
-
-
-
+instance ZigZag Int8 Word8
+instance ZigZag Int16 Word16
+instance ZigZag Int32 Word32
+instance ZigZag Int64 Word64
+instance ZigZag Integer Natural where
+  zigZag x | x >= 0    = fromIntegral $ x `shiftL` 1
+           | otherwise = fromIntegral $ negate (x `shiftL` 1) - 1
+  zagZig u =
+    let s = fromIntegral u in ((s `shiftR` 1) `xor` (negate (s .&. 1)))
