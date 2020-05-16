@@ -11,8 +11,7 @@ matrix:
     - env: IMG=quid2/eta CMD="etlas update;etlas build --enable-tests;etlas test :doc-static;etlas test :spec"
 
     # ghcjs
-    - env: IMG=quid2/ghcjs-8.4.0.1 CMD='cabal --ghcjs new-build;cabal --ghcjs new-test doc-static --constraint "tasty -clock";cabal --ghcjs new-test spec --constraint "tasty -clock"'
-
+    #- env: IMG=quid2/ghcjs-8.4.0.1 CMD='cabal --ghcjs new-build;cabal --ghcjs new-test doc-static --constraint "tasty -clock";cabal --ghcjs new-test spec --constraint "tasty -clock"'
     # OLD ghcjs FAILs some tests
     # - env: IMG=quid2/x64-ubuntu-ghcjs-9.21 CMD="stack test :spec --stack-yaml stack-ghcjs-9.21.yaml"
     # cabal OK
