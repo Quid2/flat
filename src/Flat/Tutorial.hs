@@ -100,25 +100,18 @@ They are automatically imported by the "Flat" module.
 #compatibility#
 
 === <https://www.haskell.org/ghc/ GHC>
-#ghc#
 
 Tested with: <https://www.haskell.org/ghc/ ghc> 7.10.3, 8.0.2, 8.2.2, 8.4.4, 8.6.5 and 8.8.3 (x64).
 
 Should also work with (not recently tested): <https://www.haskell.org/ghc/ ghc> 7.10.3\/LLVM 3.5.2 (Arm7).
 
 === <https://github.com/ghcjs/ghcjs GHCJS>
-#ghcjs#
+
+Tested with ghcjs-8.4.0.1.
 
 Passes all tests in the @flat@ testsuite, except for those relative to short <https://hackage.haskell.org/package/bytestring/docs/Data-ByteString-Short.html ByteString> that is unsupported by @ghcjs@.
 
-Check <https://github.com/Quid2/flat/blob/master/stack-ghcjs.yaml stack-ghcjs.yaml> to see with what versions of @ghcjs@ it has been tested.
-
-If you use a different version of @ghcjs@, you might want to run the test suite by setting your compiler in <https://github.com/Quid2/flat/blob/master/stack-ghcjs.yaml stack-ghcjs.yaml>
-and then running:
-
-@stack test --stack-yaml=stack-ghcjs.yaml@
-
-NOTE: Versions of @flat@ prior to 0.33 encoded @Double@ values incorrectly when they are not aligned with a byte boundary.
+NOTE: Some older versions of ghcjs and versions of @flat@ prior to 0.33 encoded @Double@ values incorrectly when not aligned with a byte boundary.
 
 === <https://eta-lang.org/ ETA>
 #eta#

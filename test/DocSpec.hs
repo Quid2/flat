@@ -26,7 +26,7 @@ main = do
     else find always ((extension ==? ".hs") &&? exceptFiles []) "src"
   -- print files
   runTests runOpts files
-  -- genTests genOpts files
+  genTests genOpts files
 
 runTests opts files = doctest $ opts ++ files
 

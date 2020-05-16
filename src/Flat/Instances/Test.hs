@@ -5,6 +5,7 @@ module Flat.Instances.Test
   , asList
   , flatBits
   , allBits
+  , prettyShow
   , module Data.Word
   )
 where

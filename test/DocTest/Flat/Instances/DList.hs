@@ -10,4 +10,4 @@ import Data.DList
 test = tstBits
 
 tests :: IO TestTree
-tests = testGroup "Flat.Instances.DList" <$> sequence [  DocTest.test "src/Flat/Instances/DList.hs:14" "[ExpectedLine [LineChunk \"(True,19,\\\"10000011 11000001 110\\\")\"]]" (DocTest.asPrint( test (Data.DList.fromList [7::Word,7]) ))]
+tests = testGroup "Flat.Instances.DList" <$> sequence [  DocTest.test "src/Flat/Instances/DList.hs:16" "[ExpectedLine [LineChunk \"(True,19,\\\"10000011 11000001 110\\\")\"]]" (DocTest.asPrint( test (Data.DList.fromList [7::Word,7]) ))]

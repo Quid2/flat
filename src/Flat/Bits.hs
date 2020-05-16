@@ -37,6 +37,7 @@ fromBools = V.fromList
 -- $setup
 -- >>> import Data.Word
 -- >>> import Flat.Instances.Base
+-- >>> import Flat.Instances.Test
 
 -- |The sequence of bits corresponding to the serialization of the passed value (without any final byte padding)
 -- >>> bits True
