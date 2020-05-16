@@ -1,6 +1,6 @@
 packages: .
 
-source-repository-package
-    type: git
-    location: https://github.com/tittoassini/doctest.git
-    tag: 5bded2c2ea4435e340ba727de9496e4c38a3e5ee
+--source-repository-package
+--    type: git
+--    location: https://github.com/tittoassini/doctest.git
+--    tag: 5bded2c2ea4435e340ba727de9496e4c38a3e5ee
