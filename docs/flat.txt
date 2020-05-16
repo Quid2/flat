@@ -110,12 +110,7 @@ module Data.ZigZag
 --   
 --   Invalid conversions produce a type error:
 --   
---   <pre>
---   &gt;&gt;&gt; zigZag (-1::Int64) :: Word32
---   ...
---   ... Couldn't match type ...
---   ...
---   </pre>
+--   zigZag (-1::Int64) :: Word32 ... ... Couldn't match type ... ...
 --   
 --   <pre>
 --   &gt;&gt;&gt; zigZag (0::Int8)
@@ -246,6 +241,9 @@ type Decoded a = Either DecodeException a
 
 -- | An exception during decoding
 data DecodeException
+NotEnoughSpace :: Env -> DecodeException
+TooMuchSpace :: Env -> DecodeException
+BadEncoding :: Env -> String -> DecodeException
 notEnoughSpace :: Ptr Word8 -> S -> IO a
 tooMuchSpace :: Ptr Word8 -> S -> IO a
 badEncoding :: Ptr Word8 -> S -> String -> IO a
@@ -523,226 +521,6 @@ consBool :: ConsState -> (ConsState, Bool)
 --   but it doesn't matter, errors will be checked in consClose
 consBits :: ConsState -> Int -> (ConsState, Word)
 
-
--- | <a>Build Status</a> <a>Hackage version</a>
---   
---   Haskell implementation of <a>Flat</a>, a principled, portable and
---   efficient binary data format (<a>specs</a>).
---   
---   <h3>How To Use It For Fun and Profit</h3>
---   
---   
---   To (de)serialise a data type, make it an instance of the <a>Flat</a>
---   class.
---   
---   There is <a>Generics</a> based support to automatically derive
---   instances of additional types.
---   
---   Let’s see some code, we need a couple of extensions:
---   
---   <pre>
---   &gt;&gt;&gt; \
---   </pre>
---   
---   Import the Flat library:
---   
---   <pre>
---   import Flat
---   </pre>
---   
---   Define a couple of custom data types, deriving Generic and Flat:
---   
---   <pre>
---   data Direction = North | South | Center | East | West deriving (Show,Generic,Flat)
---   BB
---   data List a = Nil | Cons a (List a) deriving (Show,Generic,Flat)
---   </pre>
---   
---   For encoding, use <tt>flat</tt>, for decoding, use <tt>unflat</tt>:
---   
---   <pre>
---   &gt;&gt;&gt; unflat . flat $ Cons North (Cons South Nil) :: Decoded (List Direction)
---   Right (Cons North (Cons South Nil))
---   </pre>
---   
---   For the decoding to work correctly, you will naturally need to know
---   the type of the serialised data. This is ok for applications that do
---   not require long-term storage and that do not need to communicate
---   across independently evolving agents. For those who do, you will need
---   to supplement <tt>flat</tt> with something like <a>zm</a>.
---   
---   <h4>Define Instances for Abstract/Primitive types</h4>
---   
---   
---   A set of primitives are available to define <tt>Flat</tt> instances
---   for abstract or primitive types.
---   
---   Instances for some common, primitive or abstract data types
---   (Bool,Words,Int,String,Text,ByteStrings,Tuples, Lists, Sequences, Maps
---   ..) are already defined in <a>Data.Flat.Instances</a>.
---   
---   <h4>Optimal Bit-Encoding</h4>
---   
---   
---   A pecularity of Flat is that it uses an optimal bit-encoding rather
---   than the usual byte-oriented one.
---   
---   To see this, let’s define a pretty printing function: <tt>bits</tt>
---   encodes a value as a sequence of bits, <tt>prettyShow</tt> displays it
---   nicely:
---   
---   <pre>
---   p :: Flat a =&gt; a -&gt; String
---   p = prettyShow . bits
---   </pre>
---   
---   Now some encodings:
---   
---   <pre>
---   p West
---   -&gt; "111"
---   </pre>
---   
---   <pre>
---   p (Nil::List Direction)
---   -&gt; "0"
---   </pre>
---   
---   <pre>
---   aList = Cons North (Cons South (Cons Center (Cons East (Cons West Nil))))
---   p aList
---   -&gt; "10010111 01110111 10"
---   </pre>
---   
---   As you can see, <tt>aList</tt> fits in less than 3 bytes rather than
---   11 as would be the case with other Haskell byte oriented serialisation
---   packages like <tt>binary</tt> or <tt>store</tt>.
---   
---   For the serialisation to work with byte-oriented devices or storage,
---   we need to add some padding:
---   
---   <pre>
---   f :: Flat a =&gt; a -&gt; String
---   f = prettyShow . paddedBits
---   </pre>
---   
---   <pre>
---   f West
---   -&gt; "11100001"
---   </pre>
---   
---   <pre>
---   f (Nil::List Direction)
---   -&gt; "00000001"
---   </pre>
---   
---   <pre>
---   f $ Cons North (Cons South (Cons Center (Cons East (Cons West Nil))))
---   -&gt; "10010111 01110111 10000001"
---   </pre>
---   
---   The padding is a sequence of 0s terminated by a 1 running till the
---   next byte boundary (if we are already at a byte boundary it will add
---   an additional byte of value 1, that’s unfortunate but there is a good
---   reason for this, check the <a>specs</a>).
---   
---   Byte-padding is automatically added by the function <tt>flat</tt> and
---   removed by <tt>unflat</tt>.
---   
---   <h3>Performance</h3>
---   
---   
---   For some hard data, see this <a>comparison of the major haskell
---   serialisation libraries</a>.
---   
---   Briefly: * Size: <tt>flat</tt> produces significantly smaller binaries
---   than all other libraries (3/4 times usually) * Serialization:
---   <tt>store</tt>, <tt>persist</tt> and <tt>flat</tt> are faster *
---   Deserialization: <tt>store</tt>, <tt>flat</tt>, <tt>persist</tt> and
---   <tt>cereal</tt> are faster * Transfer time (serialisation time +
---   transport time on the network + deserialisation at the receiving end):
---   <tt>flat</tt> is usually faster for all but the highest network speeds
---   
---   <h3>Compatibility</h3>
---   
---   
---   <h4><a>GHC</a></h4>
---   
---   
---   Tested with: * <a>ghc</a> 7.10.3, 8.0.2, 8.2.2, 8.4.4 and 8.6.3 (x64)
---   
---   Should also work with (not recently tested): * <a>ghc</a> 7.10.3/LLVM
---   3.5.2 (Arm7)
---   
---   <h4><a>GHCJS</a></h4>
---   
---   
---   Passes all tests in the <tt>flat</tt> testsuite, except for those
---   relative to short bytestrings (Data.ByteString.Short) that are
---   unsupported by <tt>ghcjs</tt>.
---   
---   Check <a>stack-ghcjs.yaml</a> to see with what versions of
---   <tt>ghcjs</tt> it has been tested.
---   
---   If you use a different version of <tt>ghcjs</tt>, you might want to
---   run the test suite by setting your compiler in <a>stack-ghcjs.yaml</a>
---   and then running:
---   
---   <pre>
---   stack test --stack-yaml=stack-ghcjs.yaml
---   </pre>
---   
---   NOTE: Versions prior to 0.33 encode <tt>Double</tt> values incorrectly
---   when they are not aligned with a byte boundary.
---   
---   NOTE: A native <a>TypeScript/JavaScript version</a> of <tt>flat</tt>
---   is under development.
---   
---   <h4><a>ETA</a></h4>
---   
---   
---   It builds (with etlas 1.5.0.0 and eta eta-0.8.6b2) but currently fails
---   the test suite.
---   
---   <h3>Installation</h3>
---   
---   
---   Get the latest stable version from <a>hackage</a>.
---   
---   <h3>Known Bugs and Infelicities</h3>
---   
---   
---   <h4>Longish compilation times</h4>
---   
---   
---   ’flat` relies more than other serialisation libraries on extensive
---   inlining for its good performance, this unfortunately leads to longer
---   compilation times.
---   
---   If you have many data types or very large ones this might become an
---   issue.
---   
---   A couple of good practices that will eliminate or mitigate this
---   problem are:
---   
---   <ul>
---   <li>During development, turn optimisations off (<tt>stack --fast</tt>
---   or <tt>-O0</tt> in the cabal file).</li>
---   <li>Keep your serialisation code in a separate module(s).</li>
---   </ul>
---   
---   <h4>Data types with more than 512 constructors are currently
---   unsupported</h4>
---   
---   
---   See also the <a>full list of open issues</a>.
---   
---   <h3>Acknowledgements</h3>
---   
---   
---   <tt>flat</tt> reuses ideas and readapts code from various packages,
---   mainly: <tt>store</tt>, <tt>binary-bits</tt> and <tt>binary</tt> and
---   includes contributions from Justus Sagemüller.
 module Flat.Tutorial
 
 
@@ -1307,18 +1085,15 @@ instance Flat.Class.Flat Data.ByteString.Lazy.Internal.ByteString
 instance Flat.Class.Flat Data.ByteString.Short.Internal.ShortByteString
 
 
+-- | Flat instances for the <a>array</a> package
+module Flat.Instances.Array
+instance (Flat.Class.Flat i, Flat.Class.Flat e, GHC.Arr.Ix i) => Flat.Class.Flat (GHC.Arr.Array i e)
+instance (Flat.Class.Flat i, Flat.Class.Flat e, GHC.Arr.Ix i, Data.Array.Base.IArray Data.Array.Base.UArray e) => Flat.Class.Flat (Data.Array.Base.UArray i e)
+
+
 -- | Flat Instances for common data types from the packages on which
 --   <tt>flat</tt> has a dependency.
 module Flat.Instances
-
-
--- | Flat instances for the <a>array</a> package
-module Flat.Instances.Array
-sizeIArray :: (IArray a e, Ix i, Flat e, Flat i) => a i e -> NumBits -> NumBits
-encodeIArray :: (Ix i, IArray a e, Flat i, Flat e) => a i e -> Encoding
-decodeIArray :: (Ix i, IArray a e, Flat i, Flat e) => Get (a i e)
-instance (Flat.Class.Flat i, Flat.Class.Flat e, GHC.Arr.Ix i) => Flat.Class.Flat (GHC.Arr.Array i e)
-instance (Flat.Class.Flat i, Flat.Class.Flat e, GHC.Arr.Ix i, Data.Array.Base.IArray Data.Array.Base.UArray e) => Flat.Class.Flat (Data.Array.Base.UArray i e)
 
 
 -- | Pre-value and post-value byte alignments
@@ -1403,17 +1178,20 @@ toBools :: Bits -> [Bool]
 fromBools :: [Bool] -> Bits
 
 -- | The sequence of bits corresponding to the serialization of the passed
---   value (without any final byte padding)
+--   value (without any final byte padding) &gt;&gt;&gt; bits True [True]
 bits :: forall a. Flat a => a -> Bits
 
 -- | The sequence of bits corresponding to the byte-padded serialization of
---   the passed value
+--   the passed value &gt;&gt;&gt; paddedBits True
+--   [True,False,False,False,False,False,False,True]
 paddedBits :: forall a. Flat a => a -> Bits
 
 -- | Convert a sequence of bits to the corresponding list of bytes
+--   &gt;&gt;&gt; asBytes $ asBits (256+3::Word16) [1,3]
 asBytes :: Bits -> [Word8]
 
--- | asBits (5::Word8) | &gt;
+-- | Convert an integral value to its equivalent bit representation
+--   &gt;&gt;&gt; asBits (5::Word8)
 --   [False,False,False,False,False,True,False,True]
 asBits :: FiniteBits a => a -> Bits
 instance Text.PrettyPrint.HughesPJClass.Pretty Flat.Bits.Bits
@@ -1432,10 +1210,12 @@ tstBits :: (Eq a, Flat a) => a -> (Bool, NumBits, String)
 
 -- | Test that container is serialised as a List
 asList :: (Eq a1, Eq a2, Flat a1, Flat a2) => (a2 -> a1) -> a2 -> Bool
+flatBits :: Flat a => a -> String
+allBits :: Flat a => a -> String
 
 
 -- | Haskell implementation of <a>Flat</a>, a principled, portable and
---   efficient binary data format (<a>specs</a>).
+--   efficient binary data format.
 module Flat
 
 -- | A decoded value

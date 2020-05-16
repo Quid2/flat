@@ -1,8 +1,10 @@
-module Flat.Instances.DList where
+module Flat.Instances.DList
+  ()
+where
 
-import Flat.Class
+import           Flat.Class
 import           Flat.Instances.Mono
-import Data.DList
+import           Data.DList
 
 -- $setup
 -- >>> import Flat.Instances.Test

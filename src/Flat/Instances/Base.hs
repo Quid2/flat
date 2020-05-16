@@ -2,7 +2,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleInstances ,StandaloneDeriving #-}
 -- | Flat instances for the base library
-module Flat.Instances.Base where
+module Flat.Instances.Base() where
 
 import Data.Bool
 import Data.Char

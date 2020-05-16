@@ -1,5 +1,7 @@
 -- | Flat instances for the vector package.
-module Flat.Instances.Vector where
+module Flat.Instances.Vector
+  ()
+where
 
 import           Flat.Instances.Mono
 import           Flat.Instances.Util

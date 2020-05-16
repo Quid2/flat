@@ -1,4 +1,6 @@
-module Flat.Instances.Unordered where
+module Flat.Instances.Unordered
+  ()
+where
 
 import           Flat.Instances.Mono
 import           Flat.Instances.Util

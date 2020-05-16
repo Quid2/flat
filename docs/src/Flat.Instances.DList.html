@@ -1,22 +1,24 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Flat.Instances.DList</span><span> </span><span class="hs-keyword">where</span><span>
-</span><a name="line-2"></a><span>
-</span><a name="line-3"></a><span class="hs-keyword">import</span><span> </span><a href="Flat.Class.html"><span class="hs-identifier">Flat.Class</span></a><span>
-</span><a name="line-4"></a><span class="hs-keyword">import</span><span>           </span><a href="Flat.Instances.Mono.html"><span class="hs-identifier">Flat.Instances.Mono</span></a><span>
-</span><a name="line-5"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data.DList</span><span>
-</span><a name="line-6"></a><span>
-</span><a name="line-7"></a><span class="hs-comment">-- $setup</span><span>
-</span><a name="line-8"></a><span class="hs-comment">-- &gt;&gt;&gt; import Flat.Instances.Test</span><span>
-</span><a name="line-9"></a><span class="hs-comment">-- &gt;&gt;&gt; import Flat.Instances.Base()</span><span>
-</span><a name="line-10"></a><span class="hs-comment">-- &gt;&gt;&gt; import Data.DList</span><span>
-</span><a name="line-11"></a><span class="hs-comment">-- &gt;&gt;&gt; let test = tstBits</span><span>
-</span><a name="line-12"></a><span>
-</span><a name="line-13"></a><span class="hs-comment">{-|
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Flat.Instances.DList</span><span>
+</span><a name="line-2"></a><span>  </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><a name="line-3"></a><span class="hs-keyword">where</span><span>
+</span><a name="line-4"></a><span>
+</span><a name="line-5"></a><span class="hs-keyword">import</span><span>           </span><a href="Flat.Class.html"><span class="hs-identifier">Flat.Class</span></a><span>
+</span><a name="line-6"></a><span class="hs-keyword">import</span><span>           </span><a href="Flat.Instances.Mono.html"><span class="hs-identifier">Flat.Instances.Mono</span></a><span>
+</span><a name="line-7"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Data.DList</span><span>
+</span><a name="line-8"></a><span>
+</span><a name="line-9"></a><span class="hs-comment">-- $setup</span><span>
+</span><a name="line-10"></a><span class="hs-comment">-- &gt;&gt;&gt; import Flat.Instances.Test</span><span>
+</span><a name="line-11"></a><span class="hs-comment">-- &gt;&gt;&gt; import Flat.Instances.Base()</span><span>
+</span><a name="line-12"></a><span class="hs-comment">-- &gt;&gt;&gt; import Data.DList</span><span>
+</span><a name="line-13"></a><span class="hs-comment">-- &gt;&gt;&gt; let test = tstBits</span><span>
+</span><a name="line-14"></a><span>
+</span><a name="line-15"></a><span class="hs-comment">{-|
 &gt;&gt;&gt; test (Data.DList.fromList [7::Word,7])
 (True,19,&quot;10000011 11000001 110&quot;)
 -}</span><span>
-</span><a name="line-17"></a><span>
-</span><a name="line-18"></a><span class="hs-keyword">instance</span><span> </span><a href="Flat.Class.html#Flat"><span class="hs-identifier hs-type">Flat</span></a><span> </span><a href="#local-6989586621679096190"><span class="hs-identifier hs-type">a</span></a><span> </span><span class="hs-glyph">=&gt;</span><span> </span><a href="Flat.Class.html#Flat"><span class="hs-identifier hs-type">Flat</span></a><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">DList</span><span> </span><a href="#local-6989586621679096190"><span class="hs-identifier hs-type">a</span></a><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><a name="line-19"></a><span>  </span><a name="local-8214565720323842424"><a href="Flat.Class.html#size"><span class="hs-identifier">size</span></a></a><span>   </span><span class="hs-glyph">=</span><span> </span><a href="Flat.Instances.Mono.html#sizeList"><span class="hs-identifier hs-var">sizeList</span></a><span> </span><span class="hs-operator hs-var">.</span><span> </span><span class="hs-identifier hs-var">toList</span><span>
-</span><a name="line-20"></a><span>  </span><a name="local-8214565720323842422"><a href="Flat.Class.html#encode"><span class="hs-identifier">encode</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a href="Flat.Instances.Mono.html#encodeList"><span class="hs-identifier hs-var">encodeList</span></a><span> </span><span class="hs-operator hs-var">.</span><span> </span><span class="hs-identifier hs-var">toList</span><span>
-</span><a name="line-21"></a><span>  </span><a name="local-8214565720323842423"><a href="Flat.Class.html#decode"><span class="hs-identifier">decode</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">fromList</span><span> </span><span class="hs-operator hs-var">&lt;$&gt;</span><span> </span><a href="Flat.Instances.Mono.html#decodeList"><span class="hs-identifier hs-var">decodeList</span></a><span>
-</span><a name="line-22"></a></pre></body></html>
+</span><a name="line-19"></a><span>
+</span><a name="line-20"></a><span class="hs-keyword">instance</span><span> </span><a href="Flat.Class.html#Flat"><span class="hs-identifier hs-type">Flat</span></a><span> </span><a href="#local-6989586621679096190"><span class="hs-identifier hs-type">a</span></a><span> </span><span class="hs-glyph">=&gt;</span><span> </span><a href="Flat.Class.html#Flat"><span class="hs-identifier hs-type">Flat</span></a><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">DList</span><span> </span><a href="#local-6989586621679096190"><span class="hs-identifier hs-type">a</span></a><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><a name="line-21"></a><span>  </span><a name="local-8214565720323842424"><a href="Flat.Class.html#size"><span class="hs-identifier">size</span></a></a><span>   </span><span class="hs-glyph">=</span><span> </span><a href="Flat.Instances.Mono.html#sizeList"><span class="hs-identifier hs-var">sizeList</span></a><span> </span><span class="hs-operator hs-var">.</span><span> </span><span class="hs-identifier hs-var">toList</span><span>
+</span><a name="line-22"></a><span>  </span><a name="local-8214565720323842422"><a href="Flat.Class.html#encode"><span class="hs-identifier">encode</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a href="Flat.Instances.Mono.html#encodeList"><span class="hs-identifier hs-var">encodeList</span></a><span> </span><span class="hs-operator hs-var">.</span><span> </span><span class="hs-identifier hs-var">toList</span><span>
+</span><a name="line-23"></a><span>  </span><a name="local-8214565720323842423"><a href="Flat.Class.html#decode"><span class="hs-identifier">decode</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">fromList</span><span> </span><span class="hs-operator hs-var">&lt;$&gt;</span><span> </span><a href="Flat.Instances.Mono.html#decodeList"><span class="hs-identifier hs-var">decodeList</span></a><span>
+</span><a name="line-24"></a></pre></body></html>

@@ -2,15 +2,17 @@
 {-# LANGUAGE FlexibleInstances #-}
 
 -- | Flat instances for the `array` package
-module Flat.Instances.Array where
+module Flat.Instances.Array
+  ()
+where
 
-import qualified Data.Array as A
-import qualified Data.Array.Unboxed as U
+import qualified Data.Array                    as A
+import qualified Data.Array.Unboxed            as U
 import           Data.Array.IArray
 import           Flat.Class
 import           Flat.Decoder
 import           Flat.Encoder
-import           Flat.Instances.Base ()
+import           Flat.Instances.Base            ( )
 -- import Flat.Instances.Util
 import           Flat.Instances.Mono
 
@@ -42,14 +44,14 @@ Arrays and Unboxed Arrays are encoded in the same way:
 True
 -}
 instance (Flat i, Flat e, Ix i) => Flat (A.Array i e) where
-  size = sizeIArray
+  size   = sizeIArray
 
   encode = encodeIArray
 
   decode = decodeIArray
 
 instance (Flat i, Flat e, Ix i, IArray U.UArray e) => Flat (U.UArray i e) where
-  size = sizeIArray
+  size   = sizeIArray
 
   encode = encodeIArray
 

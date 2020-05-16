@@ -10,7 +10,7 @@ module Flat.Decoder.Types
   , S(..)
   , GetResult(..)
   , Decoded
-  , DecodeException
+  , DecodeException(..)
   , notEnoughSpace
   , tooMuchSpace
   , badEncoding

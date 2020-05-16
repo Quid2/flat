@@ -155,7 +155,7 @@
 </span><a name="line-155"></a><span>  </span><span class="hs-comment">--   bits = n' .|. 7</span><span>
 </span><a name="line-156"></a><span>  </span><span class="hs-keyword">in</span><span> </span><a href="Flat.Decoder.Types.html#S"><span class="hs-identifier hs-var">S</span></a><span> </span><span class="hs-special">{</span><span class="hs-identifier">currPtr</span><span class="hs-glyph">=</span><span class="hs-identifier">currPtr</span><span> </span><a href="#local-6989586621679052368"><span class="hs-identifier hs-var">s</span></a><span> </span><span class="hs-special">`</span><span class="hs-identifier hs-var">plusPtr</span><span class="hs-special">`</span><span> </span><a href="#local-6989586621679052370"><span class="hs-identifier hs-var">bytes</span></a><span class="hs-special">,</span><span class="hs-identifier">usedBits</span><span class="hs-glyph">=</span><a href="#local-6989586621679052371"><span class="hs-identifier hs-var">bits</span></a><span class="hs-special">}</span><span>
 </span><a name="line-157"></a><span>
-</span><a name="line-158"></a><span class="hs-comment">-- {-# INLINE dBool #-} </span><span>
+</span><a name="line-158"></a><span class="hs-pragma">{-# INLINE</span><span> </span><span class="hs-pragma">dBool</span><span> </span><span class="hs-pragma">#-}</span><span>
 </span><a name="line-159"></a><span class="hs-comment">-- Inlining dBool Massively increases compilation time and decreases run time by a third</span><span>
 </span><a name="line-160"></a><span class="hs-comment">-- TODO: test dBool inlining for 8.8.3</span><span>
 </span><a name="line-161"></a><span class="hs-comment">-- |Decode a boolean</span><span>
