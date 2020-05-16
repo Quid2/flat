@@ -138,7 +138,8 @@ test-suite spec
 
   -- -DETA_VERSION -Dghcjs_HOST_OS
 
-  ghc-options: -O1 -Wno-unused-top-binds -Wno-type-defaults
+  ghc-options: -O1 
+  -- -Wno-unused-top-binds -Wno-type-defaults
   hs-source-dirs:   test
   other-modules:
     Test.Data
@@ -241,7 +242,7 @@ test-suite doc-static
     , unordered-containers
     , vector
 
-  ghc-options: -Wno-unused-top-binds -Wno-type-defaults
+  --ghc-options: -Wno-unused-top-binds -Wno-type-defaults
 
 -- Additional development time tests and benchmarks
 -- test-suite core
