@@ -382,9 +382,9 @@ flatUnflatRT = testGroup
   , rt "Integer" (prop_Flat_roundtrip :: RT Integer)
   , rt "Float" (prop_Flat_roundtrip :: RT Float)
   , rt "Double" (prop_Flat_roundtrip :: RT Double)
-#ifndef ghcjs_HOST_OS
+-- #ifndef ghcjs_HOST_OS
   , rt "Text" (prop_Flat_roundtrip :: RT T.Text)
-#endif
+-- #endif
   , rt "UTF8 Text" (prop_Flat_roundtrip :: RT UTF8Text)
 #if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
   , rt "UTF16 Text" (prop_Flat_roundtrip :: RT UTF16Text)
