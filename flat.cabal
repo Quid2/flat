@@ -11,7 +11,7 @@ tested-with:
 
 homepage:           http://quid2.org
 synopsis:           Principled and efficient bit-oriented binary serialization.
-description:        Principled and efficient bit-oriented binary serialization.
+description:        Reference implementation of `flat`, a principled and efficient binary serialization format.
 category:           Data,Parsing,Serialization
 build-type:         Simple
 extra-source-files:
@@ -82,7 +82,8 @@ library
 
   ghc-options:
     -Wall -O2 -funbox-strict-fields -fno-warn-orphans
-    -fno-warn-name-shadowing -Werror
+    -fno-warn-name-shadowing
+  --  -Werror
 
   if impl(eta -any)
     build-depends:
@@ -138,7 +139,7 @@ test-suite spec
 
   -- -DETA_VERSION -Dghcjs_HOST_OS
 
-  ghc-options: -O1 
+  -- ghc-options: -O1 
   if impl(ghc >8)
     ghc-options: -Wno-unused-top-binds -Wno-type-defaults -Wno-missing-signatures
   hs-source-dirs:   test
