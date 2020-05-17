@@ -26,6 +26,18 @@ Briefly:
 
 Get the latest stable version from [hackage](https://hackage.haskell.org/package/flat).
 
-### Acknowledgements
+### Other Stuff You Might Like
 
- `flat` reuses ideas and readapts code from various packages, mainly: `store`, `binary-bits` and `binary` and includes contributions from Justus Sagemüller.
+#### [ZM - Language independent, reproducible, absolute types](https://github.com/Quid2/zm)
+
+To decode `flat` encoded data you need to know the type of the serialised data.
+
+This is ok for applications that do not require long-term storage and that do not operate in open distributed systems.
+
+For those who do, you might want to supplement `flat` with something like [ZM](https://github.com/Quid2/zm).
+
+#### Ports for other languages
+
+[TypeScript-JavaScript](https://github.com/Quid2/ts) and [Purescript](https://www.purescript.org/) ports are under development.
+
+Get in touch if you would like to help porting `flat` to other languages.

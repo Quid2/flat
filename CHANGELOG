@@ -1,18 +1,12 @@
 Significant and compatibility-breaking changes.
 
 Version 0.4:
+    - Compatibility with ghc 8.8.3
 	- Changed namespace from Data.Flat to Flat
 	- Addtional Flat Instances for some common packages: array, base, bytestring, containers, dlist, text, unordered-containers, vector
-	- Additional doctests, with a static version that can run without ghci and therefore also under ghcjs/eta (run it with stack test :docs)
-	- ETA support has been dropped (still there mostly but untested)
+	- Additional doctests, with a static version that can run without ghci and therefore also under ghcjs/eta (run it with stack test :doc-static)
 	- Many minor changes
 
-Version 0.3.6:
-    - Added instances for base, containers, array, vector ...
-	- ? Fixed GHCJS bug
-	- Added support for ETA
-	- Tested with GHC 8.6.2
-	
 Version 0.3.4:
 	- Redisegned Generics-based instance generation (Data.Flat.Class) to reduce compilation time and improve encoding and decoding performance
 	- Fixed GHCJS Double bug and tested GHCJS with full test suite
