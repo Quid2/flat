@@ -4,9 +4,10 @@
 
 -- | Principled and efficient bit-oriented binary serialization.
 --   
---   Principled and efficient bit-oriented binary serialization.
+--   Reference implementation of <a>flat</a>, a principled and efficient
+--   binary serialization format.
 @package flat
-@version 0.3.11
+@version 0.4
 
 module Data.ByteString.Convert
 
