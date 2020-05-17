@@ -234,7 +234,11 @@ test-suite doc-static
     , dlist
     , flat
     , pretty
-    , quickcheck-instances>=0.3.17
+    , quickcheck-instances>=0.3.22
+    , QuickCheck >= 2.13.2 && < 3
+    , splitmix >= 0.0.2
+    , time-compat >= 1.9.3
+    , hashable >= 1.2.6.1 && < 2
     , tasty
     , tasty-hunit
     , tasty-quickcheck
