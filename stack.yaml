@@ -7,7 +7,9 @@ packages:
 allow-newer: true
 
 extra-deps:
-  - quickcheck-instances-0.3.20
+  # Required for lts-
+  - quickcheck-instances-0.3.21
+  - splitmix-0.0.2@sha256:e1c4d1202757d63cd4b4498d5fa600a792f2a315d2fdc6cf772f4679113c1819
 
   # Modified doctest, used to generate static tests
   - git: https://github.com/tittoassini/doctest
