@@ -12,9 +12,9 @@ import Data.Complex(Complex(..))
 import Data.Ratio
 import Prelude hiding ( mempty )
 import           Control.Monad                  ( liftM2 )
-#if MIN_VERSION_base(4,9,0)
+-- #if MIN_VERSION_base(4,9,0)
 import qualified Data.List.NonEmpty as B
-#endif
+-- #endif
 
 #if !MIN_VERSION_base(4,9,0)
 deriving instance Generic (Complex a)
@@ -485,7 +485,7 @@ For better encoding/decoding performance, it is useful to declare instances of c
 instance {-# OVERLAPPING #-}Flat [ Char ]
 
 
-#if MIN_VERSION_base(4,9,0)
+-- #if MIN_VERSION_base(4,9,0)
 {-|
 >>> test (B.fromList [True])
 (True,2,"10")
@@ -494,7 +494,7 @@ instance {-# OVERLAPPING #-}Flat [ Char ]
 (True,4,"0100")
 -}
 instance {-# OVERLAPPABLE #-}Flat a => Flat (B.NonEmpty a)
-#endif
+-- #endif
 
 {- |
 Tuples are supported up to 7 elements.
