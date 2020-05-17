@@ -11,7 +11,9 @@ tested-with:
 
 homepage:           http://quid2.org
 synopsis:           Principled and efficient bit-oriented binary serialization.
-description:        Reference implementation of `flat`, a principled and efficient binary serialization format.
+description:
+  Reference implementation of `flat`, a principled and efficient binary serialization format.
+
 category:           Data,Parsing,Serialization
 build-type:         Simple
 extra-source-files:
@@ -56,8 +58,8 @@ library
     Flat.Instances.Vector
     Flat.Memory
     Flat.Run
-    Flat.Types
     Flat.Tutorial
+    Flat.Types
 
   hs-source-dirs:   src
   default-language: Haskell2010
@@ -83,6 +85,7 @@ library
   ghc-options:
     -Wall -O2 -funbox-strict-fields -fno-warn-orphans
     -fno-warn-name-shadowing
+
   --  -Werror
 
   if impl(eta -any)
@@ -141,7 +144,9 @@ test-suite spec
 
   -- ghc-options: -O1 
   if impl(ghc >8)
-    ghc-options: -Wno-unused-top-binds -Wno-type-defaults -Wno-missing-signatures
+    ghc-options:
+      -Wno-unused-top-binds -Wno-type-defaults -Wno-missing-signatures
+
   hs-source-dirs:   test
   other-modules:
     Test.Data
@@ -192,7 +197,6 @@ test-suite spec
       , tasty
       , text
 
-
 -- dynamic doctests and generation of static doctests
 -- Usable only with recent versions of ghc (no ghcjs or eta)
 -- test-suite doc
@@ -216,6 +220,7 @@ test-suite doc-static
     DocTest
     DocTest.Data.FloatCast
     DocTest.Data.ZigZag
+    DocTest.Flat.Bits
     DocTest.Flat.Decoder.Prim
     DocTest.Flat.Endian
     DocTest.Flat.Instances.Array
@@ -227,7 +232,6 @@ test-suite doc-static
     DocTest.Flat.Instances.Text
     DocTest.Flat.Instances.Unordered
     DocTest.Flat.Instances.Vector
-    DocTest.Flat.Bits
     DocTest.Flat.Tutorial
 
   default-language: Haskell2010
@@ -239,11 +243,7 @@ test-suite doc-static
     , dlist
     , flat
     , pretty
-    , quickcheck-instances>=0.3.22
-    , QuickCheck >= 2.13.2 && < 3
-    -- , splitmix >= 0.0.2
-    -- , time-compat >= 1.9.3
-    , hashable >= 1.2.6.1 && < 1.4
+    , quickcheck-instances
     , tasty
     , tasty-hunit
     , tasty-quickcheck
@@ -251,11 +251,13 @@ test-suite doc-static
     , unordered-containers
     , vector
 
+  -- >=0.3.22
+  --, QuickCheck >= 2.13.2 && < 3
+  --, hashable >= 1.2.6.1 && < 1.4
   if impl(ghc <8)
     build-depends: semigroups
 
-
-  --ghc-options: -Wno-unused-top-binds -Wno-type-defaults
+--ghc-options: -Wno-unused-top-binds -Wno-type-defaults
 
 -- Additional development time tests and benchmarks
 -- test-suite core
