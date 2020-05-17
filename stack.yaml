@@ -10,7 +10,7 @@ extra-deps:
   # Required for lts-6.35 and lts-9.21
   - quickcheck-instances-0.3.21
   - splitmix-0.0.2
-  - time-compat-0.1.9.2.1
+  - time-compat-1.9.3
 
   # Modified doctest, used to generate static tests
   - git: https://github.com/tittoassini/doctest
