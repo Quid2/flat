@@ -18,7 +18,7 @@ matrix:
     #ghc 8.0.2 OK
     - env: IMG=quid2/x64-ubuntu-stack-lts-9.21 CMD="stack test --resolver lts-9.21"
     #ghc 8.2.2 OK
-    - env: IMG=quid2/x64-ubuntu-stack-lts-11.22 CMD="stack test --resolver lts-11.22"
+    #- env: IMG=quid2/x64-ubuntu-stack-lts-11.22 CMD="stack test --resolver lts-11.22"
     # ghc 8.4.4 OK
     # - env: IMG=quid2/x64-ubuntu-stack-lts-12.26 CMD="stack test --resolver lts-12.26"
     # # ghc 8.6.5 OK
