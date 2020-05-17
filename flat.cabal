@@ -164,6 +164,9 @@ test-suite spec
     , tasty-quickcheck
     , text
 
+  if impl(ghc <8)
+    build-depends: semigroups
+
   if impl(eta -any)
     build-depends:
         array             ==0.5.2.0
