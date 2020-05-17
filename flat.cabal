@@ -139,7 +139,8 @@ test-suite spec
   -- -DETA_VERSION -Dghcjs_HOST_OS
 
   ghc-options: -O1 
-  -- -Wno-unused-top-binds -Wno-type-defaults
+  if impl(ghc >8)
+    ghc-options: -Wno-unused-top-binds -Wno-type-defaults
   hs-source-dirs:   test
   other-modules:
     Test.Data

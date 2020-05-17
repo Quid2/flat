@@ -1,7 +1,6 @@
 {-# LANGUAGE CPP                #-}
 {-# LANGUAGE DeriveAnyClass     #-}
 {-# LANGUAGE StandaloneDeriving #-}
-{-# OPTIONS_GHC -Wno-unused-binds -Wno-type-defaults  #-}
 module Test.E.Flat() where
 
 import           Flat
