@@ -29,15 +29,6 @@ import           Data.MonoTraversable           ( Element
 import           Data.Sequences                 ( IsSequence )
 import qualified Data.Sequences                as S
 import           Data.Containers
--- ( ContainerKey
---                                                 , IsMap
---                                                 , MapValue
---                                                 , mapFromList
---                                                 , mapToList
---                                                 , IsSet
---                                                 , setToList
---                                                 , setFromList
---                                                 )
 import           Flat.Instances.Util
 import qualified Data.Foldable                 as F
 
@@ -131,12 +122,13 @@ instance (IsSequence l, Flat (Element l)) => Flat (AsList l) where
   decode = AsList <$> decodeList
 
 {-# INLINE sizeList #-}
-sizeList :: (MonoFoldable mono, Flat (Element mono)) => mono -> NumBits -> NumBits
+sizeList
+  :: (MonoFoldable mono, Flat (Element mono)) => mono -> NumBits -> NumBits
 sizeList l sz = ofoldl' (\s e -> size e (s + 1)) (sz + 1) l
 
 {-# INLINE encodeList #-}
 encodeList :: (Flat (Element mono), MonoFoldable mono) => mono -> Encoding
-encodeList = encodeListWith encode  . otoList
+encodeList = encodeListWith encode . otoList
 
 {-# INLINE decodeList #-}
 decodeList :: (IsSequence b, Flat (Element b)) => Get b
@@ -185,7 +177,10 @@ instance (IsMap map, Flat (ContainerKey map), Flat (MapValue map)) => Flat (AsMa
 
 {-# INLINE sizeMap #-}
 sizeMap :: (Flat (ContainerKey r), Flat (MapValue r), IsMap r) => Size r
-sizeMap m acc = F.foldl' (\acc' (k, v) -> size k (size v (acc' + 1))) (acc + 1) . mapToList $ m
+sizeMap m acc =
+  F.foldl' (\acc' (k, v) -> size k (size v (acc' + 1))) (acc + 1)
+    . mapToList
+    $ m
 -- sizeMap l sz = ofoldl' (\s (k, v) -> size k (size v (s + 1))) (sz + 1) l
 
 {-# INLINE encodeMap #-}

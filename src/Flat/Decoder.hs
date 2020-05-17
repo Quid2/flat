@@ -2,9 +2,9 @@
 -- |Strict Decoder
 module Flat.Decoder (
     strictDecoder,
-    strictDecoderPart,
+    -- strictDecoderPart,
     Decoded,
-    DecodeException,
+    DecodeException(..),
     Get,
     dByteString,
     dLazyByteString,

@@ -5,7 +5,7 @@
 -- |Strict Decoder Types
 module Flat.Decoder.Types
   ( strictDecoder
-  , strictDecoderPart
+  -- , strictDecoderPart
   , Get(..)
   , S(..)
   , GetResult(..)
@@ -26,6 +26,8 @@ import           System.IO.Unsafe
 #if MIN_VERSION_base(4,9,0)
 import qualified Control.Monad.Fail       as Fail
 #endif
+
+
 strictDecoder :: Get a -> B.ByteString -> Either DecodeException a
 strictDecoder get bs =
   strictDecoder_ get bs $ \(GetResult s'@(S ptr' o') a) endPtr ->
@@ -33,9 +35,9 @@ strictDecoder get bs =
       then tooMuchSpace endPtr s'
       else return a
 
-strictDecoderPart :: Get a -> B.ByteString -> Either DecodeException a
-strictDecoderPart get bs =
-  strictDecoder_ get bs $ \(GetResult _ a) _ -> return a
+-- strictDecoderPart :: Get a -> B.ByteString -> Either DecodeException a
+-- strictDecoderPart get bs =
+--   strictDecoder_ get bs $ \(GetResult _ a) _ -> return a
 
 strictDecoder_ ::
      Exception e
@@ -59,11 +61,13 @@ strictDecoder_ get (BS.PS base off len) check =
 --     in do
 --       GetResult (S ptr' o') a <- runGet get endPtr (S ptr 0)
 --       return (a, BS.PS base (ptr' `minusPtr` base0) (endPtr `minusPtr` ptr'), o')
+
+
 -- |Decoder monad
 newtype Get a =
   Get
-    { runGet :: Ptr Word8 -- End Ptr
-                 -> S -> IO (GetResult a)
+    { runGet :: 
+      Ptr Word8 -> S -> IO (GetResult a)
     } -- deriving (Functor)
 
 -- Seems to give better performance than the derived version

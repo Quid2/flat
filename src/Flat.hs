@@ -7,7 +7,7 @@ module Flat
   , module Flat.Filler
   , module X
   , Decoded
-  , DecodeException
+  , DecodeException(..)
   )
 where
 

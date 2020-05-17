@@ -147,7 +147,7 @@ w7l t =
     w7 :: Word8 -> Word8
     w7 l = l .|. 0x80
 
--- Encode as data NEList = Elem Word7 | Cons Word7 List
+-- | Encoded as: data NonEmptyList = Elem Word7 | Cons Word7 List
 {-# INLINE eIntegralW #-}
 eIntegralW :: [Word8] -> Prim
 eIntegralW vs s@(S op _ o)
@@ -229,7 +229,7 @@ low7 :: (Integral a) => a -> Word8
 low7 t = fromIntegral t .&. 0x7F
 
 -- | Encode text as UTF8 and encode the result as an array of bytes
--- PROB: encodeUtf8 calls a C primitive, not compatible with GHCJS
+-- PROB: encodeUtf8 calls a C primitive, not compatible with GHCJS (fixed in latest versions of GHCJS?)
 eUTF8F :: T.Text -> Prim
 eUTF8F = eBytesF . TE.encodeUtf8
 
@@ -243,6 +243,8 @@ eUTF16F t = eFillerF >=> eUTF16F_ t
     eUTF16F_ !(TI.Text (TA.Array array) w16Off w16Len) s =
       writeArray array (2 * w16Off) (2 * w16Len) (nextPtr s)
 #endif
+
+-- |Encode a Lazy ByteString
 eLazyBytesF :: L.ByteString -> Prim
 eLazyBytesF bs = eFillerF >=> \s -> write bs (nextPtr s)
     -- Single copy

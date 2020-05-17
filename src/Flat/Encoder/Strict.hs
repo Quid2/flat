@@ -67,6 +67,7 @@ instance Monoid Encoding where
   mconcat = foldl' mappend mempty
 
 -- PROB: GHC 8.02 won't always apply the rules leading to poor execution times (e.g. with lists)
+-- TODO: check with newest GHC versions
 {-# RULES
 "encodersSN" forall h t . encodersS (h : t) =
              h `mappend` encodersS t

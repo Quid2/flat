@@ -8,9 +8,9 @@
 @package flat
 @version 0.3.11
 
+module Data.ByteString.Convert
 
 -- | Convert to/from strict ByteStrings
-module Data.ByteString.Convert
 class AsByteString a
 toByteString :: AsByteString a => a -> ByteString
 fromByteString :: AsByteString a => ByteString -> a
@@ -23,13 +23,10 @@ instance Data.ByteString.Convert.AsByteString [GHC.Word.Word8]
 --   
 --   Code copied from <a>binary</a>.
 --   
---   This module was written based on:
---   
---   
+--   Based on:
 --   <a>http://hackage.haskell.org/package/reinterpret-cast-0.1.0/docs/src/Data-ReinterpretCast-Internal-ImplArray.html</a>..
 --   
 --   Implements casting via a 1-element STUArray, as described in
---   
 --   <a>http://stackoverflow.com/a/7002812/263061</a>.
 module Data.FloatCast
 
@@ -221,7 +218,6 @@ instance Data.ZigZag.ZigZag GHC.Integer.Type.Integer GHC.Natural.Natural
 -- | Strict Decoder Types
 module Flat.Decoder.Types
 strictDecoder :: Get a -> ByteString -> Either DecodeException a
-strictDecoderPart :: Get a -> ByteString -> Either DecodeException a
 
 -- | Decoder monad
 newtype Get a
@@ -336,8 +332,12 @@ dBE64 :: Get Word64
 
 -- | Return the n most significant bits (up to maximum of 8)
 --   
---   The bits are returned right shifted: &gt;&gt;&gt; unflatWith (dBEBits8
---   3) [0b11100001::Word8] == Right 0b00000111 True
+--   The bits are returned right shifted:
+--   
+--   <pre>
+--   &gt;&gt;&gt; unflatWith (dBEBits8 3) [0b11100001::Word8] == Right 0b00000111
+--   True
+--   </pre>
 dBEBits8 :: Int -> Get Word8
 
 -- | Return the n most significant bits (up to maximum of 16) The bits are
@@ -374,10 +374,17 @@ dLazyByteString_ :: Get ByteString
 -- | Decode a ByteArray and its length
 dByteArray_ :: Get (ByteArray, Int)
 
--- | A special state, optimised for constructor decoding. It consists of:
---   The bits to parse, top bit being the first to parse (could use a
---   Word16 instead, no difference in performance) The number of decoded
---   bits Supports up to 512 constructors (9 bits)
+-- | A special state, optimised for constructor decoding.
+--   
+--   It consists of:
+--   
+--   <ul>
+--   <li>The bits to parse, the top bit being the first to parse (could use
+--   a Word16 instead, no difference in performance)</li>
+--   <li>The number of decoded bits</li>
+--   </ul>
+--   
+--   Supports up to 512 constructors (9 bits).
 data ConsState
 ConsState :: {-# UNPACK #-} !Word -> !Int -> ConsState
 
@@ -425,13 +432,15 @@ dInt :: Get Int
 -- | Strict Decoder
 module Flat.Decoder
 strictDecoder :: Get a -> ByteString -> Either DecodeException a
-strictDecoderPart :: Get a -> ByteString -> Either DecodeException a
 
 -- | A decoded value
 type Decoded a = Either DecodeException a
 
 -- | An exception during decoding
 data DecodeException
+NotEnoughSpace :: Env -> DecodeException
+TooMuchSpace :: Env -> DecodeException
+BadEncoding :: Env -> String -> DecodeException
 
 -- | Decoder monad
 data Get a
@@ -482,8 +491,12 @@ dBE64 :: Get Word64
 
 -- | Return the n most significant bits (up to maximum of 8)
 --   
---   The bits are returned right shifted: &gt;&gt;&gt; unflatWith (dBEBits8
---   3) [0b11100001::Word8] == Right 0b00000111 True
+--   The bits are returned right shifted:
+--   
+--   <pre>
+--   &gt;&gt;&gt; unflatWith (dBEBits8 3) [0b11100001::Word8] == Right 0b00000111
+--   True
+--   </pre>
 dBEBits8 :: Int -> Get Word8
 
 -- | Return the n most significant bits (up to maximum of 16) The bits are
@@ -501,10 +514,17 @@ dBEBits64 :: Int -> Get Word64
 -- | Drop the specified number of bits
 dropBits :: Int -> Get ()
 
--- | A special state, optimised for constructor decoding. It consists of:
---   The bits to parse, top bit being the first to parse (could use a
---   Word16 instead, no difference in performance) The number of decoded
---   bits Supports up to 512 constructors (9 bits)
+-- | A special state, optimised for constructor decoding.
+--   
+--   It consists of:
+--   
+--   <ul>
+--   <li>The bits to parse, the top bit being the first to parse (could use
+--   a Word16 instead, no difference in performance)</li>
+--   <li>The number of decoded bits</li>
+--   </ul>
+--   
+--   Supports up to 512 constructors (9 bits).
 data ConsState
 ConsState :: {-# UNPACK #-} !Word -> !Int -> ConsState
 
@@ -602,7 +622,8 @@ eDoubleF :: Double -> Prim
 eUTF16F :: Text -> Prim
 
 -- | Encode text as UTF8 and encode the result as an array of bytes PROB:
---   encodeUtf8 calls a C primitive, not compatible with GHCJS
+--   encodeUtf8 calls a C primitive, not compatible with GHCJS (fixed in
+--   latest versions of GHCJS?)
 eUTF8F :: Text -> Prim
 eCharF :: Char -> Prim
 eNaturalF :: Natural -> Prim
@@ -617,6 +638,8 @@ eWord64F :: Word64 -> Prim
 eWord32F :: Word32 -> Prim
 eWord16F :: Word16 -> Prim
 eBytesF :: ByteString -> Prim
+
+-- | Encode a Lazy ByteString
 eLazyBytesF :: ByteString -> Prim
 eShortBytesF :: ShortByteString -> Prim
 eWord8F :: Word8 -> Prim
@@ -820,11 +843,25 @@ module Flat.Class
 
 -- | Class of types that can be encoded/decoded
 class Flat a
+
+-- | Return the encoding corrresponding to the value
 encode :: Flat a => a -> Encoding
+
+-- | Return the encoding corrresponding to the value
 encode :: (Flat a, Generic a, GEncode (Rep a)) => a -> Encoding
+
+-- | Decode a value
 decode :: Flat a => Get a
+
+-- | Decode a value
 decode :: (Flat a, Generic a, GDecode (Rep a)) => Get a
+
+-- | Add maximum size in bits of the value to the total count Used to
+--   calculated maximum buffer size before encoding
 size :: Flat a => a -> NumBits -> NumBits
+
+-- | Add maximum size in bits of the value to the total count Used to
+--   calculated maximum buffer size before encoding
 size :: (Flat a, Generic a, GSize (Rep a)) => a -> NumBits -> NumBits
 
 -- | Calculate the maximum size in bits of the serialisation of the value
@@ -1178,21 +1215,37 @@ toBools :: Bits -> [Bool]
 fromBools :: [Bool] -> Bits
 
 -- | The sequence of bits corresponding to the serialization of the passed
---   value (without any final byte padding) &gt;&gt;&gt; bits True [True]
+--   value (without any final byte padding)
+--   
+--   <pre>
+--   &gt;&gt;&gt; bits True
+--   [True]
+--   </pre>
 bits :: forall a. Flat a => a -> Bits
 
 -- | The sequence of bits corresponding to the byte-padded serialization of
---   the passed value &gt;&gt;&gt; paddedBits True
+--   the passed value
+--   
+--   <pre>
+--   &gt;&gt;&gt; paddedBits True
 --   [True,False,False,False,False,False,False,True]
+--   </pre>
 paddedBits :: forall a. Flat a => a -> Bits
 
 -- | Convert a sequence of bits to the corresponding list of bytes
---   &gt;&gt;&gt; asBytes $ asBits (256+3::Word16) [1,3]
+--   
+--   <pre>
+--   &gt;&gt;&gt; asBytes $ asBits (256+3::Word16)
+--   [1,3]
+--   </pre>
 asBytes :: Bits -> [Word8]
 
 -- | Convert an integral value to its equivalent bit representation
+--   
+--   <pre>
 --   &gt;&gt;&gt; asBits (5::Word8)
 --   [False,False,False,False,False,True,False,True]
+--   </pre>
 asBits :: FiniteBits a => a -> Bits
 instance Text.PrettyPrint.HughesPJClass.Pretty Flat.Bits.Bits
 
@@ -1213,6 +1266,9 @@ asList :: (Eq a1, Eq a2, Flat a1, Flat a2) => (a2 -> a1) -> a2 -> Bool
 flatBits :: Flat a => a -> String
 allBits :: Flat a => a -> String
 
+-- | Pretty print a value with the <a>prettyNormal</a> level.
+prettyShow :: Pretty a => a -> String
+
 
 -- | Haskell implementation of <a>Flat</a>, a principled, portable and
 --   efficient binary data format.
@@ -1223,3 +1279,6 @@ type Decoded a = Either DecodeException a
 
 -- | An exception during decoding
 data DecodeException
+NotEnoughSpace :: Env -> DecodeException
+TooMuchSpace :: Env -> DecodeException
+BadEncoding :: Env -> String -> DecodeException

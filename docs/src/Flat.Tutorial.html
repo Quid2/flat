@@ -18,7 +18,7 @@ We need a couple of extensions:
 
 &gt;&gt;&gt; :set -XDeriveGeneric -XDeriveAnyClass
 
-The @Flat@ library:
+The @Flat@ top module:
 
 &gt;&gt;&gt; import Flat
 
@@ -78,9 +78,7 @@ To do so, rather than encoding a plain value, 'Flat.Run.flat' encodes a 'Flat.Fi
 
 In practice, the padding is a, possibly empty, sequence of 0s followed by a 1.
 
-But .. you don't need to worry about these details as byte-padding is automatically added by the function 'Flat.Run.flat' and removed by 'Flat.Run.unflat'.
-
-For example, this encodes as 7 bits:
+For example, this list encodes as 7 bits:
 
 &gt;&gt;&gt; flatBits $ Cons North (Cons South Nil)
 &quot;1001010&quot;
@@ -90,42 +88,43 @@ And, with the added padding of a final &quot;1&quot;, will snugly fit in a singl
 &gt;&gt;&gt; allBits $ Cons North (Cons South Nil)
 &quot;10010101&quot;
 
+But .. you don't need to worry about these details as byte-padding is automatically added by the function 'Flat.Run.flat' and removed by 'Flat.Run.unflat'.
+
 === Pre-defined Instances
 
 Flat instances are already defined for relevant types of some common packages: array, base, bytestring, containers, dlist, mono-traversable, text, unordered-containers, vector.
 
 They are automatically imported by the &quot;Flat&quot; module.
 
+For example:
+
+&gt;&gt;&gt; flatBits $ Just True
+&quot;11&quot;
+
 == Compatibility
 #compatibility#
 
 === &lt;https://www.haskell.org/ghc/ GHC&gt;
-#ghc#
 
-Tested with: &lt;https://www.haskell.org/ghc/ ghc&gt; 7.10.3, 8.0.2, 8.2.2, 8.4.4, 8.6.5 and 8.8.3 (x64).
+* x32 and x64: 7.10.3, 8.0.2, 8.2.2, 8.4.4, 8.6.5, 8.8.3.
 
-Should also work with (not recently tested): &lt;https://www.haskell.org/ghc/ ghc&gt; 7.10.3\/LLVM 3.5.2 (Arm7).
+* &lt;https://en.wikipedia.org/wiki/ARM7 ARM7-armv7hf&gt; and &lt;https://en.wikipedia.org/wiki/ARM_architecture#AArch64_features ARM8-aaarch64&gt;: 8.0.2. 
 
 === &lt;https://github.com/ghcjs/ghcjs GHCJS&gt;
-#ghcjs#
 
-Passes all tests in the @flat@ testsuite, except for those relative to short &lt;https://hackage.haskell.org/package/bytestring/docs/Data-ByteString-Short.html ByteString&gt; that is unsupported by @ghcjs@.
+* @ghcjs-8.4.0.1@.
 
-Check &lt;https://github.com/Quid2/flat/blob/master/stack-ghcjs.yaml stack-ghcjs.yaml&gt; to see with what versions of @ghcjs@ it has been tested.
+NOTE: Some tests are not run for @ghcjs@ as they are related to unsupported features such as UTF16 encoding of Text and short &lt;https://hackage.haskell.org/package/bytestring/docs/Data-ByteString-Short.html ByteString&gt;.
 
-If you use a different version of @ghcjs@, you might want to run the test suite by setting your compiler in &lt;https://github.com/Quid2/flat/blob/master/stack-ghcjs.yaml stack-ghcjs.yaml&gt;
-and then running:
+For details of what tests are skipped search @test/Spec.hs@ for @ghcjs_HOST_OS@.
 
-@stack test --stack-yaml=stack-ghcjs.yaml@
-
-NOTE: Versions of @flat@ prior to 0.33 encoded @Double@ values incorrectly when they are not aligned with a byte boundary.
+NOTE: Some older versions of @ghcjs@ and versions of @flat@ prior to 0.33 encoded @Double@ values incorrectly when not aligned with a byte boundary.
 
 === &lt;https://eta-lang.org/ ETA&gt;
-#eta#
 
-It builds (with etlas 1.5.0.0 and eta eta-0.8.6b2) but currently fails the test suite.
+It builds (with @etlas 1.5.0.0@ and @eta-0.8.6b2@) and passes the @doctest-static@ test but it won't complete the main @spec@ test probably because of a recursive iteration issue, see &lt;https://github.com/typelead/eta/issues/901&gt;.
 
-Support for eta is not currently being actively mantained.
+Support for @eta@ is not currently being actively mantained.
 
 == Known Bugs and Infelicities
 #known-bugs-and-infelicities#
@@ -165,7 +164,7 @@ For those who do, you might want to supplement @flat@ with something like &lt;ht
 
 &lt;https://github.com/Quid2/ts TypeScript\/JavaScript&gt; and &lt;https://www.purescript.org/ Purescript&gt; ports are under development.
 
-Get in touch if you would like to help porting @Flat@ to other languages.
+Get in touch if you would like to help porting @flat@ to other languages.
 
 == Acknowledgements
 #acknowledgements#
@@ -174,6 +173,6 @@ Get in touch if you would like to help porting @Flat@ to other languages.
 @store@, @binary-bits@ and @binary@ and includes contributions from
 Justus Sagem&#252;ller.
 -}</span><span>
+</span><a name="line-176"></a><span>
 </span><a name="line-177"></a><span>
-</span><a name="line-178"></a><span>
-</span><a name="line-179"></a></pre></body></html>
+</span><a name="line-178"></a></pre></body></html>

@@ -52,14 +52,18 @@ getSize a = size a 0
 
 -- |Class of types that can be encoded/decoded
 class Flat a where
+    -- |Return the encoding corrresponding to the value
     encode :: a -> Encoding
     default encode :: (Generic a, GEncode (Rep a)) => a -> Encoding
     encode = gencode . from
 
+    -- |Decode a value
     decode :: Get a
     default decode :: (Generic a, GDecode (Rep a)) => Get a
     decode = to `fmap` gget
 
+    -- |Add maximum size in bits of the value to the total count
+    -- Used to calculated maximum buffer size before encoding 
     size :: a -> NumBits -> NumBits
     default size :: (Generic a, GSize (Rep a)) => a -> NumBits -> NumBits
     size !x !n = gsize n $ from x
@@ -77,7 +81,7 @@ class Flat a where
     {-# NOINLINE encode #-}
 #endif
 
--- Generic Encoder
+-- |Generic Encoder
 class GEncode f where gencode :: f a -> Encoding
 
 instance {-# OVERLAPPABLE #-} GEncode f => GEncode (M1 i c f) where
@@ -131,31 +135,31 @@ instance GEncode a => GEncodeSum (C1 c a) where
   gencodeSum !code !numBits x = eBits16 numBits code <> gencode x
   {-# INLINE  gencodeSum #-}
 
--- Generic Decoding
+-- |Generic Decoding
 class GDecode f where
   gget :: Get (f t)
 
--- Metadata (constructor name, etc)
+-- |Metadata (constructor name, etc)
 instance GDecode a => GDecode (M1 i c a) where
     gget = M1 <$> gget
     {-# INLINE  gget #-}
 
--- Type without constructors
+-- |Type without constructors
 instance GDecode V1 where
     gget = unused
     {-# INLINE  gget #-}
 
--- Constructor without arguments
+-- |Constructor without arguments
 instance GDecode U1 where
     gget = pure U1
     {-# INLINE  gget #-}
 
--- Product: constructor with parameters
+-- |Product: constructor with parameters
 instance (GDecode a, GDecode b) => GDecode (a :*: b) where
   gget = (:*:) <$> gget <*> gget
   {-# INLINE gget #-}
 
--- Constants, additional parameters, and rank-1 recursion
+-- |Constants, additional parameters, and rank-1 recursion
 instance Flat a => GDecode (K1 i a) where
 #if INL == 1
   gget = K1 <$> inline decode
@@ -221,7 +225,7 @@ instance {-# OVERLAPPABLE #-} (NumConstructors (a :+: b) <= 512, GDecodeSum (a :
     getSum cs
   {-# INLINE gget #-}
 
--- Constructor Decoder
+-- |Constructor Decoder
 class GDecodeSum f where
     getSum :: ConsState -> Get (f a)
 
@@ -307,22 +311,22 @@ instance {-# OVERLAPPING #-} (GDecode n1,GDecode n2,GDecode n3,GDecode n4,GDecod
 -- Implemented as a function that adds the maximum size to a running total
 class GSize f where gsize :: NumBits -> f a -> NumBits
 
--- Skip metadata
+-- |Skip metadata
 instance GSize f => GSize (M1 i c f) where
     gsize !n = gsize n . unM1
     {-# INLINE gsize #-}
 
--- Type without constructors
+-- |Type without constructors
 instance GSize V1 where
     gsize !n _ = n
     {-# INLINE gsize #-}
 
--- Constructor without arguments
+-- |Constructor without arguments
 instance GSize U1 where
     gsize !n _ = n
     {-# INLINE gsize #-}
 
--- Skip metadata
+-- |Skip metadata
 instance Flat a => GSize (K1 i a) where
 #if INL == 1
   gsize !n x = inline size (unK1 x) n
@@ -338,7 +342,7 @@ instance (GSize a, GSize b) => GSize (a :*: b) where
       -- gsize (gsize n x) y
     {-# INLINE gsize #-}
 
--- Different size implementations
+-- Alternative 'gsize' implementations
 #define SIZ_ADD
 -- #define SIZ_NUM
 
@@ -361,7 +365,7 @@ instance (GSizeNxt (a :+: b),GSizeMax (a:+:b)) => GSize (a :+: b) where
   gsize !n x = gsizeNxt (gsizeMax x + n) x
   {-# INLINE gsize #-}
 
--- Calculate the maximum size of a class constructor (that might be one bit more than the size of some of its constructors)
+-- |Calculate the maximum size of a class constructor (that might be one bit more than the size of some of its constructors)
 #ifdef SIZ_MAX_VAL
 class GSizeMax (f :: * -> *) where gsizeMax :: f a ->  NumBits
 
@@ -412,7 +416,7 @@ type family If c (t::Nat) (e::Nat) where
     If 'False t e = e
 #endif
 
--- Calculate the size of a value, not taking in account its constructor
+-- |Calculate the size of a value, not taking in account its constructor
 class GSizeNxt (f :: * -> *) where gsizeNxt :: NumBits -> f a ->  NumBits
 
 instance (GSizeNxt a, GSizeNxt b) => GSizeNxt (a :+: b) where
@@ -426,7 +430,7 @@ instance (GSize a) => GSizeNxt (C1 c a) where
     gsizeNxt !n !x = gsize n x
 #endif
 
--- Calculate size in bits of constructor
+-- |Calculate size in bits of constructor
 -- vs proxy implementation: similar compilation time but much better run times (at least for Tree N, -70%)
 class GSizeSum (f :: * -> *) where gsizeSum :: NumBits -> f a ->  NumBits
 
@@ -446,7 +450,6 @@ instance (GSize a) => GSizeSum (C1 c a) where
 type family NumConstructors (a :: * -> *) :: Nat where
   NumConstructors (C1 c a) = 1
   NumConstructors (x :+: y) = NumConstructors x + NumConstructors y
-
 
 unused :: forall a . a
 unused = error "Now, now, you could not possibly have meant this.."

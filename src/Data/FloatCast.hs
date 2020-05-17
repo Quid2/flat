@@ -6,13 +6,9 @@
 
 Code copied from <https://hackage.haskell.org/package/binary binary>.
 
-This module was written based on:
+Based on: <http://hackage.haskell.org/package/reinterpret-cast-0.1.0/docs/src/Data-ReinterpretCast-Internal-ImplArray.html>..
 
-<http://hackage.haskell.org/package/reinterpret-cast-0.1.0/docs/src/Data-ReinterpretCast-Internal-ImplArray.html>..
-
-Implements casting via a 1-element STUArray, as described in
-
-<http://stackoverflow.com/a/7002812/263061>.
+Implements casting via a 1-element STUArray, as described in <http://stackoverflow.com/a/7002812/263061>.
 -}
 module Data.FloatCast
   ( floatToWord

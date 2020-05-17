@@ -33,6 +33,7 @@ instance Flat Filler where
   -- use generated decode
 
 -- |A Post aligned value, a value followed by a filler
+-- Useful to complete the encoding of a top-level value
 data PostAligned a = PostAligned { postValue :: a, postFiller :: Filler }
 #ifdef ETA_VERSION    
   deriving (Show, Eq, Ord, Typeable, Generic, NFData)
@@ -46,8 +47,8 @@ instance Flat a => Flat (PostAligned a) where
 --  deriving (Show, Eq, Ord, Typeable, Generic, NFData,Flat)
 
 
-
 -- |A Pre aligned value, a value preceded by a filler
+-- Useful to prealign ByteArrays, Texts and any structure that can be encoded more efficiently when byte aligned.  
 data PreAligned a = PreAligned { preFiller :: Filler, preValue :: a }
   deriving (Show, Eq, Ord, Typeable, Generic, NFData, Flat)
 
@@ -65,6 +66,7 @@ preAligned :: a -> PreAligned a
 preAligned = PreAligned FillerEnd
 
 -- postAlignedDecoder :: Get a -> Get (PostAligned a)
+-- |Decode a value assuming that is PostAligned
 postAlignedDecoder :: Get b -> Get b
 postAlignedDecoder dec = do
   v <- dec

@@ -18,7 +18,7 @@ We need a couple of extensions:
 
 >>> :set -XDeriveGeneric -XDeriveAnyClass
 
-The @Flat@ library:
+The @Flat@ top module:
 
 >>> import Flat
 
@@ -78,9 +78,7 @@ To do so, rather than encoding a plain value, 'Flat.Run.flat' encodes a 'Flat.Fi
 
 In practice, the padding is a, possibly empty, sequence of 0s followed by a 1.
 
-But .. you don't need to worry about these details as byte-padding is automatically added by the function 'Flat.Run.flat' and removed by 'Flat.Run.unflat'.
-
-For example, this encodes as 7 bits:
+For example, this list encodes as 7 bits:
 
 >>> flatBits $ Cons North (Cons South Nil)
 "1001010"
@@ -90,35 +88,43 @@ And, with the added padding of a final "1", will snugly fit in a single byte:
 >>> allBits $ Cons North (Cons South Nil)
 "10010101"
 
+But .. you don't need to worry about these details as byte-padding is automatically added by the function 'Flat.Run.flat' and removed by 'Flat.Run.unflat'.
+
 === Pre-defined Instances
 
 Flat instances are already defined for relevant types of some common packages: array, base, bytestring, containers, dlist, mono-traversable, text, unordered-containers, vector.
 
 They are automatically imported by the "Flat" module.
 
+For example:
+
+>>> flatBits $ Just True
+"11"
+
 == Compatibility
 #compatibility#
 
 === <https://www.haskell.org/ghc/ GHC>
 
-Tested with: <https://www.haskell.org/ghc/ ghc> 7.10.3, 8.0.2, 8.2.2, 8.4.4, 8.6.5 and 8.8.3 (x64).
+* x32 and x64: 7.10.3, 8.0.2, 8.2.2, 8.4.4, 8.6.5, 8.8.3.
 
-Should also work with (not recently tested): <https://www.haskell.org/ghc/ ghc> 7.10.3\/LLVM 3.5.2 (Arm7).
+* <https://en.wikipedia.org/wiki/ARM7 ARM7-armv7hf> and <https://en.wikipedia.org/wiki/ARM_architecture#AArch64_features ARM8-aaarch64>: 8.0.2. 
 
 === <https://github.com/ghcjs/ghcjs GHCJS>
 
-Tested with ghcjs-8.4.0.1.
+* @ghcjs-8.4.0.1@.
 
-Passes all tests in the @flat@ testsuite, except for those relative to short <https://hackage.haskell.org/package/bytestring/docs/Data-ByteString-Short.html ByteString> that is unsupported by @ghcjs@.
+NOTE: Some tests are not run for @ghcjs@ as they are related to unsupported features such as UTF16 encoding of Text and short <https://hackage.haskell.org/package/bytestring/docs/Data-ByteString-Short.html ByteString>.
 
-NOTE: Some older versions of ghcjs and versions of @flat@ prior to 0.33 encoded @Double@ values incorrectly when not aligned with a byte boundary.
+For details of what tests are skipped search @test/Spec.hs@ for @ghcjs_HOST_OS@.
+
+NOTE: Some older versions of @ghcjs@ and versions of @flat@ prior to 0.33 encoded @Double@ values incorrectly when not aligned with a byte boundary.
 
 === <https://eta-lang.org/ ETA>
-#eta#
 
-It builds (with etlas 1.5.0.0 and eta eta-0.8.6b2) but currently fails the test suite.
+It builds (with @etlas 1.5.0.0@ and @eta-0.8.6b2@) and passes the @doctest-static@ test but it won't complete the main @spec@ test probably because of a recursive iteration issue, see <https://github.com/typelead/eta/issues/901>.
 
-Support for eta is not currently being actively mantained.
+Support for @eta@ is not currently being actively mantained.
 
 == Known Bugs and Infelicities
 #known-bugs-and-infelicities#
@@ -143,22 +149,6 @@ This limit could be easily extended, shout if you need it.
 === Other
 
 <https://github.com/Quid2/flat/issues Full list of open issues>.
-
-== Other Stuff You Might Like
-
-=== <https://github.com/Quid2/zm ZM - Language independent, reproducible, absolute types>
-
-To decode @flat@ encoded data you need to know the type of the serialised data.
-
-This is ok for applications that do not require long-term storage and that do not operate in open distributed systems.
-
-For those who do, you might want to supplement @flat@ with something like <https://github.com/Quid2/zm zm>.
-
-=== Ports for other languages
-
-<https://github.com/Quid2/ts TypeScript\/JavaScript> and <https://www.purescript.org/ Purescript> ports are under development.
-
-Get in touch if you would like to help porting @Flat@ to other languages.
 
 == Acknowledgements
 #acknowledgements#

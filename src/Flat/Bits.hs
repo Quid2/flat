@@ -39,18 +39,22 @@ fromBools = V.fromList
 -- >>> import Flat.Instances.Base
 -- >>> import Flat.Instances.Test
 
--- |The sequence of bits corresponding to the serialization of the passed value (without any final byte padding)
--- >>> bits True
--- [True]
+{- |The sequence of bits corresponding to the serialization of the passed value (without any final byte padding)
+
+>>> bits True
+[True]
+-}
 bits :: forall a . Flat a => a -> Bits
 bits v =
   let lbs                     = flat v
       Right (PostAligned _ f) = unflatRaw lbs :: Decoded (PostAligned a)
   in  takeBits (8 * B.length lbs - fillerLength f) lbs
 
--- |The sequence of bits corresponding to the byte-padded serialization of the passed value
--- >>> paddedBits True
--- [True,False,False,False,False,False,False,True]
+{- |The sequence of bits corresponding to the byte-padded serialization of the passed value
+
+>>> paddedBits True
+[True,False,False,False,False,False,False,True]
+-}
 paddedBits :: forall a . Flat a => a -> Bits
 paddedBits v = let lbs = flat v in takeBits (8 * B.length lbs) lbs
 
@@ -62,15 +66,19 @@ takeBits numBits lbs = V.generate
     in  testBit (B.index lbs (fromIntegral bb)) (7 - b)
   )
 
--- |Convert an integral value to its equivalent bit representation
--- >>> asBits (5::Word8)
--- [False,False,False,False,False,True,False,True]
+{- |Convert an integral value to its equivalent bit representation
+
+>>> asBits (5::Word8)
+[False,False,False,False,False,True,False,True]
+-}
 asBits :: FiniteBits a => a -> Bits
 asBits w = let s = finiteBitSize w in V.generate s (testBit w . (s - 1 -))
 
--- |Convert a sequence of bits to the corresponding list of bytes
--- >>> asBytes $ asBits (256+3::Word16)
--- [1,3]
+{- |Convert a sequence of bits to the corresponding list of bytes
+ 
+>>> asBytes $ asBits (256+3::Word16)
+[1,3]
+-}
 asBytes :: Bits -> [Word8]
 asBytes = map byteVal . bytes . V.toList
 
@@ -84,8 +92,10 @@ bytes :: [t] -> [[t]]
 bytes [] = []
 bytes l  = let (w, r) = splitAt 8 l in w : bytes r
 
--- | >>> prettyShow $ asBits (256+3::Word16)
--- "00000001 00000011"
+{- |
+>>> prettyShow $ asBits (256+3::Word16)
+"00000001 00000011"
+-}
 instance Pretty Bits where
   pPrint = hsep . map prettyBits . bytes . V.toList
 

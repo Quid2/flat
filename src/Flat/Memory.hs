@@ -2,7 +2,11 @@
 {-# LANGUAGE MagicHash     #-}
 {-# LANGUAGE TypeFamilies  #-}
 {-# LANGUAGE UnboxedTuples #-}
--- |Memory access primitives
+{- |
+Memory access primitives.
+
+Includes code from the store-core package.
+-}
 module Flat.Memory
   ( chunksToByteString
   , chunksToByteArray
@@ -71,7 +75,7 @@ pokeByteArray sourceArr sourceOffset len dest = do
 -- Copied from the store-core package
 copyByteArrayToAddr :: ByteArray# -> Int -> Ptr a -> Int -> IO ()
 copyByteArrayToAddr arr (I# offset) (Ptr addr) (I# len) =
-  IO (\s -> (#copyByteArrayToAddr# arr offset addr len s, ()#))
+  IO (\s -> (# copyByteArrayToAddr# arr offset addr len s, () #))
 {-# INLINE copyByteArrayToAddr #-}
 
 -- toByteString :: Ptr Word8 -> Int -> BS.ByteString
@@ -104,10 +108,11 @@ chunksToByteArray (sourcePtr0, lens) = unsafePerformIO $ do
   farr <- unsafeFreezeByteArray arr
   return (farr, len)
 
--- from store-core
+
 -- | Wrapper around @copyAddrToByteArray#@ primop.
+-- Copied from the store-core package
 copyAddrToByteArray
   :: Ptr a -> MutableByteArray (PrimState IO) -> Int -> Int -> IO ()
 copyAddrToByteArray (Ptr addr) (MutableByteArray arr) (I# offset) (I# len) =
-  IO (\s -> (#copyAddrToByteArray# addr arr offset len s, ()#))
+  IO (\s -> (# copyAddrToByteArray# addr arr offset len s, () #))
 {-# INLINE copyAddrToByteArray #-}

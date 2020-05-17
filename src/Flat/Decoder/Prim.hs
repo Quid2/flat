@@ -38,13 +38,19 @@ import           Foreign
 -- $setup
 -- >>> :set -XBinaryLiterals
 -- >>> import Data.Word
+-- >>> import Data.Int
 -- >>> import Flat.Run
 
--- |A special state, optimised for constructor decoding.
--- It consists of:
--- The bits to parse, top bit being the first to parse (could use a Word16 instead, no difference in performance)
--- The number of decoded bits
--- Supports up to 512 constructors (9 bits)
+{- |A special state, optimised for constructor decoding.
+
+It consists of:
+
+* The bits to parse, the top bit being the first to parse (could use a Word16 instead, no difference in performance)
+
+* The number of decoded bits
+
+Supports up to 512 constructors (9 bits).
+-}
 data ConsState =
   ConsState {-# UNPACK #-} !Word !Int
 
@@ -173,11 +179,13 @@ dBool = Get $ \endPtr s ->
 
 
 {-# INLINE dBEBits8  #-}
--- |Return the n most significant bits (up to maximum of 8)
---
--- The bits are returned right shifted:
--- >>> unflatWith (dBEBits8 3) [0b11100001::Word8] == Right 0b00000111
--- True
+{- | Return the n most significant bits (up to maximum of 8)
+
+The bits are returned right shifted:
+
+>>> unflatWith (dBEBits8 3) [0b11100001::Word8] == Right 0b00000111
+True
+-}
 dBEBits8 :: Int -> Get Word8
 dBEBits8 n = Get $ \endPtr s -> do
       ensureBits endPtr s n
@@ -385,6 +393,15 @@ getChunksInfo = Get $ \endPtr s -> do
 
 -- Fix for ghcjs bug:  https://github.com/ghcjs/ghcjs/issues/706
 -- TODO: verify if actually needed here and if also needed in encoder
+-- {- |
+-- Shift right with sign extension.
+
+-- >>> shR (0b1111111111111111::Word16) 3 == 0b0001111111111111
+-- True
+
+-- >>> shR (-1::Int16) 3 
+-- -1
+-- -}  
 {-# INLINE shR #-}
 shR :: Bits a => a -> Int -> a
 #ifdef ghcjs_HOST_OS

@@ -24,6 +24,7 @@ import           Flat.Instances.Mono
 -- >>> import           qualified Data.Array.Unboxed as U
 -- >>> import           Data.Array.IArray
 -- >>> import           Data.Word
+
 {-|
 Array is encoded as (lowBound,highBound,AsArray (elems array)):
 
