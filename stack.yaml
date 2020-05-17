@@ -4,8 +4,10 @@ packages:
   - .
 #  - ../EXTERNAL/doctest
 
+allow-newer: true
+
 extra-deps:
-  - quickcheck-instances-0.3.21@sha256:415392bade19a0a802a631b77077791e308aeb5421109100f35e98072c5e236c
+  - quickcheck-instances-0.3.22
 
   # Modified doctest, used to generate static tests
   - git: https://github.com/tittoassini/doctest
