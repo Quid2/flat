@@ -3,4 +3,4 @@ packages: .
 source-repository-package
     type: git
     location: https://github.com/tittoassini/doctest.git
-    tag: 5bded2c2ea4435e340ba727de9496e4c38a3e5ee
+    tag: c9cdbe4eee086cb8aa46e96532160320dd367f09
