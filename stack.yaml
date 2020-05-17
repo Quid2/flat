@@ -4,7 +4,9 @@ packages:
   - .
 #  - ../EXTERNAL/doctest
 
-# Modified doctest, used to generate static tests
 extra-deps:
+  - quickcheck-instances-0.3.21@sha256:415392bade19a0a802a631b77077791e308aeb5421109100f35e98072c5e236c
+
+  # Modified doctest, used to generate static tests
   - git: https://github.com/tittoassini/doctest
     commit: 5bded2c2ea4435e340ba727de9496e4c38a3e5ee
