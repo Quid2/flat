@@ -12,19 +12,19 @@ matrix:
     # ghcjs OK
     #- env: IMG=quid2/ghcjs-8.4.0.1 CMD='cabal --ghcjs new-build --enable-tests;node dist-newstyle/build/x86_64-linux/ghcjs-8.4.0.1/flat-0.4/t/doc-static/build/doc-static/doc-static.jsexe/all.js;node dist-newstyle/build/x86_64-linux/ghcjs-8.4.0.1/flat-0.4/t/spec/build/spec/spec.jsexe/all.js'
     # # cabal OK
-    - env: IMG=quid2/x32-ubuntu-cabal CMD="cabal v2-update;cabal v2-build --only-dependencies --enable-tests;cabal v2-build;cabal v2-test"
+    # - env: IMG=quid2/x32-ubuntu-cabal CMD="cabal v2-update;cabal v2-build --only-dependencies --enable-tests;cabal v2-build;cabal v2-test"
     # # ghc 7.10.3 OK
-    - env: IMG=quid2/x64-ubuntu-stack-lts-6.35 CMD="stack test --stack-yaml stack-6.35.yaml"
+    # - env: IMG=quid2/x64-ubuntu-stack-lts-6.35 CMD="stack test --stack-yaml stack-6.35.yaml"
     # # #ghc 8.0.2 OK
-    - env: IMG=quid2/x64-ubuntu-stack-lts-9.21 CMD="stack test --stack-yaml stack-9.21.yaml"
+    # - env: IMG=quid2/x64-ubuntu-stack-lts-9.21 CMD="stack test --stack-yaml stack-9.21.yaml"
     # # #ghc 8.2.2 OK
-    - env: IMG=quid2/x64-ubuntu-stack-lts-11.22 CMD="stack test --resolver lts-11.22"
+    # - env: IMG=quid2/x64-ubuntu-stack-lts-11.22 CMD="stack test --resolver lts-11.22"
     # # # ghc 8.4.4 OK
-    # - env: IMG=quid2/x64-ubuntu-stack-lts-12.26 CMD="stack test --resolver lts-12.26"
+    - env: IMG=quid2/x64-ubuntu-stack-lts-12.26 CMD="stack test --resolver lts-12.26"
     # # # ghc 8.6.5 OK
-    # - env: IMG=quid2/x64-ubuntu-stack-lts-14.27 CMD="stack test --resolver lts-14.27"
+    - env: IMG=quid2/x64-ubuntu-stack-lts-14.27 CMD="stack test --resolver lts-14.27"
     # # # ghc 8.8.3 (OK, but slow in running some tests)
-    # - env: IMG=quid2/x64-ubuntu-stack-lts-15.11 CMD="stack test --resolver lts-15.11"
+    - env: IMG=quid2/x64-ubuntu-stack-lts-15.11 CMD="stack test --resolver lts-15.11"
 
 before_install:
   - PKG=${PWD##*/}
