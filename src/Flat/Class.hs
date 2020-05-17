@@ -63,7 +63,8 @@ class Flat a where
     decode = to `fmap` gget
 
     -- |Add maximum size in bits of the value to the total count
-    -- Used to calculated maximum buffer size before encoding 
+    -- 
+    --  Used to calculated maximum buffer size before encoding 
     size :: a -> NumBits -> NumBits
     default size :: (Generic a, GSize (Rep a)) => a -> NumBits -> NumBits
     size !x !n = gsize n $ from x

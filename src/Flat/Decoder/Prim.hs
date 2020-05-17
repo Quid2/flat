@@ -98,7 +98,8 @@ consBool cs =  (0/=) <$> consBits cs 1
 -- consBool (ConsState w usedBits) = (ConsState (w `unsafeShiftL` 1) (1+usedBits),0 /= 32768 .&. w)
 
 -- |Decode from 1 to 3 bits
--- It could read more bits that are available, but it doesn't matter, errors will be checked in consClose
+-- 
+-- It could read more bits that are available, but it doesn't matter, errors will be checked in consClose.
 consBits :: ConsState -> Int -> (ConsState, Word)
 consBits cs 3 = consBits_ cs 3 7
 consBits cs 2 = consBits_ cs 2 3
@@ -373,8 +374,7 @@ dByteString_ = chunksToByteString <$> getChunksInfo
 dByteArray_ :: Get (ByteArray,Int)
 dByteArray_ = chunksToByteArray <$> getChunksInfo
 
--- |Decode an Array (a list of chunks up to 255 bytes long)
--- returning the pointer to the first data byte and a list of chunk sizes
+-- |Decode an Array (a list of chunks up to 255 bytes long) returning the pointer to the first data byte and a list of chunk sizes
 getChunksInfo :: Get (Ptr Word8, [Int])
 getChunksInfo = Get $ \endPtr s -> do
 

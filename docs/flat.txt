@@ -97,8 +97,7 @@ runST :: () => (forall s. () => ST s a) -> a
 cast :: (MArray (STUArray s) a (ST s), MArray (STUArray s) b (ST s)) => a -> ST s b
 
 
--- | ZigZag encoding of signed integrals (see
---   <a>https://gist.github.com/mfuerstenau/ba870a29e16536fdbaba)</a>.
+-- | <a>ZigZag encoding</a> of signed integrals.
 module Data.ZigZag
 
 -- | Convert between a signed integral and the corresponding ZigZag encoded
@@ -289,7 +288,9 @@ toBE16 :: Word16 -> Word16
 isBigEndian :: Bool
 
 
--- | Memory access primitives
+-- | Memory access primitives.
+--   
+--   Includes code from the store-core package.
 module Flat.Memory
 chunksToByteString :: (Ptr Word8, [Int]) -> ByteString
 chunksToByteArray :: (Ptr Word8, [Int]) -> (ByteArray, Int)
@@ -397,8 +398,10 @@ consClose :: Int -> Get ()
 -- | Decode a single bit
 consBool :: ConsState -> (ConsState, Bool)
 
--- | Decode from 1 to 3 bits It could read more bits that are available,
---   but it doesn't matter, errors will be checked in consClose
+-- | Decode from 1 to 3 bits
+--   
+--   It could read more bits that are available, but it doesn't matter,
+--   errors will be checked in consClose.
 consBits :: ConsState -> Int -> (ConsState, Word)
 
 
@@ -537,8 +540,10 @@ consClose :: Int -> Get ()
 -- | Decode a single bit
 consBool :: ConsState -> (ConsState, Bool)
 
--- | Decode from 1 to 3 bits It could read more bits that are available,
---   but it doesn't matter, errors will be checked in consClose
+-- | Decode from 1 to 3 bits
+--   
+--   It could read more bits that are available, but it doesn't matter,
+--   errors will be checked in consClose.
 consBits :: ConsState -> Int -> (ConsState, Word)
 
 module Flat.Tutorial
@@ -760,6 +765,8 @@ instance GHC.Show.Show Flat.Encoder.Strict.Encoding
 instance GHC.Base.Semigroup Flat.Encoder.Strict.Encoding
 instance GHC.Base.Monoid Flat.Encoder.Strict.Encoding
 
+
+-- | Encoder and encoding primitives
 module Flat.Encoder
 data Encoding
 
@@ -856,12 +863,14 @@ decode :: Flat a => Get a
 -- | Decode a value
 decode :: (Flat a, Generic a, GDecode (Rep a)) => Get a
 
--- | Add maximum size in bits of the value to the total count Used to
---   calculated maximum buffer size before encoding
+-- | Add maximum size in bits of the value to the total count
+--   
+--   Used to calculated maximum buffer size before encoding
 size :: Flat a => a -> NumBits -> NumBits
 
--- | Add maximum size in bits of the value to the total count Used to
---   calculated maximum buffer size before encoding
+-- | Add maximum size in bits of the value to the total count
+--   
+--   Used to calculated maximum buffer size before encoding
 size :: (Flat a, Generic a, GSize (Rep a)) => a -> NumBits -> NumBits
 
 -- | Calculate the maximum size in bits of the serialisation of the value
@@ -1146,7 +1155,9 @@ FillerEnd :: Filler
 -- | Length of a filler in bits
 fillerLength :: Num a => Filler -> a
 
--- | A Pre aligned value, a value preceded by a filler
+-- | A Pre aligned value, a value preceded by a filler Useful to prealign
+--   ByteArrays, Texts and any structure that can be encoded more
+--   efficiently when byte aligned.
 data PreAligned a
 PreAligned :: Filler -> a -> PreAligned a
 [preFiller] :: PreAligned a -> Filler
@@ -1155,7 +1166,8 @@ PreAligned :: Filler -> a -> PreAligned a
 -- | Pre align a value
 preAligned :: a -> PreAligned a
 
--- | A Post aligned value, a value followed by a filler
+-- | A Post aligned value, a value followed by a filler Useful to complete
+--   the encoding of a top-level value
 data PostAligned a
 PostAligned :: a -> Filler -> PostAligned a
 [postValue] :: PostAligned a -> a
@@ -1163,6 +1175,8 @@ PostAligned :: a -> Filler -> PostAligned a
 
 -- | Post align a value
 postAligned :: a -> PostAligned a
+
+-- | Decode a value assuming that is PostAligned
 postAlignedDecoder :: Get b -> Get b
 instance Flat.Class.Flat a => Flat.Class.Flat (Flat.Filler.PreAligned a)
 instance Control.DeepSeq.NFData a => Control.DeepSeq.NFData (Flat.Filler.PreAligned a)

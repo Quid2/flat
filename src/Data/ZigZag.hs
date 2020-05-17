@@ -2,7 +2,7 @@
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
--- | ZigZag encoding of signed integrals (see https://gist.github.com/mfuerstenau/ba870a29e16536fdbaba).
+-- |<https://gist.github.com/mfuerstenau/ba870a29e16536fdbaba ZigZag encoding> of signed integrals.
 module Data.ZigZag
   ( ZigZag(..)
   )

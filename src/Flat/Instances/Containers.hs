@@ -99,8 +99,6 @@ instance (Flat a,Ord a) => Flat (Set a) where
   decode = decodeSet
 
 {-|
-Data.Tree
-
 >>>  tst (Node (1::Word8) [Node 2 [Node 3 []], Node 4 []])
 (True,39,[1,129,64,200,32])
 -}
