@@ -10,7 +10,7 @@ matrix:
     # FAIL Compiles library, compiles tests (if doc is commented out) but does not pass all tests (FloatCast issue)
     #- env: IMG=quid2/eta CMD="etlas --version;etlas update;etlas build --enable-tests;etlas test"
     # # ghcjs
-    - env: IMG=quid2/ghcjs-8.4.0.1 CMD='cabal --version;cabal install cabal-install;cabal --version;cabal --ghcjs new-build;cabal cabal --ghcjs new-test doc-static --constraint "tasty -clock";cabal --ghcjs new-test spec --constraint "tasty -clock"'
+    - env: IMG=quid2/ghcjs-8.4.0.1 CMD='cabal --ghcjs new-build --enable-tests;node dist-newstyle/build/x86_64-linux/ghcjs-8.4.0.1/flat-0.4/t/doc-static/build/doc-static/doc-static.jsexe/all.js;node dist-newstyle/build/x86_64-linux/ghcjs-8.4.0.1/flat-0.4/t/spec/build/spec/spec.jsexe/all.js'
     # # cabal OK
     # - env: IMG=quid2/x32-ubuntu-cabal CMD="cabal v2-update;cabal v2-build --only-dependencies --enable-tests;cabal v2-build;cabal v2-test"
     # # ghc 7.10.3 OK
