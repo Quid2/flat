@@ -190,17 +190,17 @@ test-suite spec
 
 -- dynamic doctests and generation of static doctests
 -- Usable only with recent versions of ghc (no ghcjs or eta)
-test-suite doc
-  type:             exitcode-stdio-1.0
-  main-is:          DocSpec.hs
-  hs-source-dirs:   test
-  default-language: Haskell2010
-  build-depends:
-      base
-    , directory
-    , doctest    ==0.16.3.1
-    , filemanip  >=0.3.6.3
-    , text
+-- test-suite doc
+--   type:             exitcode-stdio-1.0
+--   main-is:          DocSpec.hs
+--   hs-source-dirs:   test
+--   default-language: Haskell2010
+--   build-depends:
+--       base
+--     , directory
+--     , doctest    ==0.16.3.1
+--     , filemanip  >=0.3.6.3
+--     , text
 
 -- static doctests (faster, useful for test coverage and to test ghcjs and eta)
 test-suite doc-static
