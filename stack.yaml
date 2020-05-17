@@ -7,7 +7,7 @@ packages:
 allow-newer: true
 
 extra-deps:
-  - quickcheck-instances-0.3.22
+  - quickcheck-instances-0.3.17
 
   # Modified doctest, used to generate static tests
   - git: https://github.com/tittoassini/doctest
