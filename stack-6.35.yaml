@@ -1,0 +1,13 @@
+resolver: lts-6.35
+
+packages:
+  - .
+
+allow-newer: true
+
+extra-deps:
+  - quickcheck-instances-0.3.22
+  - QuickCheck-2.13.2
+  - splitmix-0.0.2
+  - time-compat-1.9.3
+  - hashable-1.2.6.1

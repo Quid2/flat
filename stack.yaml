@@ -1,0 +1,10 @@
+resolver: lts-14.27
+
+packages:
+  - .
+#  - ../EXTERNAL/doctest
+
+extra-deps:
+  # Modified doctest, used to generate static tests
+  # - git: https://github.com/tittoassini/doctest
+  #   commit: c9cdbe4eee086cb8aa46e96532160320dd367f09
