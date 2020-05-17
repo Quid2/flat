@@ -16,11 +16,11 @@ Briefly:
 
 ### Documentation
 
-* [Tutorial](docs/src/Flat-Tutorial.html)
+* [Tutorial](http://hackage.haskell.org/package/flat/docs/Flat-Tutorial.html)
 
-* [Full Package Docs](docs/src)
+* [Hackage Package and Docs](http://hackage.haskell.org/package/flat)
 
-* [Flat Format Specification](http://quid2.org)
+* [Flat Format Specification](http://quid2.org/docs/Flat.pdf)
 
 ### Installation
 
