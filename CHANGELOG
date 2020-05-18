@@ -1,5 +1,9 @@
 Significant and compatibility-breaking changes.
 
+Version 0.4.2:
+	- Fixed links in README.md
+	- Added multiple stack.yaml files for different LTS
+
 Version 0.4:
     - Compatibility with ghc 8.8.3
 	- Changed namespace from Data.Flat to Flat
