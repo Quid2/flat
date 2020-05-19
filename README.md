@@ -1,6 +1,9 @@
 
 [![Build Status](https://travis-ci.org/Quid2/flat.svg?branch=master)](https://travis-ci.org/Quid2/flat)
 [![Hackage version](https://img.shields.io/hackage/v/flat.svg)](http://hackage.haskell.org/package/flat)
+[![Stackage Nightly](http://stackage.org/package/model/badge/nightly)](http://stackage.org/nightly/package/model)
+[![Stackage LTS](http://stackage.org/package/model/badge/lts)](http://stackage.org/lts/package/model)
+
 
 Haskell implementation of [Flat](http://quid2.org/docs/Flat.pdf), a principled, language-independent and efficient binary data format.
 
