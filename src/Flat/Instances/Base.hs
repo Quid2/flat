@@ -16,6 +16,25 @@ import           Control.Monad                  ( liftM2 )
 import qualified Data.List.NonEmpty as B
 -- #endif
 
+#if ! MIN_VERSION_base(4,8,0)
+import Control.Applicative
+import Data.Monoid (mempty)
+#endif
+
+#if MIN_VERSION_base(4,9,0)
+import qualified Data.Semigroup     as Semigroup
+#endif
+
+import qualified Data.Monoid as Monoid
+
+#if !MIN_VERSION_base(4,11,0)
+import Data.Monoid ((<>))
+#endif
+
+#if MIN_VERSION_base(4,8,0)
+import Data.Functor.Identity (Identity (..))
+#endif
+
 #if !MIN_VERSION_base(4,9,0)
 deriving instance Generic (Complex a)
 #endif
@@ -29,8 +48,94 @@ deriving instance Generic (Complex a)
 -- >>> import Numeric.Natural
 -- >>> import Data.Word
 -- >>> import Data.Ratio
+-- >>> import Flat.Run
+-- >>> import Data.Monoid
 -- >>> import qualified Data.List.NonEmpty as B
 -- >>> let test = tstBits
+
+#if MIN_VERSION_base(4,8,0)
+-- | @since 0.4.4
+instance Flat a => Flat (Identity a) where
+    encode (Identity a) = encode a
+    size (Identity a) = size a
+    decode = Identity <$> decode
+#endif
+
+-- | @since 0.4.4
+instance Flat a => Flat (Monoid.Dual a) where
+    encode (Monoid.Dual a) = encode a
+    size (Monoid.Dual a) = size a
+    decode = Monoid.Dual <$> decode
+
+-- | @since 0.4.4
+instance Flat Monoid.All where
+    encode (Monoid.All a) = encode a
+    size (Monoid.All a) = size a
+    decode = Monoid.All <$> decode
+
+-- | @since 0.4.4
+instance Flat Monoid.Any where
+    encode (Monoid.Any a) = encode a
+    size (Monoid.Any a) = size a
+    decode = Monoid.Any <$> decode
+
+-- | @since 0.4.4
+instance Flat a => Flat (Monoid.Sum a) where
+    encode (Monoid.Sum a) = encode a
+    size (Monoid.Sum a) = size a
+    decode = Monoid.Sum <$> decode
+
+-- | @since 0.4.4
+instance Flat a => Flat (Monoid.Product a) where
+    encode (Monoid.Product a) = encode a
+    size (Monoid.Product a) = size a
+    decode = Monoid.Product <$> decode
+
+#if MIN_VERSION_base(4,8,0)
+{- |
+>>> let w = Just (11::Word8); a = Alt w <> Alt (Just 24) in tst a == tst w 
+True
+
+>>> let w = Just (11::Word8); a = Alt Nothing <> Alt w in tst a == tst w 
+True
+
+@since 0.4.4
+-}
+instance Flat (f a) => Flat (Monoid.Alt f a) where
+    encode (Monoid.Alt a) = encode a
+    size (Monoid.Alt a) = size a
+    decode = Monoid.Alt <$> decode
+#endif
+
+-- | @since 0.4.4
+instance Flat a => Flat (Semigroup.Min a) where
+    encode (Semigroup.Min a) = encode a
+    size (Semigroup.Min a) = size a
+    decode = Semigroup.Min <$> decode
+
+-- | @since 0.4.4
+instance Flat a => Flat (Semigroup.Max a) where
+    encode (Semigroup.Max a) = encode a
+    size (Semigroup.Max a) = size a
+    decode = Semigroup.Max <$> decode
+
+-- | @since 0.4.4
+instance Flat a => Flat (Semigroup.First a) where
+    encode (Semigroup.First a) = encode a
+    size (Semigroup.First a) = size a
+    decode = Semigroup.First <$> decode
+
+-- | @since 0.4.4
+instance Flat a => Flat (Semigroup.Last a) where
+    encode (Semigroup.Last a) = encode a
+    size (Semigroup.Last a) = size a
+    decode = Semigroup.Last <$> decode
+
+-- | @since 0.4.4
+instance Flat a => Flat (Semigroup.Option a) where
+    encode (Semigroup.Option a) = encode a
+    size (Semigroup.Option a) = size a
+    decode = Semigroup.Option <$> decode
 
 {- |
 `()`, as all data types with a single constructor, has a zero-length encoding.
