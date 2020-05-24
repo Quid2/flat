@@ -91,7 +91,7 @@ instance Flat a => Flat (Monoid.Product a) where
     size (Monoid.Product a) = size a
     decode = Monoid.Product <$> decode
 
-#if MIN_VERSION_base(4,8,0)
+#if MIN_VERSION_base(4,9,0)
 {- |
 >>> let w = Just (11::Word8); a = Alt w <> Alt (Just 24) in tst a == tst w 
 True
@@ -105,9 +105,7 @@ instance Flat (f a) => Flat (Monoid.Alt f a) where
     encode (Monoid.Alt a) = encode a
     size (Monoid.Alt a) = size a
     decode = Monoid.Alt <$> decode
-#endif
 
-#if MIN_VERSION_base(4,9,0)
 -- | @since 0.4.4
 instance Flat a => Flat (Semigroup.Min a) where
     encode (Semigroup.Min a) = encode a
