@@ -77,10 +77,20 @@ instance (Flat a, Flat b, Ord a) => Flat (Map a b) where
   decode = decodeMap
 
 {-|
-Data.Sequence.Seq is encoded as a list
+Data.Sequence.Seq is encoded as a list.
 
 >>> asList Data.Sequence.fromList [3::Word8,4,7]
 True
+
+In flat <0.4, it was encoded as an Array.
+
+If you want to restore the previous behaviour, use AsArray:
+
+>>> tst $ AsArray (Data.Sequence.fromList [11::Word8,22,33])
+(True,40,[3,11,22,33,0])
+
+>>> tst $ Data.Sequence.fromList [11::Word8,22,33]
+(True,28,[133,197,164,32])
 -}
 instance Flat a => Flat (Seq a) where
  size = sizeList -- . toList
