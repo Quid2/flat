@@ -8,8 +8,6 @@ module Flat.Types (
     Natural,
     SBS.ShortByteString,
     T.Text,
-    -- UTF8Text(..),
-    -- UTF16Text(..),
     ) where
 
 import qualified Data.ByteString.Short.Internal as SBS
