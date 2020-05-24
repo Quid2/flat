@@ -29,6 +29,7 @@ import Data.Sequence
 -- >>> import Data.IntMap
 -- >>> import Data.Map 
 -- >>> import Data.Tree      
+-- >>> import Flat.Instances.Mono
 
 {-|
 Maps are defined as a list of (Key,Value) tuples:
