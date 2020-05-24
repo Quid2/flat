@@ -1,6 +1,6 @@
 cabal-version:      >=1.10
 name:               flat
-version:            0.4.2
+version:            0.4.3
 license:            BSD3
 license-file:       LICENSE
 copyright:          Copyright: (c) 2016-2020 Pasqualino `Titto` Assini
