@@ -63,10 +63,10 @@ instance Arbitrary UTF8Text where
   shrink t = UTF8Text <$> shrink (unUTF8 t)
 
 #if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
-instance Arbitrary UTF16Text where
-  arbitrary = UTF16Text <$> arbitrary
+instance Arbitrary UTF16LEText where
+  arbitrary = UTF16LEText <$> arbitrary
 
-  shrink t = UTF16Text <$> shrink (unUTF16 t)
+  shrink t = UTF16LEText <$> shrink (unUTF16 t)
 #endif
 
 -- instance Flat [Int16]
@@ -317,7 +317,7 @@ testSize = testGroup "Size"
     , sz tx utf8Size
     , sz (UTF8Text tx) utf8Size
 #if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
-    , sz (UTF16Text tx) utf16Size
+    , sz (UTF16LEText tx) utf16Size
 #endif
     ]
   where
@@ -385,7 +385,7 @@ flatUnflatRT = testGroup
   , rt "Text" (prop_Flat_roundtrip :: RT T.Text)
   , rt "UTF8 Text" (prop_Flat_roundtrip :: RT UTF8Text)
 #if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
-  , rt "UTF16 Text" (prop_Flat_roundtrip :: RT UTF16Text)
+  , rt "UTF16 Text" (prop_Flat_roundtrip :: RT UTF16LEText)
 #endif
   , rt "ByteString" (prop_Flat_roundtrip :: RT B.ByteString)
   , rt "Lazy ByteString" (prop_Flat_roundtrip :: RT L.ByteString)

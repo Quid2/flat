@@ -192,7 +192,7 @@ asciiTextT = ("asciiText", T.pack $ longS english )
 unicodeTextUTF8T = ("unicodeTextUTF8",UTF8Text unicodeText)
 
 #if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
-unicodeTextUTF16T = ("unicodeTextUTF16",UTF16Text unicodeText)
+unicodeTextUTF16T = ("unicodeTextUTF16",UTF16LEText unicodeText)
 #endif
 
 unicodeTextT = ("unicodeText",unicodeText)
