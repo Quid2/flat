@@ -1,5 +1,8 @@
 Significant and compatibility-breaking changes.
 
+Version 0.4.4:
+	- Added instances for Identity, Monoid.Dual/All/Any/Sum/Product/Alt, Semigroup.Min/Max/First/Last/Option 
+
 Version 0.4.2:
 	- Fixed links in README.md
 	- Added multiple stack.yaml files for different LTS
