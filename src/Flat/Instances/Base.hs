@@ -107,6 +107,7 @@ instance Flat (f a) => Flat (Monoid.Alt f a) where
     decode = Monoid.Alt <$> decode
 #endif
 
+#if MIN_VERSION_base(4,9,0)
 -- | @since 0.4.4
 instance Flat a => Flat (Semigroup.Min a) where
     encode (Semigroup.Min a) = encode a
@@ -136,6 +137,7 @@ instance Flat a => Flat (Semigroup.Option a) where
     encode (Semigroup.Option a) = encode a
     size (Semigroup.Option a) = size a
     decode = Semigroup.Option <$> decode
+#endif
 
 {- |
 `()`, as all data types with a single constructor, has a zero-length encoding.
