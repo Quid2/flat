@@ -36,9 +36,11 @@ import           GHC.ST                         ( runST
 
 
 
--- | Reinterpret-casts a `Word32` to a `Float`.
-{-|
+
+{- | Reinterpret-casts a `Word32` to a `Float`.
+
 prop> \f -> wordToFloat (floatToWord f ) == f
++++ OK, passed 100 tests.
 
 >>> floatToWord (-0.15625)
 3189768192
@@ -62,9 +64,11 @@ floatToWord x = runST (cast x)
 -- >>> import Numeric (showHex)
 -- >>> import Data.Word
 
--- | Reinterpret-casts a `Double` to a `Word64`.
 {-|
+Reinterpret-casts a `Double` to a `Word64`.
+
 prop> \f -> wordToDouble (doubleToWord f ) == f
++++ OK, passed 100 tests.
 
 >>> showHex (doubleToWord 1.0000000000000004) ""
 "3ff0000000000002"
@@ -89,10 +93,9 @@ wordToDouble :: Word64 -> Double
 wordToDouble x = runST (cast x)
 -- wordToDouble x = runST (cast $ fix64 x)
 
-{- | 
->>> runST (cast (0xF0F1F2F3F4F5F6F7::Word64)) == (0xF0F1F2F3F4F5F6F7::Word64)
-True
--}
+-- | 
+-- >>> runST (cast (0xF0F1F2F3F4F5F6F7::Word64)) == (0xF0F1F2F3F4F5F6F7::Word64)
+-- True
 cast
   :: (MArray (STUArray s) a (ST s), MArray (STUArray s) b (ST s)) => a -> ST s b
 cast x = newArray (0 :: Int, 0) x >>= castSTUArray >>= flip readArray 0

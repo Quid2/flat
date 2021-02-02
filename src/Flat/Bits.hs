@@ -1,29 +1,33 @@
-{-# LANGUAGE FlexibleInstances    #-}
-{-# LANGUAGE RankNTypes           #-}
-{-# LANGUAGE ScopedTypeVariables  #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
 -- |Utilities to represent and display bit sequences
-module Flat.Bits
-  ( Bits
-  , toBools
-  , fromBools
-  , bits
-  , paddedBits
-  , asBytes
-  , asBits
-  )
-where
+module Flat.Bits (
+    Bits,
+    toBools,
+    fromBools,
+    bits,
+    paddedBits,
+    asBytes,
+    asBits,
+) where
 
-import           Data.Bits               hiding ( Bits )
-import qualified Data.ByteString               as B
-import           Flat.Class
-import           Flat.Decoder
-import           Flat.Filler
-import           Flat.Run
-import qualified Data.Vector.Unboxed           as V
-import           Data.Word
-import           Text.PrettyPrint.HughesPJClass
+import Data.Bits (FiniteBits (finiteBitSize), testBit)
+import qualified Data.ByteString as B
+import qualified Data.Vector.Unboxed as V
+import Data.Word (Word8)
+import Flat.Class (Flat)
+import Flat.Decoder (Decoded)
+import Flat.Filler (PostAligned (PostAligned), fillerLength)
+import Flat.Run (flat, unflatRaw)
+import Text.PrettyPrint.HughesPJClass (
+    Doc,
+    Pretty (pPrint),
+    hsep,
+    text,
+ )
 
 -- |A sequence of bits
 type Bits = V.Vector Bool
@@ -34,37 +38,39 @@ toBools = V.toList
 fromBools :: [Bool] -> Bits
 fromBools = V.fromList
 
--- $setup
--- >>> import Data.Word
--- >>> import Flat.Instances.Base
--- >>> import Flat.Instances.Test
+{- $setup
+>>> import Data.Word
+>>> import Flat.Instances.Base
+>>> import Flat.Instances.Test(tst)
+-}
 
 {- |The sequence of bits corresponding to the serialization of the passed value (without any final byte padding)
 
 >>> bits True
 [True]
 -}
-bits :: forall a . Flat a => a -> Bits
+bits :: forall a. Flat a => a -> Bits
 bits v =
-  let lbs                     = flat v
-      Right (PostAligned _ f) = unflatRaw lbs :: Decoded (PostAligned a)
-  in  takeBits (8 * B.length lbs - fillerLength f) lbs
+    let lbs = flat v
+        Right (PostAligned _ f) = unflatRaw lbs :: Decoded (PostAligned a)
+     in takeBits (8 * B.length lbs - fillerLength f) lbs
 
 {- |The sequence of bits corresponding to the byte-padded serialization of the passed value
 
 >>> paddedBits True
 [True,False,False,False,False,False,False,True]
 -}
-paddedBits :: forall a . Flat a => a -> Bits
+paddedBits :: forall a. Flat a => a -> Bits
 paddedBits v = let lbs = flat v in takeBits (8 * B.length lbs) lbs
 
 takeBits :: Int -> B.ByteString -> Bits
-takeBits numBits lbs = V.generate
-  (fromIntegral numBits)
-  (\n ->
-    let (bb, b) = n `divMod` 8
-    in  testBit (B.index lbs (fromIntegral bb)) (7 - b)
-  )
+takeBits numBits lbs =
+    V.generate
+        (fromIntegral numBits)
+        ( \n ->
+            let (bb, b) = n `divMod` 8
+             in testBit (B.index lbs (fromIntegral bb)) (7 - b)
+        )
 
 {- |Convert an integral value to its equivalent bit representation
 
@@ -75,7 +81,7 @@ asBits :: FiniteBits a => a -> Bits
 asBits w = let s = finiteBitSize w in V.generate s (testBit w . (s - 1 -))
 
 {- |Convert a sequence of bits to the corresponding list of bytes
- 
+
 >>> asBytes $ asBits (256+3::Word16)
 [1,3]
 -}
@@ -84,22 +90,23 @@ asBytes = map byteVal . bytes . V.toList
 
 -- |Convert to the corresponding value (most significant bit first)
 byteVal :: [Bool] -> Word8
-byteVal = sum . map (\(e, b) -> if b then e else 0) . zip
-  [ 2 ^ n | n <- [7 :: Int, 6 .. 0] ]
+byteVal =
+    sum . map (\(e, b) -> if b then e else 0)
+        . zip
+            [2 ^ n | n <- [7 :: Int, 6 .. 0]]
 
 -- |Split a list in groups of 8 elements or less
 bytes :: [t] -> [[t]]
 bytes [] = []
-bytes l  = let (w, r) = splitAt 8 l in w : bytes r
+bytes l = let (w, r) = splitAt 8 l in w : bytes r
 
 {- |
 >>> prettyShow $ asBits (256+3::Word16)
 "00000001 00000011"
 -}
 instance Pretty Bits where
-  pPrint = hsep . map prettyBits . bytes . V.toList
+    pPrint = hsep . map prettyBits . bytes . V.toList
 
 prettyBits :: Foldable t => t Bool -> Doc
 prettyBits l =
-  text . take (length l) . concatMap (\b -> if b then "1" else "0") $ l
-
+    text . take (length l) . concatMap (\b -> if b then "1" else "0") $ l

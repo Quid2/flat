@@ -70,10 +70,10 @@ module Flat.Encoder (
 #endif
     ) where
 
-import           Flat.Encoder.Prim
+import Flat.Encoder.Prim ( eTrueF, eFalseF )
 import           Flat.Encoder.Size(arrayBits)
 import           Flat.Encoder.Strict
-import           Flat.Encoder.Types
+import Flat.Encoder.Types ( NumBits, Size )
 
 #if ! MIN_VERSION_base(4,11,0)
 import           Data.Semigroup((<>))

@@ -1,7 +1,8 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+
 -- |Encoding and decoding functions
 module Flat.Run (
     flat,
@@ -10,21 +11,21 @@ module Flat.Run (
     unflatWith,
     unflatRaw,
     unflatRawWith,
-    ) where
+) where
 
-import qualified Data.ByteString         as B
-import           Data.ByteString.Convert
-import           Flat.Class
-import           Flat.Decoder
-import qualified Flat.Encoder       as E
-import           Flat.Filler
+import qualified Data.ByteString as B
+import Data.ByteString.Convert (AsByteString (..))
+import Flat.Class (Flat (decode, encode), getSize)
+import Flat.Decoder (Decoded, Get, strictDecoder)
+import qualified Flat.Encoder as E
+import Flat.Filler (postAligned, postAlignedDecoder)
 
 -- |Encode padded value.
 flat :: Flat a => a -> B.ByteString
 flat = flatRaw . postAligned
 
 -- |Decode padded value.
-unflat :: (Flat a,AsByteString b) => b -> Decoded a
+unflat :: (Flat a, AsByteString b) => b -> Decoded a
 unflat = unflatWith decode
 
 -- |Decode padded value, using the provided unpadded decoder.
@@ -32,7 +33,7 @@ unflatWith :: AsByteString b => Get a -> b -> Decoded a
 unflatWith dec = unflatRawWith (postAlignedDecoder dec)
 
 -- |Decode unpadded value.
-unflatRaw :: (Flat a,AsByteString b) => b -> Decoded a
+unflatRaw :: (Flat a, AsByteString b) => b -> Decoded a
 unflatRaw = unflatRawWith decode
 
 -- |Unflat unpadded value, using provided decoder
@@ -41,16 +42,18 @@ unflatRawWith dec = strictDecoder dec . toByteString
 
 -- |Encode unpadded value
 flatRaw :: (Flat a, AsByteString b) => a -> b
-flatRaw a = fromByteString $ 
-    E.strictEncoder 
-        (getSize a) 
-#ifdef ETA_VERSION    
+flatRaw a =
+    fromByteString $
+        E.strictEncoder
+            (getSize a)
+
+#ifdef ETA_VERSION
         (E.trampolineEncoding (encode a))
 #else
         (encode a)
 #endif
 
--- #ifdef ETA_VERSION    
+-- #ifdef ETA_VERSION
 --   deriving (Show, Eq, Ord, Typeable, Generic, NFData)
 
 -- instance Flat a => Flat (PostAligned a) where
@@ -59,6 +62,3 @@ flatRaw a = fromByteString $
 -- #else
 --   deriving (Show, Eq, Ord, Typeable, Generic, NFData,Flat)
 -- #endif
-
-
-

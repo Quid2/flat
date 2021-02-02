@@ -163,7 +163,7 @@ dropBits_ s n =
   in S {currPtr=currPtr s `plusPtr` bytes,usedBits=bits}
 
 {-# INLINE dBool #-} 
--- Inlining dBool Massively increases compilation time and decreases run time by a third
+-- Inlining dBool massively increases compilation time and decreases run time by a third
 -- TODO: test dBool inlining for 8.8.3
 -- |Decode a boolean
 dBool :: Get Bool
@@ -183,7 +183,6 @@ dBool = Get $ \endPtr s ->
 {- | Return the n most significant bits (up to maximum of 8)
 
 The bits are returned right shifted:
-
 >>> unflatWith (dBEBits8 3) [0b11100001::Word8] == Right 0b00000111
 True
 -}
@@ -201,7 +200,7 @@ dBEBits16 n = Get $ \endPtr s -> do
       takeN n s
 
 {-# INLINE dBEBits32  #-}
--- |Return the n most significant bits (up to maximum of 8)
+-- |Return the n most significant bits (up to maximum of 32)
 -- The bits are returned right shifted.
 dBEBits32 :: Int -> Get Word32
 dBEBits32 n = Get $ \endPtr s -> do
@@ -209,7 +208,7 @@ dBEBits32 n = Get $ \endPtr s -> do
       takeN n s
 
 {-# INLINE dBEBits64  #-}
--- |Return the n most significant bits (up to maximum of 8)
+-- |Return the n most significant bits (up to maximum of 64)
 -- The bits are returned right shifted.
 dBEBits64 :: Int -> Get Word64
 dBEBits64 n = Get $ \endPtr s -> do

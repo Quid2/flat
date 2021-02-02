@@ -1,17 +1,16 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE DefaultSignatures      #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
--- |<https://gist.github.com/mfuerstenau/ba870a29e16536fdbaba ZigZag encoding> of signed integrals.
-module Data.ZigZag
-  ( ZigZag(..)
-  )
-where
+{-# LANGUAGE ScopedTypeVariables    #-}
 
-import           Data.Word
-import           Data.Int
-import           Data.Bits
-import           Numeric.Natural
+-- |<https://gist.github.com/mfuerstenau/ba870a29e16536fdbaba ZigZag encoding> of signed integrals.
+module Data.ZigZag (ZigZag(..)) where
+
+import Data.Bits
+    ( Bits((.&.), xor, shiftR, shiftL), FiniteBits(finiteBitSize) )
+import Data.Int ( Int8, Int16, Int32, Int64 )
+import Data.Word ( Word8, Word16, Word32, Word64 )
+import Numeric.Natural ( Natural )
 
 -- $setup
 -- >>> :set -XNegativeLiterals -XScopedTypeVariables -XFlexibleContexts
@@ -19,17 +18,17 @@ import           Numeric.Natural
 -- >>> import Data.Int
 -- >>> import Numeric.Natural
 -- >>> import Test.QuickCheck.Instances.Natural
-
 {-|
 Convert between a signed integral and the corresponding ZigZag encoded unsigned integral (e.g. between Int8 and Word8 or Integral and Natural).
 
-Invalid conversions produce a type error:
+Allow conversion only between compatible types, invalid conversions produce a type error:
 
-zigZag (-1::Int64) :: Word32 
+@
+zigZag (-1::Int64) :: Word32
 ...
 ... Couldn't match type ...
 ...
-
+@
 >>> zigZag (0::Int8)
 0
 
@@ -64,41 +63,57 @@ zigZag (-1::Int64) :: Word32
 [0,-1,1,-2,2,-3,3]
 
 prop> \(f::Integer) -> zagZig (zigZag f) == f
++++ OK, passed 100 tests.
 
 prop> \(f::Natural) -> zigZag (zagZig f) == f
++++ OK, passed 100 tests.
 
 prop> \(f::Int8) -> zagZig (zigZag f) == f
++++ OK, passed 100 tests.
 prop> \(f::Word8) -> zigZag (zagZig f) == f
++++ OK, passed 100 tests.
 prop> \(s::Int8) -> zigZag s == fromIntegral (zigZag (fromIntegral s :: Integer))
++++ OK, passed 100 tests.
 prop> \(u::Word8) -> zagZig u == fromIntegral (zagZig (fromIntegral u :: Natural))
++++ OK, passed 100 tests.
 
 prop> \(f::Int64) -> zagZig (zigZag f) == f
++++ OK, passed 100 tests.
 prop> \(f::Word64) -> zigZag (zagZig f) == f
++++ OK, passed 100 tests.
 prop> \(s::Int64) -> zigZag s == fromIntegral (zigZag (fromIntegral s :: Integer))
++++ OK, passed 100 tests.
 prop> \(u::Word64) -> zagZig u == fromIntegral (zagZig (fromIntegral u :: Natural))
++++ OK, passed 100 tests.
 -}
-
--- Allow conversion only between compatible types
-class (Integral signed,Integral unsigned) => ZigZag signed unsigned | unsigned -> signed,signed -> unsigned where
+class (Integral signed, Integral unsigned)
+  => ZigZag signed unsigned | unsigned -> signed, signed -> unsigned where
   zigZag :: signed -> unsigned
   default zigZag :: FiniteBits signed => signed -> unsigned
-  zigZag s = fromIntegral ((s `shiftL` 1) `xor` (s `shiftR` (finiteBitSize s - 1)))
-  {-# INLINE zigZag #-}
+  zigZag s = fromIntegral
+    ((s `shiftL` 1) `xor` (s `shiftR` (finiteBitSize s - 1)))
 
+  {-# INLINE zigZag #-}
   zagZig :: unsigned -> signed
   default zagZig :: (Bits unsigned) => unsigned -> signed
-  zagZig u = fromIntegral ((u `shiftR` 1) `xor` (negate (u .&. 1)))
+  zagZig u = fromIntegral ((u `shiftR` 1) `xor` negate (u .&. 1))
 
   -- default zagZig :: (Bits signed) => unsigned -> signed
   -- zagZig u = let (s::signed) = fromIntegral u in ((s `shiftR` 1) `xor` (negate (s .&. 1)))
   {-# INLINE zagZig #-}
 
 instance ZigZag Int8 Word8
+
 instance ZigZag Int16 Word16
+
 instance ZigZag Int32 Word32
+
 instance ZigZag Int64 Word64
+
 instance ZigZag Integer Natural where
-  zigZag x | x >= 0    = fromIntegral $ x `shiftL` 1
-           | otherwise = fromIntegral $ negate (x `shiftL` 1) - 1
-  zagZig u =
-    let s = fromIntegral u in ((s `shiftR` 1) `xor` (negate (s .&. 1)))
+  zigZag x
+    | x >= 0 = fromIntegral $ x `shiftL` 1
+    | otherwise = fromIntegral $ negate (x `shiftL` 1) - 1
+
+  zagZig u = let s = fromIntegral u
+             in ((s `shiftR` 1) `xor` negate (s .&. 1))

@@ -27,7 +27,7 @@ import           System.IO.Unsafe
 import qualified Control.Monad.Fail       as Fail
 #endif
 
-
+-- | Given a decoder and an input buffer returns the decoded value or an exception (if the input buffer is not fully consumed) 
 strictDecoder :: Get a -> B.ByteString -> Either DecodeException a
 strictDecoder get bs =
   strictDecoder_ get bs $ \(GetResult s'@(S ptr' o') a) endPtr ->
@@ -63,11 +63,23 @@ strictDecoder_ get (BS.PS base off len) check =
 --       return (a, BS.PS base (ptr' `minusPtr` base0) (endPtr `minusPtr` ptr'), o')
 
 
--- |Decoder monad
+{- | 
+A decoder.
+
+Given:
+* end of input buffer
+* current position in input buffer
+
+returns:
+* decoded value
+* new position in input buffer
+-}
 newtype Get a =
   Get
     { runGet :: 
-      Ptr Word8 -> S -> IO (GetResult a)
+      Ptr Word8 
+      -> S      
+      -> IO (GetResult a)
     } -- deriving (Functor)
 
 -- Seems to give better performance than the derived version

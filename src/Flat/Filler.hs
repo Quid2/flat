@@ -14,11 +14,11 @@ module Flat.Filler (
     postAlignedDecoder
     ) where
 
-import           Flat.Class
-import           Flat.Encoder
-import           Flat.Decoder
-import           Control.DeepSeq
-import           Data.Typeable
+import Flat.Class ( Generic, Flat(..) )
+import Flat.Encoder ( eFiller, sFillerMax )
+import Flat.Decoder ( Get )
+import Control.DeepSeq ( NFData )
+import Data.Typeable ( Typeable )
 
 -- |A meaningless sequence of 0 bits terminated with a 1 bit (easier to implement than the reverse)
 -- Useful to align an encoded value at byte/word boundaries.

@@ -15,10 +15,11 @@ module Flat.Memory
   , pokeByteString
   , unsafeCreateUptoN'
   , minusPtr
+  --, peekByteString
   )
 where
 
-import           Control.Monad
+import Control.Monad ( foldM, foldM_, void, when )
 import           Control.Monad.Primitive        ( PrimMonad(..) )
 import qualified Data.ByteString.Internal      as BS
 import           Data.Primitive.ByteArray       ( MutableByteArray(..)
@@ -27,7 +28,7 @@ import           Data.Primitive.ByteArray       ( MutableByteArray(..)
                                                 , newByteArray
                                                 , unsafeFreezeByteArray
                                                 )
-import           Foreign                 hiding ( void )
+import Foreign ( Word8, Ptr, withForeignPtr, minusPtr, plusPtr )
 import           GHC.Prim                       ( copyAddrToByteArray#
                                                 , copyByteArrayToAddr#
                                                 )
@@ -35,7 +36,7 @@ import           GHC.Ptr                        ( Ptr(..) )
 import           GHC.Types                      ( IO(..)
                                                 , Int(..)
                                                 )
-import           System.IO.Unsafe
+import System.IO.Unsafe ( unsafeDupablePerformIO, unsafePerformIO )
 import qualified Data.ByteString               as B
 
 unsafeCreateUptoN' :: Int -> (Ptr Word8 -> IO (Int, a)) -> (BS.ByteString, a)
@@ -64,6 +65,10 @@ pokeByteString (BS.PS foreignPointer sourceOffset sourceLength) destPointer =
       sourceLength
     return (destPointer `plusPtr` sourceLength)
 
+-- | Create a new bytestring, copying from sourcePtr sourceLength number of bytes
+-- peekByteString :: Ptr Word8 -> Int -> BS.ByteString
+-- peekByteString sourcePtr sourceLength = BS.unsafeCreate sourceLength $ \destPointer -> BS.memcpy destPointer sourcePtr sourceLength
+
 pokeByteArray :: ByteArray# -> Int -> Int -> Ptr Word8 -> IO (Ptr Word8)
 pokeByteArray sourceArr sourceOffset len dest = do
   copyByteArrayToAddr sourceArr sourceOffset dest len
@@ -78,12 +83,9 @@ copyByteArrayToAddr arr (I# offset) (Ptr addr) (I# len) =
   IO (\s -> (# copyByteArrayToAddr# arr offset addr len s, () #))
 {-# INLINE copyByteArrayToAddr #-}
 
--- toByteString :: Ptr Word8 -> Int -> BS.ByteString
--- toByteString sourcePtr sourceLength = BS.unsafeCreate sourceLength $ \destPointer -> BS.memcpy destPointer sourcePtr sourceLength
-
 chunksToByteString :: (Ptr Word8, [Int]) -> BS.ByteString
 chunksToByteString (sourcePtr0, lens) =
-  BS.unsafeCreate (sum lens) $ \destPtr0 -> void $ foldM
+  BS.unsafeCreate (sum lens) $ \destPtr0 -> foldM_
     (\(destPtr, sourcePtr) sourceLength ->
       BS.memcpy destPtr sourcePtr sourceLength
         >> return

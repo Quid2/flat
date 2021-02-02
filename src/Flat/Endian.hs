@@ -12,7 +12,8 @@ module Flat.Endian
 
 #include "MachDeps.h"
 
-import Data.Word
+import           Data.Word (Word16, Word32, Word64, byteSwap16, byteSwap32,
+                            byteSwap64)
 
 -- #ifdef ghcjs_HOST_OS
 -- import Data.Bits
