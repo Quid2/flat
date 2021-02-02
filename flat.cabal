@@ -1,13 +1,13 @@
 cabal-version:      >=1.10
 name:               flat
-version:            0.4.4
+version:            0.4.5
 license:            BSD3
 license-file:       LICENSE
-copyright:          Copyright: (c) 2016-2020 Pasqualino `Titto` Assini
+copyright:          Copyright: (c) 2016-2021 Pasqualino `Titto` Assini
 maintainer:         tittoassini@gmail.com
 author:             Pasqualino `Titto` Assini
 tested-with:
-  GHC ==7.10.3 || ==8.0.2 || ==8.2.2 || ==8.4.4 || ==8.6.5 || ==8.8.3
+  GHC ==7.10.3 || ==8.0.2 || ==8.2.2 || ==8.4.4 || ==8.6.5 || ==8.8.4 || ==8.10.3
 
 homepage:           http://quid2.org
 synopsis:           Principled and efficient bit-oriented binary serialization.
@@ -88,7 +88,10 @@ library
     -Wall -O2 -funbox-strict-fields -fno-warn-orphans
     -fno-warn-name-shadowing
 
-  --  -Werror
+    -- Stan options
+    -- -fwrite-ide-info -hiedir=.hie
+  
+    --  -Werror
 
   if impl(eta -any)
     build-depends:
@@ -129,6 +132,8 @@ library
       , text
       , unordered-containers
       , vector
+      , QuickCheck
+      , quickcheck-instances
 
 -- , base                  >=4.8.2.0 && <5
 -- if impl(ghc <8.2)
@@ -198,6 +203,7 @@ test-suite spec
       , QuickCheck
       , tasty
       , text
+      , quickcheck-instances
 
 -- dynamic doctests and generation of static doctests
 -- Usable only with recent versions of ghc (no ghcjs or eta)
@@ -259,7 +265,18 @@ test-suite doc-static
   if impl(ghc <8)
     build-depends: semigroups
 
---ghc-options: -Wno-unused-top-binds -Wno-type-defaults
+test-suite FlatRepr
+  type:             exitcode-stdio-1.0
+  main-is:          FlatRepr.hs
+  hs-source-dirs:   test
+  default-language: Haskell2010
+  build-depends:
+      base
+    , bytestring
+    , flat
+
+  ghc-options: -rtsopts
+
 
 -- Additional development time tests and benchmarks
 -- test-suite core
