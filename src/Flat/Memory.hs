@@ -19,7 +19,7 @@ module Flat.Memory
   )
 where
 
-import Control.Monad ( foldM, foldM_, void, when )
+import Control.Monad ( foldM_, when )
 import           Control.Monad.Primitive        ( PrimMonad(..) )
 import qualified Data.ByteString.Internal      as BS
 import           Data.Primitive.ByteArray       ( MutableByteArray(..)
