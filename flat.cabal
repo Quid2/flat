@@ -37,6 +37,7 @@ library
     Flat.Class
     Flat.Decoder
     Flat.Decoder.Prim
+    Flat.Decoder.Run
     Flat.Decoder.Strict
     Flat.Decoder.Types
     Flat.Encoder

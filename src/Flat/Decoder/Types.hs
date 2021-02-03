@@ -4,9 +4,8 @@
 
 -- |Strict Decoder Types
 module Flat.Decoder.Types
-  ( strictDecoder
-  -- , strictDecoderPart
-  , Get(..)
+  ( 
+    Get(..)
   , S(..)
   , GetResult(..)
   , Decoded
@@ -16,58 +15,14 @@ module Flat.Decoder.Types
   , badEncoding
   ) where
 
-import           Control.DeepSeq
-import           Control.Exception
-import qualified Data.ByteString          as B
-import qualified Data.ByteString.Internal as BS
-import           Data.Word
-import           Foreign
-import           System.IO.Unsafe
+import Control.DeepSeq ( NFData(..) )
+import Control.Exception ( throwIO, Exception )
+import Data.Word ( Word8 )
+import Foreign ( Ptr )
+
 #if MIN_VERSION_base(4,9,0)
 import qualified Control.Monad.Fail       as Fail
 #endif
-
--- | Given a decoder and an input buffer returns either the decoded value or an error  (if the input buffer is not fully consumed) 
-strictDecoder :: Get a -> B.ByteString -> Either DecodeException a
-strictDecoder get bs =
-  strictDecoder_ get bs $ \(GetResult s'@(S ptr' o') a) endPtr ->
-    if ptr' /= endPtr || o' /= 0
-      then tooMuchSpace endPtr s'
-      else return a
-
--- strictDecoderPart :: Get a -> B.ByteString -> Either DecodeException a
--- strictDecoderPart get bs =
---   strictDecoder_ get bs $ \(GetResult _ a) _ -> return a
-
-strictDecoder_ ::
-     Exception e
-  => Get a1
-  -> BS.ByteString
-  -> (GetResult a1 -> Ptr b -> IO a)
-  -> Either e a
-strictDecoder_ get (BS.PS base off len) check =
-  unsafePerformIO . try $
-  withForeignPtr base $ \base0 ->
-    let ptr = base0 `plusPtr` off
-        endPtr = ptr `plusPtr` len
-     in do res <- runGet get endPtr (S ptr 0)
-           check res endPtr
-{-# NOINLINE strictDecoder_ #-}
-
-
-
-
-
-
--- strictRawDecoder :: Exception e => Get t -> B.ByteString -> Either e (t,B.ByteString, NumBits)
--- strictRawDecoder get (BS.PS base off len) = unsafePerformIO . try $
---   withForeignPtr base $ \base0 ->
---     let ptr = base0 `plusPtr` off
---         endPtr = ptr `plusPtr` len
---     in do
---       GetResult (S ptr' o') a <- runGet get endPtr (S ptr 0)
---       return (a, BS.PS base (ptr' `minusPtr` base0) (endPtr `minusPtr` ptr'), o')
-
 
 {- | 
 A decoder.
