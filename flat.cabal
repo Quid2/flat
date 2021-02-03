@@ -60,6 +60,7 @@ library
     Flat.Instances.Vector
     Flat.Memory
     Flat.Run
+    Flat.Repr
     Flat.Tutorial
     Flat.Types
 
@@ -134,6 +135,8 @@ library
       , vector
       , QuickCheck
       , quickcheck-instances
+      , list-t
+
 
 -- , base                  >=4.8.2.0 && <5
 -- if impl(ghc <8.2)
@@ -265,7 +268,7 @@ test-suite doc-static
   if impl(ghc <8)
     build-depends: semigroups
 
-test-suite FlatRepr
+test-suite Repr
   type:             exitcode-stdio-1.0
   main-is:          FlatRepr.hs
   hs-source-dirs:   test
@@ -274,6 +277,7 @@ test-suite FlatRepr
       base
     , bytestring
     , flat
+    , list-t
 
   ghc-options: -rtsopts
 
