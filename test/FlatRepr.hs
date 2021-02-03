@@ -1,9 +1,11 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Main where
 import Flat 
-import Flat.Decoder.Types ( Get )
+import Flat.Repr 
+import Flat.Decoder
 import Data.List (foldl')
 import qualified Data.ByteString as B
+import qualified ListT as L
 
 -- Big is a type that has a small encoded representation but a very large in-memory footprint.
 -- It is a very large bytestring whose bytes are all set to 0
@@ -34,9 +36,12 @@ main = do
     -- A serialised list of Big values
     let bigsFile = flat $ replicate numOfBigs $ newBig 1
 
+    tstListT bigsFile
+
     tstRepr bigsFile
 
     tstBig bigsFile 
+
 
 -- If we unserialise a list of Bigs and then process them (e.g. print them out) we end up in trouble, too much memory.
 tstBig :: B.ByteString -> IO ()
@@ -49,21 +54,14 @@ tstBig bigsFile = do
 tstRepr :: B.ByteString -> IO ()
 tstRepr bigsFile = do
     print "Decode to [FlatRepl Big]:"
-    let Right (bsR :: [FlatRepr Big]) = unflat bigsFile
+    let Right (bsR :: [Repr Big]) = unflat bigsFile
     let bs = map unrepr bsR
     mapM_ print bs
 
--- Flat representation of a value
-newtype FlatRepr a = FlatRepr {repr :: B.ByteString}
-
--- Get the underlying value
-unrepr :: Flat a => FlatRepr a -> a
-unrepr (FlatRepr bs)= let Right a = unflat bs in a
-
-instance Flat a => Flat (FlatRepr a) where
-    size  = error "unused"
-    encode = error "unused"
-
-    -- To create the representation we just re 'flat' the parsed value (this could be optimised by copying directly the parsed representation)
-    decode = FlatRepr . flat <$> (decode :: Get a)
-
+-- Or: we extract one element at the time via a ListT
+-- See http://hackage.haskell.org/package/list-t-1.0.4/docs/ListT.html
+tstListT :: B.ByteString -> IO ()
+tstListT bigsFile = do
+    print "Decode to ListT IO Big:"
+    stream :: L.ListT IO Big <- decodeListTWith decode bigsFile 
+    L.traverse_ print stream
