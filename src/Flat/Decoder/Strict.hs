@@ -50,7 +50,6 @@ import           Data.Word
 import           Data.ZigZag
 import           GHC.Base                       (unsafeChr)
 import           Numeric.Natural
-
 #include "MachDeps.h"
 
 {-# INLINE decodeListWith #-}

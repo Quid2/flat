@@ -164,7 +164,7 @@ dropBits_ s n =
 
 {-# INLINE dBool #-} 
 -- Inlining dBool massively increases compilation time and decreases run time by a third
--- TODO: test dBool inlining for 8.8.3
+-- TODO: test dBool inlining for ghc >= 8.8.4
 -- |Decode a boolean
 dBool :: Get Bool
 dBool = Get $ \endPtr s ->

@@ -27,7 +27,7 @@ import           System.IO.Unsafe
 import qualified Control.Monad.Fail       as Fail
 #endif
 
--- | Given a decoder and an input buffer returns the decoded value or an exception (if the input buffer is not fully consumed) 
+-- | Given a decoder and an input buffer returns either the decoded value or an error  (if the input buffer is not fully consumed) 
 strictDecoder :: Get a -> B.ByteString -> Either DecodeException a
 strictDecoder get bs =
   strictDecoder_ get bs $ \(GetResult s'@(S ptr' o') a) endPtr ->
@@ -52,6 +52,12 @@ strictDecoder_ get (BS.PS base off len) check =
         endPtr = ptr `plusPtr` len
      in do res <- runGet get endPtr (S ptr 0)
            check res endPtr
+{-# NOINLINE strictDecoder_ #-}
+
+
+
+
+
 
 -- strictRawDecoder :: Exception e => Get t -> B.ByteString -> Either e (t,B.ByteString, NumBits)
 -- strictRawDecoder get (BS.PS base off len) = unsafePerformIO . try $

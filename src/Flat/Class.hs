@@ -5,14 +5,12 @@
 {-# LANGUAGE DefaultSignatures         #-}
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE FlexibleInstances         #-}
-{-# LANGUAGE KindSignatures            #-}
 {-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE Trustworthy               #-}
 {-# LANGUAGE TypeFamilies              #-}
 {-# LANGUAGE TypeOperators             #-}
-{-# LANGUAGE TypeSynonymInstances      #-}
 {-# LANGUAGE UndecidableInstances      #-}
 
 -- |Generics-based generation of Flat instances
@@ -130,7 +128,7 @@ class GFlatEncodeSum f where
 
 instance (GFlatEncodeSum a, GFlatEncodeSum b) => GFlatEncodeSum (a :+: b) where
   gencodeSum !code !numBits s = case s of
-                           L1 !x -> gencodeSum ((code `unsafeShiftL` 1)) (numBits+1) x
+                           L1 !x -> gencodeSum (code `unsafeShiftL` 1) (numBits+1) x
                            R1 !x -> gencodeSum ((code `unsafeShiftL` 1) .|. 1) (numBits+1) x
   {-# INLINE  gencodeSum #-}
 
