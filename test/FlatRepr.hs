@@ -63,5 +63,5 @@ tstRepr bigsFile = do
 tstListT :: B.ByteString -> IO ()
 tstListT bigsFile = do
     print "Decode to ListT IO Big:"
-    stream :: L.ListT IO Big <- decodeListTWith decode bigsFile 
+    stream :: L.ListT IO Big <- listTDecoder decode bigsFile 
     L.traverse_ print stream
