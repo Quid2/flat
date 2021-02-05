@@ -3,7 +3,6 @@
 module Flat.Decoder (
     strictDecoder,
     listTDecoder,
-    -- strictDecoderPart,
     Decoded,
     DecodeException(..),
     Get,

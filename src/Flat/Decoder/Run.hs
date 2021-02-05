@@ -18,10 +18,6 @@ strictDecoder get bs =
       then tooMuchSpace endPtr s'
       else return a
 
--- strictDecoderPart :: Get a -> B.ByteString -> Either DecodeException a
--- strictDecoderPart get bs =
---   strictDecoder_ get bs $ \(GetResult _ a) _ -> return a
-
 strictDecoder_ ::
      Exception e
   => Get a1
