@@ -11,6 +11,7 @@ module Flat.Filler (
     preAligned,
     PostAligned(..),
     postAligned,
+    preAlignedDecoder,
     postAlignedDecoder
     ) where
 
@@ -71,5 +72,9 @@ postAlignedDecoder :: Get b -> Get b
 postAlignedDecoder dec = do
   v <- dec
   _::Filler <- decode
-  -- return (postAligned v)
   return v
+
+preAlignedDecoder :: Get b -> Get b
+preAlignedDecoder dec = do
+  _::Filler <- decode
+  dec
