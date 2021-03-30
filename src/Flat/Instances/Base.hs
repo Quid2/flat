@@ -558,6 +558,9 @@ instance ( Integral a, Flat a ) => Flat (Ratio a) where
 
 >>> test [False,False]
 (True,5,"10100")
+
+This instance and other similar ones are declared as @OVERLAPPABLE@, because for better encoding/decoding
+performance it can be useful to declare instances of concrete types, such as @[Char]@ (not provided out of the box).
 -}
 instance {-# OVERLAPPABLE #-}Flat a => Flat [ a ]
 
@@ -577,17 +580,6 @@ instance {-# OVERLAPPABLE #-}Flat a => Flat [ a ]
 -- trampoline = id
 -- trampolineIO = id
 -- #endif
-
-{- |
-For better encoding/decoding performance, it is useful to declare instances of concrete list types, such as [Char].
-
->>> test ""
-(True,1,"0")
-
->>> test "aaa"
-(True,28,"10110000 11011000 01101100 0010")
--}
-instance {-# OVERLAPPING #-}Flat [ Char ]
 
 
 -- #if MIN_VERSION_base(4,9,0)
