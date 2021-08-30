@@ -261,9 +261,9 @@ testDecBits = testGroup "Decode Bits"
             dropBits (len * 8 - numBitsToTake - pre)
             return r
           -- we expect the first numBitsToTake bits of the value
-          expectedD @ (Right expected) :: Decoded a = Right
+          expectedD@(Right expected) :: Decoded a = Right
             $ val `shR` (sz - numBitsToTake) -- ghcjs: shiftR fails, see: https://github.com/ghcjs/ghcjs/issues/706
-          actualD @ (Right actual) :: Decoded a = unflatRawWith dec vs
+          actualD@(Right actual) :: Decoded a = unflatRawWith dec vs
       in testCase
            (unwords
               [ "take"
