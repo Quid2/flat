@@ -242,8 +242,10 @@ dUTF16 = do
 dUTF8 :: Get T.Text
 dUTF8 = do
   _ <- dFiller
-  T.decodeUtf8 <$> dByteString_
-
+  bs <- dByteString_
+  case T.decodeUtf8' bs of
+    Right t -> pure t
+    Left e -> fail $ concat ["Input contains invalid UTF-8 data", show e]
 dFiller :: Get ()
 dFiller = do
   tag <- dBool

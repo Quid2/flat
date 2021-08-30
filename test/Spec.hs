@@ -26,6 +26,7 @@ import qualified Flat.Encoder.Strict as E
 import           Data.Int
 import           Data.Proxy
 import qualified Data.Sequence as Seq
+import           Data.String (fromString)
 import qualified Data.Text as T
 import           Data.Word
 import           Numeric.Natural
@@ -420,6 +421,7 @@ flatTests = testGroup "flat/unflat Unit tests"
       errDec (Proxy :: Proxy Bool) [] -- no data
     , errDec (Proxy :: Proxy Bool) [128] -- no filler
     , errDec (Proxy :: Proxy Bool) [128 + 1, 1, 2, 4, 8] -- additional bytes
+    , errDec (Proxy :: Proxy Text) (B.unpack (flat ((fromString "\x80") :: B.ByteString))) -- invalid UTF-8
     , encRaw () []
     , encRaw ((), (), Unit) []
     , encRaw (Unit, 'a', Unit, 'a', Unit, 'a', Unit) [97, 97, 97]
