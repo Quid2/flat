@@ -41,7 +41,7 @@ import           Data.Primitive.ByteArray
 import qualified Data.Text                      as T
 import qualified Data.Text.Encoding             as T
 
-#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
+#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION) && ! MIN_VERSION_text(2,0,0)
 import qualified Data.Text.Array                as TA
 import qualified Data.Text.Internal             as T
 #endif
@@ -233,11 +233,14 @@ dUnsigned_ shl n = do
 dUTF16 :: Get T.Text
 dUTF16 = do
   _ <- dFiller
+#if MIN_VERSION_text(2,0,0)
   -- Checked decoding
-  -- T.decodeUtf16LE <$> dByteString_
+  T.decodeUtf16LE <$> dByteString_
+#else
   -- Unchecked decoding
   (ByteArray array, lengthInBytes) <- dByteArray_
   return (T.Text (TA.Array array) 0 (lengthInBytes `div` 2))
+#endif
 #endif
 dUTF8 :: Get T.Text
 dUTF8 = do

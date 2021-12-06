@@ -58,7 +58,7 @@ import           Flat.Types
 import           Data.FloatCast
 import           Data.Primitive.ByteArray
 import qualified Data.Text                      as T
-#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
+#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION) && ! MIN_VERSION_text(2,0,0)
 import qualified Data.Text.Array                as TA
 import qualified Data.Text.Internal             as TI
 #endif
@@ -235,13 +235,16 @@ eUTF8F = eBytesF . TE.encodeUtf8
 
 -- PROB: Not compatible with GHCJS or ETA (that is big endian and writes contents in reverse order)
 -- | Encode text as UTF16 and encode the result as an array of bytes
--- Efficient, as Text is already internally encoded as UTF16.
 #if ! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
 eUTF16F :: T.Text -> Prim
+#if MIN_VERSION_text(2,0,0)
+eUTF16F = eBytesF . TE.encodeUtf16LE
+#else
 eUTF16F t = eFillerF >=> eUTF16F_ t
   where
     eUTF16F_ !(TI.Text (TA.Array array) w16Off w16Len) s =
       writeArray array (2 * w16Off) (2 * w16Len) (nextPtr s)
+#endif
 #endif
 
 -- |Encode a Lazy ByteString
