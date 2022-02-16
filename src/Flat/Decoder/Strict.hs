@@ -147,7 +147,7 @@ dWord64 =
                       42
                       (wordStep
                          49
-                         (wordStep 56 (wordStep 63 (wordStep 70 (lastStep 77)))))))))))
+                         (wordStep 56 (lastStep 63)))))))))
     0
 
 {-# INLINE dChar #-}
