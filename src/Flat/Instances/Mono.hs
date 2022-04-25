@@ -1,5 +1,7 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances,UndecidableInstances ,NoMonomorphismRestriction #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE UndecidableInstances      #-}
 module Flat.Instances.Mono
   ( sizeSequence
   , encodeSequence
@@ -20,24 +22,20 @@ module Flat.Instances.Mono
   )
 where
 
-import           Data.MonoTraversable           ( Element
-                                                , ofoldl'
-                                                , otoList
-                                                --, olength
-                                                , MonoFoldable
-                                                )
-import           Data.Sequences                 ( IsSequence )
-import qualified Data.Sequences                as S
 import           Data.Containers
+import qualified Data.Foldable        as F
+import           Data.MonoTraversable (Element, MonoFoldable, ofoldl', otoList)
+import           Data.Sequences       (IsSequence)
+import qualified Data.Sequences       as S
 import           Flat.Instances.Util
-import qualified Data.Foldable                 as F
 
--- $setup
--- >>> import Flat.Instances.Base()
--- >>> import Flat.Instances.Test
--- >>> import Data.Word    
--- >>> import qualified Data.Set
--- >>> import qualified Data.Map
+{- $setup
+>>> import Flat.Instances.Base()
+>>> import Flat.Instances.Test
+>>> import Data.Word
+>>> import qualified Data.Set
+>>> import qualified Data.Map
+-}
 
 {-|
 Sequences are defined as Arrays:
@@ -55,16 +53,40 @@ Lists are defined as:
 List a ≡  Nil
         | Cons a (List a)
 
-The AsList/AsArray wrappers can be used to serialise sequences as Lists or Arrays
+In practice, this means that the list elements will be prefixed with a 1 bit and followed by a final 0 bit.
 
->>> tst $ AsArray ([]::[()])
-(True,8,[0])
+The AsList/AsArray wrappers can be used to serialise sequences as Lists or Arrays.
 
->>> tst $ AsArray [11::Word8,22,33]
-(True,40,[3,11,22,33,0])
+Let's see some examples.
 
->>> tst $ AsList ([]::[()])
-(True,1,[0])
+>>> flatBits $ AsList [True,True,True]
+"1111110"
+
+So we have Cons True (11) repeated three times, followed by a final Nil (0).
+
+The list encoding is the default one for lists so AsList is in this case unnecessary:
+
+>>> flatBits $ [True,True,True]
+"1111110"
+
+We can force a list to be encoded as an Array with AsArray:
+
+>>> flatBits $ AsArray [True,True,True]
+"00000011 11100000 000"
+
+We have the initial block with a count of 3 (3 == 00000011) followed by the elements True True True (111) and then the final block of 0 elements ("00000 000").
+
+>>> flatBits $ [AsArray [True,True,True]]
+"10000001 11110000 00000"
+
+>>> flatBits $ (True,True,True,AsArray $ replicate 7 True)
+"11100000 11111111 11000000 00"
+
+>>> flatBits $ AsArray ([]::[()])
+"00000000"
+
+>>> flatBits $ AsList ([]::[()])
+"0"
 
 >>> tst (AsList [11::Word8,22,33])
 (True,28,[133,197,164,32])
@@ -145,7 +167,7 @@ instance (IsSet set, Flat (Element set)) => Flat (AsSet set) where
   decode = AsSet <$> decodeSet
 
 sizeSet :: (IsSet set, Flat (Element set)) => Size set
-sizeSet l acc = ofoldl' (\acc e -> size e (acc + 1)) (acc + 1) $ l
+sizeSet l acc = ofoldl' (\acc e -> size e (acc + 1)) (acc + 1) l
 {-# INLINE sizeSet #-}
 
 encodeSet :: (IsSet set, Flat (Element set)) => set -> Encoding
