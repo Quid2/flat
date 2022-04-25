@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP          #-}
+{-# LANGUAGE CPP #-}
 -- |Strict Decoder
 module Flat.Decoder (
     strictDecoder,
@@ -46,6 +46,6 @@ module Flat.Decoder (
     ) where
 
 import           Flat.Decoder.Prim
+import           Flat.Decoder.Run
 import           Flat.Decoder.Strict
 import           Flat.Decoder.Types
-import Flat.Decoder.Run
