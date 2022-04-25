@@ -89,11 +89,10 @@ library
   ghc-options:
     -Wall -O2 -funbox-strict-fields -fno-warn-orphans
     -fno-warn-name-shadowing
+    -Werror
 
     -- Stan options
     -- -fwrite-ide-info -hiedir=.hie
-  
-    --  -Werror
 
   if impl(eta -any)
     build-depends:
