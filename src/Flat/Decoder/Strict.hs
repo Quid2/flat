@@ -34,22 +34,22 @@ import qualified Data.ByteString.Lazy           as L
 import qualified Data.ByteString.Short          as SBS
 import qualified Data.ByteString.Short.Internal as SBS
 import qualified Data.DList                     as DL
-import           Flat.Decoder.Prim
-import           Flat.Decoder.Types
 import           Data.Int
 import           Data.Primitive.ByteArray
 import qualified Data.Text                      as T
 import qualified Data.Text.Encoding             as T
+import           Flat.Decoder.Prim
+import           Flat.Decoder.Types
 
-#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
+
+import           Control.Monad                  (unless)
 import qualified Data.Text.Array                as TA
 import qualified Data.Text.Internal             as T
-#endif
 
 import           Data.Word
 import           Data.ZigZag
 import           GHC.Base                       (unsafeChr)
-import           Numeric.Natural
+import           Numeric.Natural                (Natural)
 #include "MachDeps.h"
 
 {-# INLINE decodeListWith #-}
@@ -92,6 +92,7 @@ dInteger = zagZig <$> dUnsigned
 {-# INLINE dInt #-}
 dWord :: Get Word
 dInt :: Get Int
+
 #if WORD_SIZE_IN_BITS == 64
 dWord = (fromIntegral :: Word64 -> Word) <$> dWord64
 
@@ -103,6 +104,13 @@ dInt = (fromIntegral :: Int32 -> Int) <$> dInt32
 #else
 #error expected WORD_SIZE_IN_BITS to be 32 or 64
 #endif
+
+
+
+
+
+
+
 
 {-# INLINE dInt8 #-}
 dInt8 :: Get Int8
@@ -161,7 +169,7 @@ charStep :: Int -> (Int -> Get Char) -> Int -> Get Char
 charStep !shl !cont !n = do
   !tw <- fromIntegral <$> dWord8
   let !w = tw .&. 127
-  let !v = n .|. (w `shift` shl)
+  let !v = n .|. w `shift` shl
   if tw == w
     then return $ unsafeChr v
     else cont v
@@ -171,21 +179,21 @@ lastCharStep :: Int -> Int -> Get Char
 lastCharStep !shl !n = do
   !tw <- fromIntegral <$> dWord8
   let !w = tw .&. 127
-  let !v = n .|. (w `shift` shl)
+  let !v = n .|. w `shift` shl
   if tw == w
     then if v > 0x10FFFF
            then charErr v
            else return $ unsafeChr v
     else charErr v
- where 
-  charErr v = fail $ concat ["Unexpected extra byte or non unicode char", show v]
+ where
+  charErr v = fail $ "Unexpected extra byte or non unicode char" ++ show v
 
 {-# INLINE wordStep #-}
 wordStep :: (Bits a, Num a) => Int -> (a -> Get a) -> a -> Get a
 wordStep shl k n = do
   tw <- fromIntegral <$> dWord8
   let w = tw .&. 127
-  let v = n .|. (w `shift` shl)
+  let v = n .|. w `shift` shl
   if tw == w
     then return v
     --else oneShot k v
@@ -196,14 +204,14 @@ lastStep :: (FiniteBits b, Show b, Num b) => Int -> b -> Get b
 lastStep shl n = do
   tw <- fromIntegral <$> dWord8
   let w = tw .&. 127
-  let v = n .|. (w `shift` shl)
+  let v = n .|. w `shift` shl
   if tw == w
     then if countLeadingZeros w < shl
            then wordErr v
            else return v
     else wordErr v
- where 
-   wordErr v = fail $ concat ["Unexpected extra byte in unsigned integer", show v]
+ where
+   wordErr v = fail $ "Unexpected extra byte in unsigned integer" ++ show v
 
 -- {-# INLINE dUnsigned #-}
 dUnsigned :: (Num b, Bits b) => Get b
@@ -222,7 +230,7 @@ dUnsigned_ :: (Bits t, Num t) => Int -> t -> Get (t, Int)
 dUnsigned_ shl n = do
   tw <- dWord8
   let w = tw .&. 127
-  let v = n .|. (fromIntegral w `shift` shl)
+  let v = n .|. fromIntegral w `shift` shl
   if tw == w
     then return (v, shl)
     else dUnsigned_ (shl + 7) v
@@ -245,13 +253,11 @@ dUTF8 = do
   bs <- dByteString_
   case T.decodeUtf8' bs of
     Right t -> pure t
-    Left e -> fail $ concat ["Input contains invalid UTF-8 data", show e]
+    Left e  -> fail $ "Input contains invalid UTF-8 data" ++ show e
 dFiller :: Get ()
 dFiller = do
   tag <- dBool
-  case tag of
-    False -> dFiller
-    True  -> return ()
+  unless tag dFiller
 
 dLazyByteString :: Get L.ByteString
 dLazyByteString = dFiller >> dLazyByteString_
@@ -266,3 +272,7 @@ dShortByteString_ = do
 
 dByteString :: Get B.ByteString
 dByteString = dFiller >> dByteString_
+
+
+
+
