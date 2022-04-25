@@ -1,44 +1,47 @@
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE FlexibleInstances ,StandaloneDeriving #-}
--- | Flat instances for the base library
-module Flat.Instances.Base() where
+{-# LANGUAGE CPP                #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE FlexibleInstances  #-}
+{-# LANGUAGE StandaloneDeriving #-}
 
-import Data.Bool
-import Data.Char
-import Data.Fixed
-import Flat.Instances.Util
-import Data.Complex(Complex(..))
-import Data.Ratio
-import Prelude hiding ( mempty )
-import           Control.Monad                  ( liftM2 )
+-- | Flat instances for the base library
+module Flat.Instances.Base () where
+
+import           Control.Monad         (liftM2)
+import           Data.Bool
+import           Data.Char
+import           Data.Complex          (Complex (..))
+import           Data.Fixed
 -- #if MIN_VERSION_base(4,9,0)
-import qualified Data.List.NonEmpty as B
+import qualified Data.List.NonEmpty    as B
 -- #endif
 
 #if ! MIN_VERSION_base(4,8,0)
-import Control.Applicative
-import Data.Monoid (mempty)
+import           Control.Applicative
+import           Data.Monoid           (mempty)
 #endif
 
 #if MIN_VERSION_base(4,9,0)
-import qualified Data.Semigroup     as Semigroup
+import qualified Data.Semigroup        as Semigroup
 #endif
 
-import qualified Data.Monoid as Monoid
+import qualified Data.Monoid           as Monoid
+import           Data.Ratio
+import           Flat.Instances.Util
+import           Prelude               hiding (mempty)
 
 #if !MIN_VERSION_base(4,11,0)
-import Data.Monoid ((<>))
+import           Data.Monoid           ((<>))
 #endif
 
 #if MIN_VERSION_base(4,8,0)
-import Data.Functor.Identity (Identity (..))
+import           Data.Functor.Identity (Identity (..))
 #endif
 
 #if !MIN_VERSION_base(4,9,0)
 deriving instance Generic (Complex a)
 #endif
 
+{- ORMOLU_DISABLE -}
 -- $setup
 -- >>> :set -XNegativeLiterals
 -- >>> import Flat.Instances.Test
@@ -52,6 +55,10 @@ deriving instance Generic (Complex a)
 -- >>> import Data.Monoid
 -- >>> import qualified Data.List.NonEmpty as B
 -- >>> let test = tstBits
+-- >>> let y = 33
+{- ORMOLU_ENABLE -}
+
+-- >>> y
 
 #if MIN_VERSION_base(4,8,0)
 -- | @since 0.4.4
@@ -93,10 +100,11 @@ instance Flat a => Flat (Monoid.Product a) where
 
 #if MIN_VERSION_base(4,9,0)
 {- |
->>> let w = Just (11::Word8); a = Alt w <> Alt (Just 24) in tst a == tst w 
+
+>>> let w = Just (11::Word8); a = Alt w <> Alt (Just 24) in tst a == tst w
 True
 
->>> let w = Just (11::Word8); a = Alt Nothing <> Alt w in tst a == tst w 
+>>> let w = Just (11::Word8); a = Alt Nothing <> Alt w in tst a == tst w
 True
 
 @since 0.4.4
@@ -129,7 +137,6 @@ instance Flat a => Flat (Semigroup.Last a) where
     encode (Semigroup.Last a) = encode a
     size (Semigroup.Last a) = size a
     decode = Semigroup.Last <$> decode
-
 -- | @since 0.4.4
 instance Flat a => Flat (Semigroup.Option a) where
     encode (Semigroup.Option a) = encode a
@@ -150,7 +157,7 @@ instance Flat () where
 
     decode = pure ()
 
-{-|
+{- |
 One bit is plenty for a Bool.
 
 >>> test False
@@ -166,10 +173,10 @@ instance Flat Bool where
 
     decode = dBool
 
-{-|
+{- |
 Char's are mapped to Word32 and then encoded.
 
-For ascii characters, the encoding is standard ascii. 
+For ascii characters, the encoding is standard ascii.
 
 >>> test 'a'
 (True,8,"01100001")
@@ -203,16 +210,16 @@ instance Flat Char where
 -}
 instance Flat a => Flat (Maybe a)
 
-{-|
+{- |
 >>> test (Left False::Either Bool ())
 (True,2,"00")
 
 >>> test (Right ()::Either Bool ())
 (True,1,"1")
 -}
-instance ( Flat a, Flat b ) => Flat (Either a b)
+instance (Flat a, Flat b) => Flat (Either a b)
 
-{-|
+{- |
 >>> test (MkFixed 123 :: Fixed E0)
 (True,16,"11110110 00000001")
 
@@ -272,11 +279,11 @@ Word7 ≡   V0
         | V127
 @
 
-Values between as 0 and 127 fit in a single byte. 
+Values between as 0 and 127 fit in a single byte.
 
 127 (0b1111111) is represented as Elem V127 and encoded as: Elem=0 127=1111111
 
->>> test (127::Word) 
+>>> test (127::Word)
 (True,8,"01111111")
 
 254 (0b11111110) is represented as Cons V126 (Elem V1) (254=128+126) and encoded as: Cons=1 V126=1111110 (Elem=0 V1=0000001):
@@ -302,7 +309,7 @@ instance Flat Word where
     decode = dWord
 
 {- |
-Naturals are encoded just as the fixed size Words. 
+Naturals are encoded just as the fixed size Words.
 
 >>> test (0::Natural)
 (True,8,"00000000")
@@ -316,7 +323,6 @@ instance Flat Natural where
     encode = eNatural
 
     decode = dNatural
-
 
 instance Flat Word16 where
     encode = eWord16
@@ -338,7 +344,6 @@ instance Flat Word64 where
     decode = dWord64
 
     size = sWord64
-
 
 {- |
 Integer, Int, Int16, Int32 and Int64 are defined as the <https://developers.google.com/protocol-buffers/docs/encoding#signed-integers ZigZag> encoded version of the equivalent unsigned Word:
@@ -382,7 +387,7 @@ instance Flat Int where
     decode = dInt
 
 {- |
-Integers are encoded just as the fixed size Ints. 
+Integers are encoded just as the fixed size Ints.
 
 >>> test (0::Integer)
 (True,8,"00000000")
@@ -412,7 +417,7 @@ instance Flat Integer where
 
     decode = dInteger
 
-{-|
+{- |
 >>> test (0::Int8)
 (True,8,"00000000")
 
@@ -490,7 +495,6 @@ instance Flat Int64 where
 
     decode = dInt64
 
-
 {- |
 Floats are encoded as standard IEEE binary32 values:
 
@@ -532,27 +536,27 @@ instance Flat Double where
 
     decode = dDouble
 
-{-|
+{- |
 >>> test (4 :+ 2 :: Complex Word8)
 (True,16,"00000100 00000010")
 -}
 instance Flat a => Flat (Complex a)
 
-{-|
+{- |
 Ratios are encoded as tuples of (numerator,denominator)
 
 >>> test (3%4::Ratio Word8)
 (True,16,"00000011 00000100")
 -}
-instance ( Integral a, Flat a ) => Flat (Ratio a) where
-    size a = size ( numerator a, denominator a )
+instance (Integral a, Flat a) => Flat (Ratio a) where
+    size a = size (numerator a, denominator a)
 
-    encode a = encode ( numerator a, denominator a )
+    encode a = encode (numerator a, denominator a)
 
     -- decode = uncurry (%) <$> decode
     decode = liftM2 (%) decode decode
 
-{-|
+{- |
 >>> test ([]::[Bool])
 (True,1,"0")
 
@@ -562,7 +566,13 @@ instance ( Integral a, Flat a ) => Flat (Ratio a) where
 This instance and other similar ones are declared as @OVERLAPPABLE@, because for better encoding/decoding
 performance it can be useful to declare instances of concrete types, such as @[Char]@ (not provided out of the box).
 -}
-instance {-# OVERLAPPABLE #-}Flat a => Flat [ a ]
+instance {-# OVERLAPPABLE #-} Flat a => Flat [a]
+
+{-
+>>> import Weigh
+>>> flat [1..10::Int]
+-}
+
 
 -- Generic list instance (stack overflows with ETA, see https://github.com/typelead/eta/issues/901)
 -- where
@@ -581,16 +591,17 @@ instance {-# OVERLAPPABLE #-}Flat a => Flat [ a ]
 -- trampolineIO = id
 -- #endif
 
-
 -- #if MIN_VERSION_base(4,9,0)
-{-|
+
+{- |
 >>> test (B.fromList [True])
 (True,2,"10")
 
 >>> test (B.fromList [False,False])
 (True,4,"0100")
 -}
-instance {-# OVERLAPPABLE #-}Flat a => Flat (B.NonEmpty a)
+instance {-# OVERLAPPABLE #-} Flat a => Flat (B.NonEmpty a)
+
 -- #endif
 
 {- |
@@ -612,26 +623,33 @@ tst (1::Int,"2","3","4","5","6","7","8")
 -}
 
 -- Not sure if these should be OVERLAPPABLE
-instance {-# OVERLAPPABLE #-}( Flat a, Flat b ) => Flat ( a, b )
+instance {-# OVERLAPPABLE #-} (Flat a, Flat b) => Flat (a, b)
 
-instance {-# OVERLAPPABLE #-}( Flat a, Flat b, Flat c ) => Flat ( a, b, c )
+instance {-# OVERLAPPABLE #-} (Flat a, Flat b, Flat c) => Flat (a, b, c)
 
-instance {-# OVERLAPPABLE #-}( Flat a, Flat b, Flat c, Flat d )
-    => Flat ( a, b, c, d )
+instance
+    {-# OVERLAPPABLE #-}
+    (Flat a, Flat b, Flat c, Flat d) =>
+    Flat (a, b, c, d)
 
-instance {-# OVERLAPPABLE #-}( Flat a, Flat b, Flat c, Flat d, Flat e )
-    => Flat ( a, b, c, d, e )
+instance
+    {-# OVERLAPPABLE #-}
+    (Flat a, Flat b, Flat c, Flat d, Flat e) =>
+    Flat (a, b, c, d, e)
 
-instance {-# OVERLAPPABLE #-}( Flat a, Flat b, Flat c, Flat d, Flat e, Flat f )
-    => Flat ( a, b, c, d, e, f )
+instance
+    {-# OVERLAPPABLE #-}
+    (Flat a, Flat b, Flat c, Flat d, Flat e, Flat f) =>
+    Flat (a, b, c, d, e, f)
 
-instance {-# OVERLAPPABLE #-}( Flat a
-                             , Flat b
-                             , Flat c
-                             , Flat d
-                             , Flat e
-                             , Flat f
-                             , Flat g
-                             ) => Flat ( a, b, c, d, e, f, g )
-
-
+instance
+    {-# OVERLAPPABLE #-}
+    ( Flat a
+    , Flat b
+    , Flat c
+    , Flat d
+    , Flat e
+    , Flat f
+    , Flat g
+    ) =>
+    Flat (a, b, c, d, e, f, g)
