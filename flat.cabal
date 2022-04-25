@@ -7,7 +7,7 @@ copyright:          Copyright: (c) 2016-2021 Pasqualino `Titto` Assini
 maintainer:         tittoassini@gmail.com
 author:             Pasqualino `Titto` Assini
 tested-with:
-  GHC ==7.10.3 || ==8.0.2 || ==8.2.2 || ==8.4.4 || ==8.6.5 || ==8.8.4 || ==8.10.3
+  GHC ==7.10.3 || ==8.0.2 || ==8.2.2 || ==8.4.4 || ==8.6.5 || ==8.8.4 || ==8.10.7 || == 9.0.2 || == 9.2.0
 
 homepage:           http://quid2.org
 synopsis:           Principled and efficient bit-oriented binary serialization.
@@ -19,7 +19,6 @@ build-type:         Simple
 extra-source-files:
   stack.yaml
   stack-6.35.yaml
-  stack-9.21.yaml
   README.md
   CHANGELOG
 
@@ -53,6 +52,7 @@ library
     Flat.Instances.ByteString
     Flat.Instances.Containers
     Flat.Instances.DList
+    Flat.Instances.Extra
     Flat.Instances.Mono
     Flat.Instances.Test
     Flat.Instances.Text
@@ -134,9 +134,7 @@ library
       , text
       , unordered-containers
       , vector
-      , QuickCheck
-      , quickcheck-instances
-      , list-t
+      , list-t > 1
 
 
 -- , base                  >=4.8.2.0 && <5
@@ -207,7 +205,7 @@ test-suite spec
       , QuickCheck
       , tasty
       , text
-      , quickcheck-instances
+      , quickcheck-instances >= 0.3.14
 
 -- dynamic doctests and generation of static doctests
 -- Usable only with recent versions of ghc (no ghcjs or eta)
@@ -224,6 +222,7 @@ test-suite spec
 --     , text
 
 -- static doctests (faster, useful for test coverage and to test ghcjs and eta)
+
 test-suite doc-static
   type:             exitcode-stdio-1.0
   main-is:          DocTests.hs
@@ -245,6 +244,8 @@ test-suite doc-static
     DocTest.Flat.Instances.Unordered
     DocTest.Flat.Instances.Vector
     DocTest.Flat.Tutorial
+    DocTest.Flat.Encoder.Prim
+    DocTest.Flat.Instances.Extra
 
   default-language: Haskell2010
   build-depends:
@@ -266,10 +267,11 @@ test-suite doc-static
   -- >=0.3.22
   --, QuickCheck >= 2.13.2 && < 3
   --, hashable >= 1.2.6.1 && < 1.4
-  if impl(ghc <8)
-    build-depends: semigroups
+  -- if impl(ghc <8)
+  --   build-depends: semigroups
 
-test-suite Repr
+-- Test for Flat.Repr
+test-suite repr
   type:             exitcode-stdio-1.0
   main-is:          FlatRepr.hs
   hs-source-dirs:   test
@@ -278,6 +280,7 @@ test-suite Repr
       base
     , bytestring
     , flat
+    , timeit
     , list-t
 
   ghc-options: -rtsopts
