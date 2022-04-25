@@ -1,7 +1,7 @@
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE RankNTypes           #-}
+{-# LANGUAGE ScopedTypeVariables  #-}
+
 
 -- |Utilities to represent and display bit sequences
 module Flat.Bits (
@@ -12,22 +12,23 @@ module Flat.Bits (
     paddedBits,
     asBytes,
     asBits,
+    takeBits,
+    takeAllBits,
 ) where
+-- TODO: AsBits Class?
 
-import Data.Bits (FiniteBits (finiteBitSize), testBit)
-import qualified Data.ByteString as B
-import qualified Data.Vector.Unboxed as V
-import Data.Word (Word8)
-import Flat.Class (Flat)
-import Flat.Decoder (Decoded)
-import Flat.Filler (PostAligned (PostAligned), fillerLength)
-import Flat.Run (flat, unflatRaw)
-import Text.PrettyPrint.HughesPJClass (
-    Doc,
-    Pretty (pPrint),
-    hsep,
-    text,
- )
+import           Data.Bits                      (FiniteBits (finiteBitSize),
+                                                 testBit)
+import qualified Data.ByteString                as B
+import qualified Data.Vector.Unboxed            as V
+import           Data.Word                      (Word8)
+import           Flat.Class                     (Flat)
+import           Flat.Decoder                   (Decoded)
+import           Flat.Filler                    (PostAligned (PostAligned),
+                                                 fillerLength)
+import           Flat.Run                       (flat, unflatRaw)
+import           Text.PrettyPrint.HughesPJClass (Doc, Pretty (pPrint), hsep,
+                                                 text)
 
 -- |A sequence of bits
 type Bits = V.Vector Bool
@@ -41,7 +42,7 @@ fromBools = V.fromList
 {- $setup
 >>> import Data.Word
 >>> import Flat.Instances.Base
->>> import Flat.Instances.Test(tst)
+>>> import Flat.Instances.Test(tst,prettyShow)
 -}
 
 {- |The sequence of bits corresponding to the serialization of the passed value (without any final byte padding)
@@ -61,7 +62,10 @@ bits v =
 [True,False,False,False,False,False,False,True]
 -}
 paddedBits :: forall a. Flat a => a -> Bits
-paddedBits v = let lbs = flat v in takeBits (8 * B.length lbs) lbs
+paddedBits v = let lbs = flat v in takeAllBits lbs
+
+takeAllBits :: B.ByteString -> Bits
+takeAllBits lbs= takeBits (8 * B.length lbs) lbs
 
 takeBits :: Int -> B.ByteString -> Bits
 takeBits numBits lbs =
@@ -90,15 +94,12 @@ asBytes = map byteVal . bytes . V.toList
 
 -- |Convert to the corresponding value (most significant bit first)
 byteVal :: [Bool] -> Word8
-byteVal =
-    sum . map (\(e, b) -> if b then e else 0)
-        . zip
-            [2 ^ n | n <- [7 :: Int, 6 .. 0]]
+byteVal = sum . zipWith (\ e b -> (if b then e else 0)) ([2 ^ n | n <- [7 :: Int, 6 .. 0]])
 
 -- |Split a list in groups of 8 elements or less
 bytes :: [t] -> [[t]]
 bytes [] = []
-bytes l = let (w, r) = splitAt 8 l in w : bytes r
+bytes l  = let (w, r) = splitAt 8 l in w : bytes r
 
 {- |
 >>> prettyShow $ asBits (256+3::Word16)

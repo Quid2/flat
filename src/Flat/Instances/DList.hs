@@ -2,9 +2,9 @@ module Flat.Instances.DList
   ()
 where
 
-import           Flat.Class
-import           Flat.Instances.Mono
-import           Data.DList
+import           Data.DList          (DList, fromList, toList)
+import           Flat.Class          (Flat (..))
+import           Flat.Instances.Mono (decodeList, encodeList, sizeList)
 
 -- $setup
 -- >>> import Flat.Instances.Test
