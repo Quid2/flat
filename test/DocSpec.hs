@@ -1,12 +1,14 @@
-{-# LANGUAGE OverloadedStrings, NoMonomorphismRestriction, FlexibleContexts, ViewPatterns #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE OverloadedStrings         #-}
 
 module Main where
 
-import           Data.List                      ( isSuffixOf )
-import           System.FilePath.Find
-import           Test.DocTest
+import           Data.List            (isSuffixOf)
+import qualified Data.Text            as T
 import           System.Environment
-import qualified Data.Text                     as T
+import           System.FilePath.Find
+import           Test.DocTest         (doctest, genTests)
 t = main
 
 -- e.g.: stack test :doc --file-watch --fast --test-arguments="Data.ZigZag Flat.Instances Flat.Instances.Base"
@@ -14,7 +16,7 @@ main :: IO ()
 main = do
   args  <- getArgs
   -- print args
-  files <- if length args > 0
+  files <- if not (null args)
     then return $ map
       ( T.unpack
       . (`T.append` ".hs")
