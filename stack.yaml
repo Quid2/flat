@@ -1,10 +1,24 @@
-resolver: lts-14.27
+# Supported stack versions
+# For lts-6.35 see stack-6.35.yaml
+
+# resolver: lts-14.27 # ghc 8.6.5
+
+# last
+# resolver: lts-16.31 # ghc 8.8.4
+
+resolver: lts-18.28 # ghc 8.10.7
+
+# resolver: lts-19.5 # ghc 9.0.2
+
+# resolver: nightly-2022-04-24 # ghc 9.2.2
 
 packages:
   - .
-#  - ../EXTERNAL/doctest
+
+  # for test only
+  # - ../EXTERNAL/doctest
 
 extra-deps:
   # Modified doctest, used to generate static tests
-  # - git: https://github.com/tittoassini/doctest
-  #   commit: c9cdbe4eee086cb8aa46e96532160320dd367f09
+  - git: https://github.com/tittoassini/doctest
+    commit: 3954e94449901764e28cfed1c35490af970e9b01

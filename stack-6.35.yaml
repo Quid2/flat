@@ -3,11 +3,8 @@ resolver: lts-6.35
 packages:
   - .
 
-allow-newer: true
-
 extra-deps:
-  - quickcheck-instances-0.3.22
-  - QuickCheck-2.13.2
-  - splitmix-0.0.2
-  - time-compat-1.9.3
-  - hashable-1.2.6.1
+  - quickcheck-instances-0.3.14
+  - QuickCheck-2.9.2@sha256:03829d0e182be6b73079ad8647761d350f4d8539db57126354a79a9bd5caac9d,5184
+  - tagged-0.8.6.1@sha256:29c67d98a4404607f024750ab9c7210dadcbbef4e1944c48c52902f2071b2662,2874
+  - list-t-1.0.1
