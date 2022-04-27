@@ -62,13 +62,13 @@ import           Flat.Encoder.Types
 import           Flat.Endian
 import           Flat.Memory
 import           Flat.Types
-import           Data.FloatCast
-import           Data.Primitive.ByteArray
-import qualified Data.Text                      as T
 
 #if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION) && ! MIN_VERSION_text(2,0,0)
 import qualified Data.Text.Array                as TA
 import qualified Data.Text.Internal             as TI
+-- import           Data.FloatCast
+-- import           Data.Primitive.ByteArray
+-- import qualified Data.Text                      as T
 #endif
 import qualified Data.Text.Encoding             as TE
 import           Data.ZigZag
