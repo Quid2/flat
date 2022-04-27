@@ -32,7 +32,9 @@ import           Data.Bits
 import qualified Data.ByteString                as B
 import qualified Data.ByteString.Lazy           as L
 import qualified Data.ByteString.Short          as SBS
+#if !MIN_VERSION_bytestring(0,11,0)
 import qualified Data.ByteString.Short.Internal as SBS
+#endif
 import qualified Data.DList                     as DL
 import           Data.Int
 import           Data.Primitive.ByteArray
