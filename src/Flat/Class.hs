@@ -34,6 +34,7 @@ import           GHC.Base     (Any)
 import           GHC.Generics
 import           GHC.TypeLits (Nat, type (+), type (<=))
 import           Prelude      hiding (mempty)
+import Data.Kind
 #if ! MIN_VERSION_base(4,11,0)
 import           Data.Semigroup((<>))
 #endif
@@ -463,7 +464,7 @@ instance (GFlatSize a) => GFlatSizeNxt (C1 c a) where
 
 -- |Calculate size in bits of constructor
 -- vs proxy implementation: similar compilation time but much better run times (at least for Tree N, -70%)
-class GFlatSizeSum (f :: * -> *) where gsizeSum :: NumBits -> f a ->  NumBits
+class GFlatSizeSum (f :: Type -> Type) where gsizeSum :: NumBits -> f a ->  NumBits
 
 instance (GFlatSizeSum a, GFlatSizeSum b)
          => GFlatSizeSum (a :+: b) where
@@ -478,7 +479,7 @@ instance (GFlatSize a) => GFlatSizeSum (C1 c a) where
 
 
 -- |Calculate number of constructors
-type family NumConstructors (a :: * -> *) :: Nat where
+type family NumConstructors (a :: Type -> Type) :: Nat where
   NumConstructors (C1 c a) = 1
   NumConstructors (x :+: y) = NumConstructors x + NumConstructors y
 
