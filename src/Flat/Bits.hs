@@ -53,8 +53,9 @@ fromBools = V.fromList
 bits :: forall a. Flat a => a -> Bits
 bits v =
     let lbs = flat v
-        Right (PostAligned _ f) = unflatRaw lbs :: Decoded (PostAligned a)
-     in takeBits (8 * B.length lbs - fillerLength f) lbs
+    in case unflatRaw lbs :: Decoded (PostAligned a) of 
+            Right (PostAligned _ f) -> takeBits (8 * B.length lbs - fillerLength f) lbs
+            Left _ -> error "impossible"
 
 {- |The sequence of bits corresponding to the byte-padded serialization of the passed value
 

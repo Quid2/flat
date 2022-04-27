@@ -11,7 +11,10 @@ newtype Repr a = Repr {repr :: B.ByteString}
 
 -- Get the underlying value
 unrepr :: Flat a => Repr a -> a
-unrepr (Repr bs)= let Right a = unflat bs in a
+unrepr (Repr bs)= 
+    case unflat bs of
+        Right a -> a 
+        Left _  -> error "impossible"
 
 instance Flat a => Flat (Repr a) where
     size = error "unused"
