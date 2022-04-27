@@ -6,8 +6,8 @@ license-file:       LICENSE
 copyright:          Copyright: (c) 2016-2021 Pasqualino `Titto` Assini
 maintainer:         tittoassini@gmail.com
 author:             Pasqualino `Titto` Assini
-tested-with:
-  GHC ==7.10.3 || ==8.0.2 || ==8.2.2 || ==8.4.4 || ==8.6.5 || ==8.8.4 || ==8.10.7 || == 9.0.2 || == 9.2.0
+-- tested-with: GHC ==7.10.3 || ==8.0.2 || ==8.2.2 || ==8.4.4 || ==8.6.5 || ==8.8.4 || ==8.10.7 || == 9.0.2 || == 9.2.0
+tested-with: GHC ==7.10.3 || ==8.10.7 || == 9.0.2 || == 9.2.0
 
 homepage:           http://quid2.org
 synopsis:           Principled and efficient bit-oriented binary serialization.
@@ -89,7 +89,7 @@ library
   ghc-options:
     -Wall -O2 -funbox-strict-fields -fno-warn-orphans
     -fno-warn-name-shadowing
-    -Werror
+    -- -Werror
 
     -- Stan options
     -- -fwrite-ide-info -hiedir=.hie
@@ -125,7 +125,7 @@ library
       , deepseq               >=1.4
       , dlist                 >=0.6
       , ghc-prim
-      , hashable
+      , hashable >= 1.4.0.2
       , mono-traversable
       , pretty                >=1.1.2
       , primitive
@@ -201,13 +201,12 @@ test-suite spec
       , deepseq
       , filepath
       , mono-traversable
-      , QuickCheck
       , tasty
       , text
-      , quickcheck-instances >= 0.3.14
+      , QuickCheck >= 2.14.2 
 
--- dynamic doctests and generation of static doctests
--- Usable only with recent versions of ghc (no ghcjs or eta)
+-- -- dynamic doctests and generation of static doctests
+-- -- Usable only with recent versions of ghc (no ghcjs or eta)
 -- test-suite doc
 --   type:             exitcode-stdio-1.0
 --   main-is:          DocSpec.hs
@@ -219,6 +218,7 @@ test-suite spec
 --     , doctest    ==0.16.3.1
 --     , filemanip  >=0.3.6.3
 --     , text
+--     , QuickCheck >= 2.14.2 
 
 -- static doctests (faster, useful for test coverage and to test ghcjs and eta)
 
@@ -255,17 +255,14 @@ test-suite doc-static
     , dlist
     , flat
     , pretty
-    , quickcheck-instances
     , tasty
     , tasty-hunit
     , tasty-quickcheck
     , text
     , unordered-containers
     , vector
+    , QuickCheck >= 2.14.2 
 
-  -- >=0.3.22
-  --, QuickCheck >= 2.13.2 && < 3
-  --, hashable >= 1.2.6.1 && < 1.4
   -- if impl(ghc <8)
   --   build-depends: semigroups
 
