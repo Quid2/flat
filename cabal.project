@@ -1,0 +1,2 @@
+packages: .
+constraints: text >= 2.0
