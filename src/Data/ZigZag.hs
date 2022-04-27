@@ -6,18 +6,20 @@
 -- |<https://gist.github.com/mfuerstenau/ba870a29e16536fdbaba ZigZag encoding> of signed integrals.
 module Data.ZigZag (ZigZag(..)) where
 
-import Data.Bits
-    ( Bits((.&.), xor, shiftR, shiftL), FiniteBits(finiteBitSize) )
-import Data.Int ( Int8, Int16, Int32, Int64 )
-import Data.Word ( Word8, Word16, Word32, Word64 )
-import Numeric.Natural ( Natural )
+import           Data.Bits       (Bits (shiftL, shiftR, xor, (.&.)),
+                                  FiniteBits (finiteBitSize))
+import           Data.Int        (Int16, Int32, Int64, Int8)
+import           Data.Word       (Word16, Word32, Word64, Word8)
+import           Numeric.Natural (Natural)
 
 -- $setup
 -- >>> :set -XNegativeLiterals -XScopedTypeVariables -XFlexibleContexts
 -- >>> import Data.Word
 -- >>> import Data.Int
 -- >>> import Numeric.Natural
--- >>> import Test.QuickCheck.Instances.Natural
+-- >>> import Test.QuickCheck.Arbitrary
+-- >>> instance Arbitrary Natural where arbitrary = arbitrarySizedNatural; shrink    = shrinkIntegral
+
 {-|
 Convert between a signed integral and the corresponding ZigZag encoded unsigned integral (e.g. between Int8 and Word8 or Integral and Natural).
 
@@ -70,19 +72,25 @@ prop> \(f::Natural) -> zigZag (zagZig f) == f
 
 prop> \(f::Int8) -> zagZig (zigZag f) == f
 +++ OK, passed 100 tests.
+
 prop> \(f::Word8) -> zigZag (zagZig f) == f
 +++ OK, passed 100 tests.
+
 prop> \(s::Int8) -> zigZag s == fromIntegral (zigZag (fromIntegral s :: Integer))
 +++ OK, passed 100 tests.
+
 prop> \(u::Word8) -> zagZig u == fromIntegral (zagZig (fromIntegral u :: Natural))
 +++ OK, passed 100 tests.
 
 prop> \(f::Int64) -> zagZig (zigZag f) == f
 +++ OK, passed 100 tests.
+
 prop> \(f::Word64) -> zigZag (zagZig f) == f
 +++ OK, passed 100 tests.
+
 prop> \(s::Int64) -> zigZag s == fromIntegral (zigZag (fromIntegral s :: Integer))
 +++ OK, passed 100 tests.
+
 prop> \(u::Word64) -> zagZig u == fromIntegral (zagZig (fromIntegral u :: Natural))
 +++ OK, passed 100 tests.
 -}
