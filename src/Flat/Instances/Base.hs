@@ -37,9 +37,9 @@ import           Data.Monoid           ((<>))
 import           Data.Functor.Identity (Identity (..))
 #endif
 
-#if !MIN_VERSION_base(4,9,0)
-deriving instance Generic (Complex a)
-#endif
+-- #if !MIN_VERSION_base(4,9,0)
+-- deriving instance Generic (Complex a)
+-- #endif
 
 {- ORMOLU_DISABLE -}
 -- $setup
