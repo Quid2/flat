@@ -3,12 +3,12 @@
 {-# LANGUAGE MagicHash           #-}
 {-# LANGUAGE MultiWayIf          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TupleSections       #-}
-{-# LANGUAGE UnboxedTuples       #-}
 
 -- |Encoding Primitives
 module Flat.Encoder.Prim
-  ( eBits16F
+  (
+    -- Primitives whose name starts with 'e' encode a value in place
+    eBits16F
   , eBitsF
   , eFloatF
   , eDoubleF
@@ -36,8 +36,12 @@ module Flat.Encoder.Prim
   , eBoolF
   , eTrueF
   , eFalseF
+
   , varWordF
+
+  , writeWord8
   , w7l
+
     -- * Exported for testing only
   , eWord32BEF
   , eWord64BEF
@@ -51,6 +55,9 @@ import qualified Data.ByteString.Lazy           as L
 import qualified Data.ByteString.Lazy.Internal  as L
 import qualified Data.ByteString.Short.Internal as SBS
 import           Data.Char
+import           Data.FloatCast
+import           Data.Primitive.ByteArray
+import qualified Data.Text                      as T
 import           Flat.Encoder.Types
 import           Flat.Endian
 import           Flat.Memory
@@ -58,6 +65,7 @@ import           Flat.Types
 import           Data.FloatCast
 import           Data.Primitive.ByteArray
 import qualified Data.Text                      as T
+
 #if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION) && ! MIN_VERSION_text(2,0,0)
 import qualified Data.Text.Array                as TA
 import qualified Data.Text.Internal             as TI
@@ -69,6 +77,14 @@ import           Foreign
 #include "MachDeps.h"
 -- traceShowId :: a -> a
 -- traceShowId = id
+
+-- $setup
+-- >>> import Flat.Instances.Test
+-- >>> import Flat.Bits
+-- >>> import Flat.Encoder.Strict
+-- >>> import Control.Monad
+-- >>> let enc e = prettyShow $ encBits 256 (Encoding e)
+
 {-# INLINE eFloatF #-}
 eFloatF :: Float -> Prim
 eFloatF = eWord32BEF . floatToWord
@@ -93,6 +109,7 @@ eCharF = eWord32F . fromIntegral . ord
 eWordF :: Word -> Prim
 {-# INLINE eIntF #-}
 eIntF :: Int -> Prim
+
 #if WORD_SIZE_IN_BITS == 64
 eWordF = eWord64F . (fromIntegral :: Word -> Word64)
 
@@ -104,6 +121,7 @@ eIntF = eInt32F . (fromIntegral :: Int -> Int32)
 #else
 #error expected WORD_SIZE_IN_BITS to be 32 or 64
 #endif
+
 {-# INLINE eInt8F #-}
 eInt8F :: Int8 -> Prim
 eInt8F = eWord8F . zigZag
@@ -154,11 +172,16 @@ eIntegralW vs s@(S op _ o)
   | o == 0 = foldM pokeWord' op vs >>= \op' -> return (S op' 0 0)
   | otherwise = foldM (flip eWord8F) s vs
 
+{-
+>>> enc $ \s0 -> eTrueF s0 >>= \s1 -> eWord8F 0 s1 >>= \s2 -> eTrueF s2
+"10000000 01"
+-}
+
 {-# INLINE eWord8F #-}
 eWord8F :: Word8 -> Prim
 eWord8F t s@(S op _ o)
   | o == 0 = pokeWord op t
-  | otherwise = pokeByteUnaligned t s
+  | otherwise = eByteUnaligned t s
 
 {-# INLINE eWord32E #-}
 eWord32E :: (Word32 -> Word32) -> Word32 -> Prim
@@ -191,8 +214,8 @@ eWord64F = varWordF
 {-# INLINE varWordF #-}
 varWordF :: (Bits t, Integral t) => t -> Prim
 varWordF t s@(S _ _ o)
-  | o == 0 = varWord pokeByteAligned t s
-  | otherwise = varWord pokeByteUnaligned t s
+  | o == 0 = varWord eByteAligned t s
+  | otherwise = varWord eByteUnaligned t s
 
 {-# INLINE varWord #-}
 varWord :: (Bits t, Integral t) => (Word8 -> Prim) -> t -> Prim
@@ -236,13 +259,14 @@ eUTF8F = eBytesF . TE.encodeUtf8
 -- PROB: Not compatible with GHCJS or ETA (that is big endian and writes contents in reverse order)
 -- | Encode text as UTF16 and encode the result as an array of bytes
 #if ! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
+
 eUTF16F :: T.Text -> Prim
 #if MIN_VERSION_text(2,0,0)
 eUTF16F = eBytesF . TE.encodeUtf16LE
 #else
 eUTF16F t = eFillerF >=> eUTF16F_ t
   where
-    eUTF16F_ !(TI.Text (TA.Array array) w16Off w16Len) s =
+    eUTF16F_ (TI.Text (TA.Array array) w16Off w16Len) s =
       writeArray array (2 * w16Off) (2 * w16Len) (nextPtr s)
 #endif
 #endif
@@ -260,10 +284,10 @@ eLazyBytesF bs = eFillerF >=> \s -> write bs (nextPtr s)
 {-# INLINE eShortBytesF #-}
 eShortBytesF :: SBS.ShortByteString -> Prim
 eShortBytesF bs = eFillerF >=> eShortBytesF_ bs
-
-eShortBytesF_ :: SBS.ShortByteString -> Prim
-eShortBytesF_ bs@(SBS.SBS arr) =
-  \(S op _ 0) -> writeArray arr 0 (SBS.length bs) op
+  where
+    eShortBytesF_ :: SBS.ShortByteString -> Prim
+    eShortBytesF_ bs@(SBS.SBS arr) (S op _ 0) = writeArray arr 0 (SBS.length bs) op
+    eShortBytesF_ _ _ = undefined -- impossible
 
 -- data Array a = Array0 | Array1 a ... | Array255 ...
 writeArray :: ByteArray# -> Int -> Int -> Ptr Word8 -> IO S
@@ -332,8 +356,7 @@ o''=3
 -}
 -- {-# NOINLINE eBitsF_ #-}
 eBitsF_ :: NumBits -> Word8 -> Prim
-eBitsF_ n t =
-  \(S op w o) ->
+eBitsF_ n t (S op w o) =
     let o' = o + n -- used bits
         f = 8 - o' -- remaining free bits
      in if | f > 0 -> return $ S op (w .|. (t `unsafeShiftL` f)) o'
@@ -348,18 +371,30 @@ eBoolF :: Bool -> Prim
 eBoolF False = eFalseF
 eBoolF True  = eTrueF
 
+-- | >>> enc eTrueF
+-- "1"
 {-# INLINE eTrueF #-}
 eTrueF :: Prim
 eTrueF (S op w o)
   | o == 7 = pokeWord op (w .|. 1)
   | otherwise = return (S op (w .|. 128 `unsafeShiftR` o) (o + 1))
 
+-- | >>> enc eFalseF
+-- "0"
 {-# INLINE eFalseF #-}
 eFalseF :: Prim
 eFalseF (S op w o)
   | o == 7 = pokeWord op w
   | otherwise = return (S op w (o + 1))
 
+{- |
+
+>>> enc $ eTrueF >=> eFillerF
+"10000001"
+
+>>> enc eFillerF
+"00000001"
+-}
 {-# INLINE eFillerF #-}
 eFillerF :: Prim
 eFillerF (S op w _) = pokeWord op (w .|. 1)
@@ -368,15 +403,86 @@ eFillerF (S op w _) = pokeWord op (w .|. 1)
 -- TODO TEST
 -- poke16 :: Word16 -> Prim
 -- poke16 t (S op w o) | o == 0 = poke op w >> skipBytes op 2
-{-# INLINE pokeByteUnaligned #-}
-pokeByteUnaligned :: Word8 -> Prim
-pokeByteUnaligned t (S op w o) =
+{-
+To be used only when usedBits /= 0
+
+>>> enc (eFalseF >=> eFalseF >=> eByteUnaligned 255)
+"00111111 11"
+-}
+{-# INLINE eByteUnaligned #-}
+eByteUnaligned :: Word8 -> Prim
+eByteUnaligned t (S op w o) =
   poke op (w .|. (t `unsafeShiftR` o)) >>
   return (S (plusPtr op 1) (t `unsafeShiftL` (8 - o)) o)
 
-{-# INLINE pokeByteAligned #-}
-pokeByteAligned :: Word8 -> Prim
-pokeByteAligned t (S op _ _) = pokeWord op t
+{- To be used only when usedBits = 0
+
+>>> enc (eFalseF >=> eFalseF >=> eFalseF >=> eByteAligned 255)
+"11111111"
+-}
+{-# INLINE eByteAligned #-}
+eByteAligned :: Word8 -> Prim
+eByteAligned t (S op _ _) = pokeWord op t
+
+{-|
+>>> enc $ \s-> eWord8F 0 s >>= writeWord8 255 s
+"11111111"
+
+>>> enc $ \s0 -> eTrueF s0 >>= \s1 -> eWord8F 255 s1 >>= eWord8F 255 >>= writeWord8 0 s1
+"10000000 01111111 1"
+
+>>> enc $ \s0 -> eFalseF s0 >>= \s1 -> eWord8F 0 s1 >>= writeWord8 255 s1
+"01111111 1"
+
+>>> enc $ \s0 -> eFalseF s0 >>= \s1 -> eWord8F 0 s1 >>= writeWord8 255 s1 >>= eFalseF
+"01111111 10"
+
+>>> enc $ \s0 -> eTrueF s0 >>= \s1 -> eWord8F 255 s1 >>= eTrueF >>= writeWord8 0 s1 >>= eTrueF
+"10000000 011"
+-}
+
+writeWord8 :: Word8 -> S -> Prim
+writeWord8 t mem s = do
+  uncache s
+  pokeWord8 t mem
+  cache s
+
+uncache :: S -> IO ()
+uncache s = poke (nextPtr s) (currByte s)
+
+cache :: Prim
+cache s = do
+  w <- (mask s .&.) <$> peek (nextPtr s)
+  return $ s {currByte = w}
+
+mask :: S -> Word8
+mask s = 255 `unsafeShiftL` (8 - usedBits s)
+
+{-# INLINE pokeWord8 #-}
+pokeWord8 :: Word8 -> S -> IO ()
+pokeWord8 t  (S op _ 0) = poke op t
+pokeWord8 t  (S op w o) = do
+        poke op (w .|. (t `unsafeShiftR` o))
+        let op' :: Ptr Word8 = plusPtr op 1
+        v :: Word8 <- peek op'
+        poke op' (t `unsafeShiftL` (8 - o) .|. ((v `unsafeShiftL` o) `unsafeShiftR` o))
+
+-- | o == 0 = pokeByteAligned t s
+-- | otherwise = pokeByteUnaligned t s
+--   where
+-- {-# INLINE pokeByteUnaligned #-}
+-- pokeByteUnaligned :: Word8 -> S -> IO ()
+-- pokeByteUnaligned t (S op w o) = do
+--   let op' = plusPtr op 1
+--   poke op (w .|. (t `unsafeShiftR` o))
+--   v :: Word8 <- peek op'
+--   poke op' (t `unsafeShiftL` (8 - o) .|. ((v `unsafeShiftL` o) `unsafeShiftR` o))
+
+-- {-# INLINE pokeByteAligned #-}
+-- pokeByteAligned :: Word8 -> S -> IO ()
+-- pokeByteAligned t (S op _ _) = poke op t
+
+-- FIX: not really pokes
 
 {-# INLINE pokeWord #-}
 pokeWord :: Storable a => Ptr a -> a -> IO S

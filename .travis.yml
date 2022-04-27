@@ -24,7 +24,10 @@ matrix:
     # # # ghc 8.6.5 OK
     #- env: IMG=quid2/x64-ubuntu-stack-lts-14.27 CMD="stack test --no-terminal --resolver lts-14.27"
     # # # ghc 8.8.3 (OK, but slow in running some tests)
-    - env: IMG=quid2/x64-ubuntu-stack-lts-15.11 CMD="stack test --no-terminal --resolver lts-15.11"
+    # - env: IMG=quid2/x64-ubuntu-stack-lts-15.11 CMD="stack test --no-terminal --resolver lts-15.11"
+
+    # TO TEST
+    - env: IMG=fpco/stack-build:lts-19.5 CMD="stack test --no-terminal --resolver lts-19.5"
 
 before_install:
   - PKG=${PWD##*/}

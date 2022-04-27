@@ -1,30 +1,32 @@
 {-# LANGUAGE BangPatterns              #-}
 {-# LANGUAGE CPP                       #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE RecordWildCards           #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
 
 -- |Strict encoder
 module Flat.Encoder.Strict where
 
-import qualified Data.ByteString         as B
-import qualified Data.ByteString.Lazy    as L
+import           Control.Monad        (when)
+import qualified Data.ByteString      as B
+import qualified Data.ByteString.Lazy as L
+import           Data.Foldable
 import           Flat.Encoder.Prim
-import qualified Flat.Encoder.Size  as S
+import qualified Flat.Encoder.Size    as S
 import           Flat.Encoder.Types
 import           Flat.Memory
 import           Flat.Types
-import           Data.Foldable
 
 -- import           Data.Semigroup
 -- import           Data.Semigroup          (Semigroup (..))
 
 #if !MIN_VERSION_base(4,11,0)
-import           Data.Semigroup          (Semigroup (..))
+import           Data.Semigroup       (Semigroup (..))
 #endif
 
 #ifdef ETA_VERSION
 -- import Data.Function(trampoline)
-import           GHC.IO                  (trampolineIO)
+import           GHC.IO               (trampolineIO)
 trampolineEncoding :: Encoding -> Encoding
 trampolineEncoding (Encoding op) = Encoding (\s -> trampolineIO (op s))
 #else
@@ -34,12 +36,27 @@ trampolineEncoding (Encoding op) = Encoding (\s -> trampolineIO (op s))
 
 -- |Strict encoder
 strictEncoder :: NumBits -> Encoding -> B.ByteString
-strictEncoder numBits (Encoding op) =
-  let bufSize = S.bitsToBytes numBits
-   in fst $
-      unsafeCreateUptoN' bufSize $ \ptr -> do
-        (S ptr' 0 0) <- op (S ptr 0 0)
-        return (ptr' `minusPtr` ptr, ())
+strictEncoder numBits enc =
+  let (bs,numBitsUsed) = strictEncoderPartial numBits enc
+      bitsInLastByte = numBitsUsed `mod` 8
+  in if bitsInLastByte /=0
+      then error $ unwords ["encoder: did not end on byte boundary, bits used in last byte=",show  bitsInLastByte]
+      else bs
+
+numEncodedBits :: Int -> Encoding -> NumBits
+numEncodedBits numBits enc =snd $ strictEncoderPartial numBits enc
+
+strictEncoderPartial ::
+  Int                        -- ^ the maximum size in bits of the encoding
+  -> Encoding                -- ^ the encoder
+  -> (B.ByteString, NumBits) -- ^ the encoded bytestring + the actual number of encoded bits
+strictEncoderPartial numBits (Encoding op)
+  = let bufSize = S.bitsToBytes numBits
+    in unsafeCreateUptoN' bufSize $ \ptr -> do
+        S{..} <- op (S ptr 0 0)
+        let numBitsUsed = nextPtr `minusPtr` ptr * 8 + usedBits
+        when (numBitsUsed > numBits) $ error $ unwords ["encoder: size mismatch, expected <=",show numBits,"actual=",show numBitsUsed,"bits"]
+        return (nextPtr `minusPtr` ptr,numBitsUsed)
 
 newtype Encoding =
   Encoding
@@ -51,20 +68,27 @@ instance Show Encoding where
 
 instance Semigroup Encoding where
   {-# INLINE (<>) #-}
-  (<>) = mappend
+  (<>) = encodingAppend
 
 instance Monoid Encoding where
   {-# INLINE mempty #-}
   mempty = Encoding return
+
+#if !(MIN_VERSION_base(4,11,0))
   {-# INLINE mappend #-}
-  -- mappend (Encoding f) (Encoding g) = Encoding (f >=> g)
-  mappend (Encoding f) (Encoding g) = Encoding m
+  mappend = encodingAppend
+#endif
+
+  {-# INLINE mconcat #-}
+  mconcat = foldl' mappend mempty
+
+{-# INLINE encodingAppend #-}
+encodingAppend :: Encoding -> Encoding -> Encoding
+encodingAppend (Encoding f) (Encoding g) = Encoding m
     where
       m s@(S !_ !_ !_) = do
         !s1 <- f s
         g s1
-  {-# INLINE mconcat #-}
-  mconcat = foldl' mappend mempty
 
 -- PROB: GHC 8.02 won't always apply the rules leading to poor execution times (e.g. with lists)
 -- TODO: check with newest GHC versions
@@ -76,8 +100,12 @@ instance Monoid Encoding where
 
 {-# NOINLINE encodersS #-}
 encodersS :: [Encoding] -> Encoding
--- without the explicit parameter the rules won't fire
+-- Without the explicit parameter the rules won't fire!
 encodersS ws = foldl' mappend mempty ws
+
+sizeListWith :: (Foldable t1, Num t2) => (t3 -> t2 -> t2) -> t1 t3 -> t2 -> t2
+sizeListWith size l sz = foldl' (\s e -> size e (s + 1)) (sz + 1) l
+{-# INLINE sizeListWith #-}
 
 -- encodersS ws = error $ unwords ["encodersS CALLED",show ws]
 {-# INLINE encodeListWith #-}
@@ -87,7 +115,7 @@ encodeListWith enc = go
   where
     go []     = eFalse
     go (x:xs) = eTrue <> enc x <> go xs
- 
+
 -- {-# INLINE encodeList #-}
 -- encodeList :: (Foldable t, Flat a) => t a -> Encoding
 -- encodeList l = F.foldl' (\acc a -> acc <> eTrue <> encode a) mempty l <> eFalse
@@ -101,12 +129,15 @@ encodeArrayWith _ [] = eWord8 0
 encodeArrayWith f ws = Encoding $ go ws
   where
     go l s = do
+      -- write a placeholder for the number of elements in current block
       s' <- eWord8F 0 s
-      (n, s'', l) <- gol l 0 s'
-      _ <- eWord8F n s
+      (n, sn, l) <- gol l 0 s'
+      -- update actual number of elements
+      s'' <- writeWord8 n s sn
       if null l
         then eWord8F 0 s''
         else go l s''
+    -- encode up to 255 elements and returns (numberOfWrittenElements,elementsLeftToWrite,currentState)
     gol [] !n !s = return (n, s, [])
     gol l@(x:xs) !n !s
       | n == 255 = return (255, s, l)

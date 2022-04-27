@@ -1,7 +1,6 @@
-{-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE CPP          #-}
+{-# LANGUAGE CPP #-}
 
--- |Primitives to calculate the encoding size of a value
+-- |Primitives to calculate the maximum size in bits of the encoding of a value
 module Flat.Encoder.Size where
 
 import           Data.Bits
@@ -9,10 +8,10 @@ import qualified Data.ByteString                as B
 import qualified Data.ByteString.Lazy           as L
 import qualified Data.ByteString.Short.Internal as SBS
 import           Data.Char
-import           Flat.Encoder.Prim         (w7l)
+import qualified Data.Text                      as T
+import           Flat.Encoder.Prim              (w7l)
 import           Flat.Encoder.Types
 import           Flat.Types
-import qualified Data.Text                      as T
 #ifndef ghcjs_HOST_OS
 import qualified Data.Text.Internal             as TI
 #endif
@@ -149,7 +148,7 @@ sShortBytes = blobBits . SBS.length
 -- 4
 {-# INLINE textBytes #-}
 textBytes :: T.Text -> Int
-textBytes !(TI.Text _ _ w16Len) = w16Len * 2
+textBytes (TI.Text _ _ w16Len) = w16Len * 2
 #endif
 
 {-# INLINE bitsToBytes #-}

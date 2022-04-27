@@ -5,23 +5,22 @@ module Flat.Instances.Test (
     asList,
     flatBits,
     allBits,
+    encBits,
     prettyShow,
     module Data.Word,
 ) where
 
-import Data.Word
-import Flat.Bits (
-    asBytes,
-    bits,
-    paddedBits,
- )
-import Flat.Class (Flat (..))
-import Flat.Run (
-    flat,
-    unflat,
- )
-import Flat.Types (NumBits)
-import Text.PrettyPrint.HughesPJClass (prettyShow)
+import           Control.Monad                  ((>=>))
+import           Data.Word
+import           Flat.Bits                      (Bits, asBytes, bits,
+                                                 paddedBits, takeBits)
+import           Flat.Class                     (Flat (..))
+import           Flat.Encoder.Prim              (eFillerF)
+import           Flat.Encoder.Strict            (Encoding (Encoding),
+                                                 numEncodedBits, strictEncoder)
+import           Flat.Run                       (flat, unflat)
+import           Flat.Types                     (NumBits)
+import           Text.PrettyPrint.HughesPJClass (prettyShow)
 
 -- | Returns: result of flat/unflat test, encoding size in bits, byte encoding
 tst :: (Eq a, Flat a) => a -> (Bool, NumBits, [Word8])
@@ -40,6 +39,9 @@ flatBits = prettyShow . bits
 
 allBits :: Flat a => a -> String
 allBits = prettyShow . paddedBits
+
+encBits :: NumBits -> Encoding -> Bits
+encBits maxNumBits e@(Encoding enc) = takeBits (numEncodedBits maxNumBits e) (strictEncoder maxNumBits (Encoding $ enc >=> eFillerF))
 
 showBytes :: Flat a => a -> [Word8]
 showBytes = asBytes . bits
