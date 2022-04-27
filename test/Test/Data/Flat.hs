@@ -1,6 +1,6 @@
 
 {-# LANGUAGE UndecidableInstances, DeriveGeneric
-             , FlexibleContexts, FlexibleInstances, StandaloneDeriving #-}
+             , FlexibleContexts, FlexibleInstances, StandaloneDeriving , CPP #-}
 
 module Test.Data.Flat
   ( module Test.Data
@@ -33,9 +33,11 @@ Compilation times:
 -- instance Flat C0
 -- instance Flat D0
 -- instance Flat E0
+#if ! MIN_VERSION_base(4,11,0)
 deriving instance Generic (a, b, c, d, e, f, g, h)
 
 deriving instance Generic (a, b, c, d, e, f, g, h, i)
+#endif
 
 instance {-# OVERLAPPABLE #-}( Flat a
                              , Flat b
