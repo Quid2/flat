@@ -1,3 +1,4 @@
+*.else
 .stack-work/
 stack*.yaml.lock
 dist
