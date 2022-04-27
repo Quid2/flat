@@ -42,36 +42,36 @@ jobs:
           #   compilerVersion: 8.10.7
           #   setup-method: ghcup
           #   allow-failure: false
-          # - compiler: ghc-8.8.4
-          #   compilerKind: ghc
-          #   compilerVersion: 8.8.4
-          #   setup-method: hvr-ppa
-          #   allow-failure: false
-          # - compiler: ghc-8.6.5
-          #   compilerKind: ghc
-          #   compilerVersion: 8.6.5
-          #   setup-method: hvr-ppa
-          #   allow-failure: false
-          # - compiler: ghc-8.4.4
-          #   compilerKind: ghc
-          #   compilerVersion: 8.4.4
-          #   setup-method: hvr-ppa
-          #   allow-failure: false
-          # - compiler: ghc-8.2.2
-          #   compilerKind: ghc
-          #   compilerVersion: 8.2.2
-          #   setup-method: hvr-ppa
-          #   allow-failure: false
-          # - compiler: ghc-8.0.2
-          #   compilerKind: ghc
-          #   compilerVersion: 8.0.2
-          #   setup-method: hvr-ppa
-          #   allow-failure: false
-          - compiler: ghc-7.10.3
+          - compiler: ghc-8.8.4
             compilerKind: ghc
-            compilerVersion: 7.10.3
+            compilerVersion: 8.8.4
             setup-method: hvr-ppa
             allow-failure: false
+          - compiler: ghc-8.6.5
+            compilerKind: ghc
+            compilerVersion: 8.6.5
+            setup-method: hvr-ppa
+            allow-failure: false
+          - compiler: ghc-8.4.4
+            compilerKind: ghc
+            compilerVersion: 8.4.4
+            setup-method: hvr-ppa
+            allow-failure: false
+          - compiler: ghc-8.2.2
+            compilerKind: ghc
+            compilerVersion: 8.2.2
+            setup-method: hvr-ppa
+            allow-failure: false
+          - compiler: ghc-8.0.2
+            compilerKind: ghc
+            compilerVersion: 8.0.2
+            setup-method: hvr-ppa
+            allow-failure: false
+          # - compiler: ghc-7.10.3
+          #   compilerKind: ghc
+          #   compilerVersion: 7.10.3
+          #   setup-method: hvr-ppa
+          #   allow-failure: false
       fail-fast: false
     steps:
       - name: apt
