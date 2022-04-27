@@ -68,20 +68,27 @@ instance Show Encoding where
 
 instance Semigroup Encoding where
   {-# INLINE (<>) #-}
-  (<>) = mappend
+  (<>) = encodingAppend
 
 instance Monoid Encoding where
   {-# INLINE mempty #-}
   mempty = Encoding return
+
+#if !(MIN_VERSION_base(4,11,0))
   {-# INLINE mappend #-}
-  -- mappend (Encoding f) (Encoding g) = Encoding (f >=> g)
-  mappend (Encoding f) (Encoding g) = Encoding m
+  mappend = encodingAppend
+#endif
+
+  {-# INLINE mconcat #-}
+  mconcat = foldl' mappend mempty
+
+{-# INLINE encodingAppend #-}
+encodingAppend :: Encoding -> Encoding -> Encoding
+encodingAppend (Encoding f) (Encoding g) = Encoding m
     where
       m s@(S !_ !_ !_) = do
         !s1 <- f s
         g s1
-  {-# INLINE mconcat #-}
-  mconcat = foldl' mappend mempty
 
 -- PROB: GHC 8.02 won't always apply the rules leading to poor execution times (e.g. with lists)
 -- TODO: check with newest GHC versions
