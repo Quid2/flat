@@ -55,7 +55,7 @@ bits v =
     let lbs = flat v
     in case unflatRaw lbs :: Decoded (PostAligned a) of 
             Right (PostAligned _ f) -> takeBits (8 * B.length lbs - fillerLength f) lbs
-            Left _ -> error "impossible"
+            Left _ -> error "incorrect coding or decoding, please inform the maintainer of this package"
 
 {- |The sequence of bits corresponding to the byte-padded serialization of the passed value
 
