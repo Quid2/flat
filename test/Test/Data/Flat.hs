@@ -33,11 +33,11 @@ Compilation times:
 -- instance Flat C0
 -- instance Flat D0
 -- instance Flat E0
--- #if ! MIN_VERSION_base(4,16,0)
--- deriving instance Generic (a, b, c, d, e, f, g, h)
+#if ! MIN_VERSION_base(4,16,0)
+deriving instance Generic (a, b, c, d, e, f, g, h)
 
--- deriving instance Generic (a, b, c, d, e, f, g, h, i)
--- #endif
+deriving instance Generic (a, b, c, d, e, f, g, h, i)
+#endif
 
 instance {-# OVERLAPPABLE #-}( Flat a
                              , Flat b
