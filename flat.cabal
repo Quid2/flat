@@ -18,7 +18,6 @@ category:           Data,Parsing,Serialization
 build-type:         Simple
 extra-source-files:
   stack.yaml
-  stack-6.35.yaml
   README.md
   CHANGELOG
 
