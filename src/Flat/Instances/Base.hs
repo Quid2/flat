@@ -29,11 +29,11 @@ import           Data.Ratio
 import           Flat.Instances.Util
 import           Prelude               hiding (mempty)
 
-#if !MIN_VERSION_base(4,11,0)
-import           Data.Monoid           ((<>))
-#endif
+-- #if !MIN_VERSION_base(4,9,0)
+-- import           Data.Monoid           ((<>))
+-- #endif
 
-#if MIN_VERSION_base(4,8,0)
+#if MIN_VERSION_base(4,9,0)
 import           Data.Functor.Identity (Identity (..))
 #endif
 
@@ -60,7 +60,7 @@ import           Data.Functor.Identity (Identity (..))
 
 -- >>> y
 
-#if MIN_VERSION_base(4,8,0)
+#if MIN_VERSION_base(4,9,0)
 -- | @since 0.4.4
 instance Flat a => Flat (Identity a) where
     encode (Identity a) = encode a
