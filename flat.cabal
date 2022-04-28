@@ -125,20 +125,20 @@ library
       , deepseq               >=1.4
       , dlist                 >=0.6
       , ghc-prim
-      , hashable >= 1.4.0.2
       , mono-traversable
       , pretty                >=1.1.2
       , primitive
-      , semigroups
       , text
       , unordered-containers
       , vector
       , list-t > 1
-
-
--- , base                  >=4.8.2.0 && <5
--- if impl(ghc <8.2)
---   build-depends: semigroups >=0.8.4 && <0.17
+  
+  if impl(ghc <8)
+    build-depends: 
+      semigroups < 0.19
+      , hashable              >=1.2.4.0  && <=1.2.7.0
+  else 
+    build-depends: hashable >= 1.4.0.2
 
 test-suite spec
   type:             exitcode-stdio-1.0
@@ -178,7 +178,7 @@ test-suite spec
     , text
 
   if impl(ghc <8)
-    build-depends: semigroups
+    build-depends: semigroups < 0.19
 
   if impl(eta -any)
     build-depends:
@@ -207,18 +207,20 @@ test-suite spec
 
 -- -- dynamic doctests and generation of static doctests
 -- -- Usable only with recent versions of ghc (no ghcjs or eta)
--- test-suite doc
---   type:             exitcode-stdio-1.0
---   main-is:          DocSpec.hs
---   hs-source-dirs:   test
---   default-language: Haskell2010
---   build-depends:
---       base
---     , directory
---     , doctest    ==0.16.3.1
---     , filemanip  >=0.3.6.3
---     , text
---     , QuickCheck >= 2.14.2 
+
+test-suite doc
+  type:             exitcode-stdio-1.0
+  main-is:          DocSpec.hs
+  hs-source-dirs:   test
+  default-language: Haskell2010
+  build-depends:
+      base
+    , directory
+    , doctest    ==0.16.3.1
+    , filemanip  >=0.3.6.3
+    , text
+    , QuickCheck >= 2.14.2 
+
 
 -- static doctests (faster, useful for test coverage and to test ghcjs and eta)
 
@@ -263,8 +265,8 @@ test-suite doc-static
     , vector
     , QuickCheck >= 2.14.2 
 
-  -- if impl(ghc <8)
-  --   build-depends: semigroups
+  if impl(ghc <8)
+    build-depends: semigroups <0.19
 
 -- Test for Flat.Repr
 test-suite repr
@@ -280,112 +282,3 @@ test-suite repr
     , list-t
 
   ghc-options: -rtsopts
-
-
--- Additional development time tests and benchmarks
--- test-suite core
---   type:             exitcode-stdio-1.0
---   main-is:          Core.hs
---   hs-source-dirs:   test
---   default-language: Haskell2010
---   ghc-options:      -O2
---   other-modules:
---   other-modules:
---     Test.Data
---     Test.Data.Values
---     Test.Data2
---     Test.Data2.Flat
---     Test.E
---     Test.E.Flat
---     Test.Data.Flat
---   build-depends:
---       base
---     , benchpress
---     , bytestring
---     , containers
---     , deepseq
---     , flat
---     , text
---     ,inspection-testing
-
--- executable listTest
---   main-is:          ListTest.hs
---   hs-source-dirs:   test
---   default-language: Haskell2010
---   build-depends:
---       base
---     , flat
---     , text
---     , time
-
--- benchmark microBench
---   type:             exitcode-stdio-1.0
---   main-is:          Micro.hs
---   hs-source-dirs:   benchmarks test
---   other-modules:
---     Common
---     Test.Data
---     Test.Data.Values
---     Test.Data2
---     Test.Data2.Flat
---     Test.E
---     Test.E.Flat
---     Test.Data.Flat
-
---   default-language: Haskell2010
---   build-depends:
---       base
---     , benchpress
---     , bytestring
---     , containers
---     , deepseq
---     , flat
---     , text
-
--- benchmark miniBench
---   type:             exitcode-stdio-1.0
---   main-is:          Mini.hs
---   hs-source-dirs:   benchmarks test
---   other-modules:
---     Report
---     Test.Data
---     Test.Data.Values
---     Test.Data2
---     Test.Data2.Flat
---     Test.E
---     Test.E.Flat
---     Test.Data.Flat
-
---   default-language: Haskell2010
---   ghc-options:      -O2
---   build-depends:
---       base
---     , flat
---     , text
-
---   if impl(eta -any)
---     build-depends:
---         bytestring         ==0.10.8.2
---       , containers         ==0.5.9.1
---       , criterion          ==1.5.1.0
---       , deepseq            ==1.4.3.0
---       , directory          ==1.3.1.0
---       , filepath           ==1.4.1.1
---       , mono-traversable   ==1.0.1
---       , process            ==1.6.2.0
---       , statistics         ==0.14.0.2
---       , text               ==1.2.3.0
---       , vector-algorithms  ==0.7.0.1
-
---   else
---     build-depends:
---         bytestring
---       , containers
---       , criterion
---       , deepseq
---       , directory
---       , filepath
---       , mono-traversable
---       , process
---       , statistics
---       , text
