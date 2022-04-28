@@ -94,6 +94,14 @@ We have the initial block with a count of 3 (3 == 00000011) followed by the elem
 >>> tst (AsSet (Data.Set.fromList [11::Word8,22,33]))
 (True,28,[133,197,164,32])
 
+>>> tst [AsArray [1..3], AsArray [4..8]]
+(True,99,[129,129,2,3,0,65,66,2,131,3,132,0,0])
+
+>>> tst $ [AsArray [(1::Word8)..3], AsArray [4..8]]
+(True,99,[129,128,129,1,128,65,65,1,65,129,194,0,0])
+
+>>> tst $ [AsArray [(1::Int)..3]]
+(True,42,[129,129,2,3,0,0])
 -}
 newtype AsArray a =
   AsArray
