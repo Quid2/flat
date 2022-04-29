@@ -2,7 +2,7 @@ packages: .
 constraints: text >= 2.0
 
 -- Note: for ghc 7.* only the spec test builds and run correctly
-tests: true
+-- tests: true
 
 -- Modified doctest, used to generate static tests (run as doc-static)
 --source-repository-package
