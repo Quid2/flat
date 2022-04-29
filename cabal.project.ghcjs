@@ -5,3 +5,4 @@ compiler: ghcjs
 package tasty
     flags: -clock
 
+-- constraints: text >= 2.0
