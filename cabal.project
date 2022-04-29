@@ -1,5 +1,5 @@
 packages: .
-constraints: text >= 2.0
+-- constraints: text >= 2.0
 
 -- Note: for ghc 7.* only the spec test builds and run correctly
 -- tests: true
