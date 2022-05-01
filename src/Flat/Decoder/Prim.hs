@@ -25,23 +25,20 @@ module Flat.Decoder.Prim (
     ConsState(..),consOpen,consClose,consBool,consBits
     ) where
 
-import Control.Monad ( when )
-import qualified Data.ByteString         as B
-import qualified Data.ByteString.Lazy    as L
-import Flat.Decoder.Types
-    ( badEncoding, notEnoughSpace, Get(Get), GetResult(..), S(..) )
-import Flat.Endian ( toBE16, toBE32, toBE64 )
-import Flat.Memory
-    ( minusPtr, chunksToByteArray, chunksToByteString, ByteArray )
-import Data.FloatCast ( wordToDouble, wordToFloat )
-import Data.Word ( Word8, Word16, Word32, Word64 )
-import Foreign
-    ( Ptr,
-      Bits(unsafeShiftR, (.&.), unsafeShiftL, (.|.)),
-      FiniteBits(finiteBitSize),
-      castPtr,
-      plusPtr,
-      Storable(peek) )
+import           Control.Monad        (when)
+import qualified Data.ByteString      as B
+import qualified Data.ByteString.Lazy as L
+import           Data.FloatCast       (wordToDouble, wordToFloat)
+import           Data.Word            (Word16, Word32, Word64, Word8)
+import           Flat.Decoder.Types   (Get (Get), GetResult (..), S (..),
+                                       badEncoding, notEnoughSpace)
+import           Flat.Endian          (toBE16, toBE32, toBE64)
+import           Flat.Memory          (ByteArray, chunksToByteArray,
+                                       chunksToByteString, minusPtr)
+import           Foreign              (Bits (unsafeShiftL, unsafeShiftR, (.&.), (.|.)),
+                                       FiniteBits (finiteBitSize), Ptr,
+                                       Storable (peek), castPtr, plusPtr,
+                                       ptrToIntPtr)
 
 -- $setup
 -- >>> :set -XBinaryLiterals
@@ -68,14 +65,13 @@ consOpen :: Get ConsState
 consOpen = Get $ \endPtr s -> do
   let u = usedBits s
   let d = ptrToIntPtr endPtr - ptrToIntPtr (currPtr s)
-  w <- if d == 1
-    then do -- single last byte left
-      w8 :: Word8 <- peek (currPtr s)
-      return $ fromIntegral w8 `unsafeShiftL` (u+(wordSize-8))
-    else if d > 0 then do -- two different bytes
-      w16::Word16 <- toBE16 <$> peek (castPtr $ currPtr s)
-      return $ fromIntegral w16 `unsafeShiftL` (u+(wordSize-16))
-    else notEnoughSpace endPtr s
+  w <-  if d > 1 then do -- two different bytes
+          w16::Word16 <- toBE16 <$> peek (castPtr $ currPtr s)
+          return $ fromIntegral w16 `unsafeShiftL` (u+(wordSize-16))
+        else  if d == 1 then do -- single last byte left
+                w8 :: Word8 <- peek (currPtr s)
+                return $ fromIntegral w8 `unsafeShiftL` (u+(wordSize-8))
+              else notEnoughSpace endPtr s
   return $ GetResult s (ConsState w 0)
 
 -- |Switch back to normal decoding
@@ -107,7 +103,7 @@ consBool cs =  (0/=) <$> consBits cs 1
 -- consBool (ConsState w usedBits) = (ConsState (w `unsafeShiftL` 1) (1+usedBits),0 /= 32768 .&. w)
 
 -- |Decode from 1 to 3 bits
--- 
+--
 -- It could read more bits that are available, but it doesn't matter, errors will be checked in consClose.
 consBits :: ConsState -> Int -> (ConsState, Word)
 consBits cs 3 = consBits_ cs 3 7
@@ -171,7 +167,7 @@ dropBits_ s n =
   --   bits = n' .|. 7
   in S {currPtr=currPtr s `plusPtr` bytes,usedBits=bits}
 
-{-# INLINE dBool #-} 
+{-# INLINE dBool #-}
 -- Inlining dBool massively increases compilation time and decreases run time by a third
 -- TODO: test dBool inlining for ghc >= 8.8.4
 -- |Decode a boolean
@@ -407,9 +403,9 @@ getChunksInfo = Get $ \endPtr s -> do
 -- >>> shR (0b1111111111111111::Word16) 3 == 0b0001111111111111
 -- True
 
--- >>> shR (-1::Int16) 3 
+-- >>> shR (-1::Int16) 3
 -- -1
--- -}  
+-- -}
 {-# INLINE shR #-}
 shR :: Bits a => a -> Int -> a
 #ifdef ghcjs_HOST_OS
