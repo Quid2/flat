@@ -25,15 +25,23 @@ module Flat.Decoder.Prim (
     ConsState(..),consOpen,consClose,consBool,consBits
     ) where
 
-import           Control.Monad
+import Control.Monad ( when )
 import qualified Data.ByteString         as B
 import qualified Data.ByteString.Lazy    as L
-import           Flat.Decoder.Types
-import           Flat.Endian
-import           Flat.Memory
-import           Data.FloatCast
-import           Data.Word
-import           Foreign
+import Flat.Decoder.Types
+    ( badEncoding, notEnoughSpace, Get(Get), GetResult(..), S(..) )
+import Flat.Endian ( toBE16, toBE32, toBE64 )
+import Flat.Memory
+    ( minusPtr, chunksToByteArray, chunksToByteString, ByteArray )
+import Data.FloatCast ( wordToDouble, wordToFloat )
+import Data.Word ( Word8, Word16, Word32, Word64 )
+import Foreign
+    ( Ptr,
+      Bits(unsafeShiftR, (.&.), unsafeShiftL, (.|.)),
+      FiniteBits(finiteBitSize),
+      castPtr,
+      plusPtr,
+      Storable(peek) )
 
 -- $setup
 -- >>> :set -XBinaryLiterals
