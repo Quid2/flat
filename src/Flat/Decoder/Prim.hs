@@ -67,14 +67,15 @@ data ConsState =
 consOpen :: Get ConsState
 consOpen = Get $ \endPtr s -> do
   let u = usedBits s
-  w <- case compare (currPtr s) endPtr of
-    LT -> do -- two different bytes
+  let d = ptrToIntPtr endPtr - ptrToIntPtr (currPtr s)
+  w <- if d == 1
+    then do -- single last byte left
+      w8 :: Word8 <- peek (currPtr s)
+      return $ fromIntegral w8 `unsafeShiftL` (u+(wordSize-8))
+    else if d > 0 then do -- two different bytes
       w16::Word16 <- toBE16 <$> peek (castPtr $ currPtr s)
       return $ fromIntegral w16 `unsafeShiftL` (u+(wordSize-16))
-    EQ -> do
-        w8 :: Word8 <- peek (currPtr s)
-        return $ fromIntegral w8 `unsafeShiftL` (u+(wordSize-8))
-    GT -> notEnoughSpace endPtr s
+    else notEnoughSpace endPtr s
   return $ GetResult s (ConsState w 0)
 
 -- |Switch back to normal decoding
