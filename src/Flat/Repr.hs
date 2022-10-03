@@ -36,13 +36,9 @@ See test/FlatRepr.hs for a test and a longer example of use.
 
 If a decoded value is not required, it can be skipped completely using `SizeOf a`.
 
-For example, if we are not interested in the second and fourth component of this encoded tuple:
+For example, if we are not interested in the second and fourth component of the following tuple, we can decode it as:
 
->>> let v = flat ('a',"abc",'z',True)
-
-We can decode it as:
-
->>> unflat v :: Decoded (Char,SizeOf String,Char,SizeOf Bool)
+>>> let v = flat ('a',"abc",'z',True) in unflat v :: Decoded (Char,SizeOf String,Char,SizeOf Bool)
 Right ('a',SizeOf 28,'z',SizeOf 1)
 
 The unused values have not been decoded and instead their size (in bits) has been returned.
