@@ -1,3 +1,4 @@
+{-# LANGUAGE InstanceSigs        #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 module Flat.Repr where
 
@@ -12,6 +13,7 @@ import           Flat.Run           (flat, unflat)
 -- >>> import Flat.Decoder.Types
 -- >>> import Flat.Types
 -- >>> import Flat.Run
+-- >>> import Flat.Class
 
 {- | Flat representation of a value
 
@@ -29,7 +31,21 @@ To decode a `Repr a` to an `a`, we use `unrepr`:
 >>> let Right l = unflat (flat [1..5]) :: Decoded [Repr Int] in unrepr (l  !! 2)
 3
 
-See test/FlatRepr.hs for a test and an example of use.
+See test/FlatRepr.hs for a test and a longer example of use.
+
+
+If a decoded value is not required, it can be skipped completely using `SizeOf a`.
+
+For example, if we are not interested in the second and fourth component of this encoded tuple:
+
+>>> let v = flat ('a',"abc",'z',True)
+
+We can decode it as:
+
+>>> unflat v :: Decoded (Char,SizeOf String,Char,SizeOf Bool)
+Right ('a',SizeOf 28,'z',SizeOf 1)
+
+The unused values have not been decoded and instead their size (in bits) has been returned.
 -}
 
 newtype Repr a = Repr {repr :: B.ByteString} deriving Show
