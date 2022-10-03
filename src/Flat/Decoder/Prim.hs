@@ -31,7 +31,7 @@ import qualified Data.ByteString.Lazy as L
 import           Data.FloatCast       (wordToDouble, wordToFloat)
 import           Data.Word            (Word16, Word32, Word64, Word8)
 import           Flat.Decoder.Types   (Get (Get), GetResult (..), S (..),
-                                       badEncoding, notEnoughSpace)
+                                       badEncoding, badOp, notEnoughSpace)
 import           Flat.Endian          (toBE16, toBE32, toBE64)
 import           Flat.Memory          (ByteArray, chunksToByteArray,
                                        chunksToByteString, minusPtr)
@@ -40,11 +40,18 @@ import           Foreign              (Bits (unsafeShiftL, unsafeShiftR, (.&.), 
                                        Storable (peek), castPtr, plusPtr,
                                        ptrToIntPtr)
 
+#ifdef ghcjs_HOST_OS
+import           Foreign              (shift)
+#else
+#endif
+
 -- $setup
 -- >>> :set -XBinaryLiterals
 -- >>> import Data.Word
 -- >>> import Data.Int
 -- >>> import Flat.Run
+-- >>> import Flat.Bits
+-- >>> import Text.PrettyPrint.HughesPJClass (Pretty (pPrint))
 
 {- |A special state, optimised for constructor decoding.
 
@@ -168,7 +175,7 @@ dropBits_ s n =
   in S {currPtr=currPtr s `plusPtr` bytes,usedBits=bits}
 
 {-# INLINE dBool #-}
--- Inlining dBool massively increases compilation time and decreases run time by a third
+-- Inlining dBool massively increases compilation time but decreases run time by a third
 -- TODO: test dBool inlining for ghc >= 8.8.4
 -- |Decode a boolean
 dBool :: Get Bool
@@ -190,6 +197,9 @@ dBool = Get $ \endPtr s ->
 The bits are returned right shifted:
 >>> unflatWith (dBEBits8 3) [0b11100001::Word8] == Right 0b00000111
 True
+
+>>> unflatWith (dBEBits8 9) [0b11100001::Word8,0b11111111]
+Left (BadOp "read8: cannot read 9 bits")
 -}
 dBEBits8 :: Int -> Get Word8
 dBEBits8 n = Get $ \endPtr s -> do
@@ -197,8 +207,17 @@ dBEBits8 n = Get $ \endPtr s -> do
       take8 s n
 
 {-# INLINE dBEBits16  #-}
--- |Return the n most significant bits (up to maximum of 16)
--- The bits are returned right shifted.
+{- | Return the n most significant bits (up to maximum of 16)
+
+The bits are returned right shifted:
+>>> pPrint . asBits <$> unflatWith (dBEBits16 11) [0b10110111::Word8,0b11100001]
+Right 00000101 10111111
+
+If more than 16 bits are requested, only the last 16 are returned:
+
+>>> pPrint . asBits <$> unflatWith (dBEBits16 19) [0b00000000::Word8,0b11111111,0b11100001]
+Right 00000111 11111111
+-}
 dBEBits16 :: Int -> Get Word16
 dBEBits16 n = Get $ \endPtr s -> do
       ensureBits endPtr s n
@@ -245,15 +264,15 @@ take8 s n = GetResult (dropBits8 s n) <$> read8 s n
   where
     --{-# INLINE read8 #-}
     read8 :: S -> Int -> IO Word8
-    read8 s n | n >=0 && n <=8 =
-            if n <= 8 - usedBits s
-            then do  -- all bits in the same byte
-              w <- peek (currPtr s)
-              return $ (w `unsafeShiftL` usedBits s) `shR` (8 - n)
-            else do -- two different bytes
-              w::Word16 <- toBE16 <$> peek (castPtr $ currPtr s)
-              return $ fromIntegral $ (w `unsafeShiftL` usedBits s) `shR` (16 - n)
-          | otherwise = error $ unwords ["read8: cannot read",show n,"bits"]
+    read8 s n   | n >=0 && n <=8 =
+                    if n <= 8 - usedBits s
+                    then do  -- all bits in the same byte
+                      w <- peek (currPtr s)
+                      return $ (w `unsafeShiftL` usedBits s) `shR` (8 - n)
+                    else do -- two different bytes
+                      w::Word16 <- toBE16 <$> peek (castPtr $ currPtr s)
+                      return $ fromIntegral $ (w `unsafeShiftL` usedBits s) `shR` (16 - n)
+                | otherwise = badOp $ unwords ["read8: cannot read",show n,"bits"]
     -- {-# INLINE dropBits8 #-}
     -- -- Assume n <= 8
     dropBits8 :: S -> Int -> S

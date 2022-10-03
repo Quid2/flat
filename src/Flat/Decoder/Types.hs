@@ -4,7 +4,7 @@
 
 -- |Strict Decoder Types
 module Flat.Decoder.Types
-  ( 
+  (
     Get(..)
   , S(..)
   , GetResult(..)
@@ -13,35 +13,36 @@ module Flat.Decoder.Types
   , notEnoughSpace
   , tooMuchSpace
   , badEncoding
+  , badOp
   ) where
 
-import Control.DeepSeq ( NFData(..) )
-import Control.Exception ( throwIO, Exception )
-import Data.Word ( Word8 )
-import Foreign ( Ptr )
+import           Control.DeepSeq    (NFData (..))
+import           Control.Exception  (Exception, throwIO)
+import           Data.Word          (Word8)
+import           Foreign            (Ptr)
 
 #if MIN_VERSION_base(4,9,0)
-import qualified Control.Monad.Fail       as Fail
+import qualified Control.Monad.Fail as Fail
 #endif
 
-{- | 
+{- |
 A decoder.
 
 Given:
 * end of input buffer
 * current position in input buffer
 
-returns:
+Returns:
 * decoded value
 * new position in input buffer
 -}
 newtype Get a =
   Get
-    { runGet :: 
-      Ptr Word8 
-      -> S      
+    { runGet ::
+      Ptr Word8
+      -> S
       -> IO (GetResult a)
-    } -- deriving (Functor)
+    }
 
 -- Seems to give better performance than the derived version
 instance Functor Get where
@@ -85,7 +86,6 @@ instance Monad Get where
   {-# INLINE (>>=) #-}
 #if !(MIN_VERSION_base(4,13,0))
   fail = failGet
-                 -- base < 4.13
 #endif
 
 #if MIN_VERSION_base(4,9,0)
@@ -116,6 +116,7 @@ data DecodeException
   = NotEnoughSpace Env
   | TooMuchSpace Env
   | BadEncoding Env String
+  | BadOp String
   deriving (Show, Eq, Ord)
 
 type Env = (Ptr Word8, S)
@@ -128,5 +129,8 @@ tooMuchSpace endPtr s = throwIO $ TooMuchSpace (endPtr, s)
 
 badEncoding :: Ptr Word8 -> S -> String -> IO a
 badEncoding endPtr s msg = throwIO $ BadEncoding (endPtr, s) msg
+
+badOp :: String -> IO a
+badOp msg = throwIO $ BadOp msg
 
 instance Exception DecodeException
