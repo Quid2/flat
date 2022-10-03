@@ -3,15 +3,16 @@
 -- |Primitives to calculate the maximum size in bits of the encoding of a value
 module Flat.Encoder.Size where
 
-import           Data.Bits
+import           Data.Bits                      (Bits)
 import qualified Data.ByteString                as B
 import qualified Data.ByteString.Lazy           as L
 import qualified Data.ByteString.Short.Internal as SBS
-import           Data.Char
+import           Data.Char                      (ord)
 import qualified Data.Text                      as T
 import           Flat.Encoder.Prim              (w7l)
-import           Flat.Encoder.Types
-import           Flat.Types
+import           Flat.Types                     (Int16, Int32, Int64, Natural,
+                                                 NumBits, Text, Word16, Word32,
+                                                 Word64)
 #ifndef ghcjs_HOST_OS
 import qualified Data.Text.Internal             as TI
 #endif
@@ -118,7 +119,7 @@ sIntegral t =
 
 --sUTF8 :: T.Text -> NumBits
 --sUTF8 t = fold
--- Wildly pessimistic but fast
+-- TOFIX: Wildly pessimistic and also slow as T.length is O(n)
 {-# INLINE sUTF8Max #-}
 sUTF8Max :: Text -> NumBits
 sUTF8Max = blobBits . (4 *) . T.length

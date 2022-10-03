@@ -40,6 +40,7 @@ flatBits = prettyShow . bits
 allBits :: Flat a => a -> String
 allBits = prettyShow . paddedBits
 
+-- |@since 0.5
 encBits :: NumBits -> Encoding -> Bits
 encBits maxNumBits e@(Encoding enc) = takeBits (numEncodedBits maxNumBits e) (strictEncoder maxNumBits (Encoding $ enc >=> eFillerF))
 

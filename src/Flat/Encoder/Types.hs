@@ -9,7 +9,7 @@ module Flat.Encoder.Types(
 import           Flat.Types
 import           GHC.Ptr         (Ptr (..))
 
--- |Calculate the size (in bits) of the encoding of a value
+-- |Add the maximum size in bits of the encoding of value a to a NumBits
 type Size a = a -> NumBits -> NumBits
 
 -- |Strict encoder state

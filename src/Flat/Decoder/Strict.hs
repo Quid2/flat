@@ -35,6 +35,7 @@ import qualified Data.ByteString.Short          as SBS
 #if !MIN_VERSION_bytestring(0,11,0)
 import qualified Data.ByteString.Short.Internal as SBS
 #endif
+import           Control.Monad                  (unless)
 import qualified Data.DList                     as DL
 import           Data.Int
 import           Data.Primitive.ByteArray
@@ -42,7 +43,6 @@ import qualified Data.Text                      as T
 import qualified Data.Text.Encoding             as T
 import           Flat.Decoder.Prim
 import           Flat.Decoder.Types
-import           Control.Monad                  (unless)
 
 #if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION) && ! MIN_VERSION_text(2,0,0)
 import qualified Data.Text.Array                as TA
@@ -253,6 +253,7 @@ dUTF16 = do
   return (T.Text (TA.Array array) 0 (lengthInBytes `div` 2))
 #endif
 #endif
+
 dUTF8 :: Get T.Text
 dUTF8 = do
   _ <- dFiller
@@ -260,6 +261,7 @@ dUTF8 = do
   case T.decodeUtf8' bs of
     Right t -> pure t
     Left e  -> fail $ "Input contains invalid UTF-8 data" ++ show e
+
 dFiller :: Get ()
 dFiller = do
   tag <- dBool
