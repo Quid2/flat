@@ -1,19 +1,16 @@
 cabal-version:      >=1.10
 name:               flat
-version:            0.4.5
-license:            BSD3
-license-file:       LICENSE
-copyright:          Copyright: (c) 2016-2021 Pasqualino `Titto` Assini
-maintainer:         tittoassini@gmail.com
-author:             Pasqualino `Titto` Assini
-tested-with: GHC ==7.10.3 || ==8.0.2 || ==8.2.2 || ==8.4.4 || ==8.6.5 || ==8.8.4 || ==8.10.7 || == 9.0.2 || == 9.2.0
-
+version:            0.4.7
 homepage:           http://quid2.org
 synopsis:           Principled and efficient bit-oriented binary serialization.
-description:
-  Reference implementation of `flat`, a principled and efficient binary serialization format.
-
+description:        Reference implementation of `flat`, a principled and efficient binary serialization format.
 category:           Data,Parsing,Serialization
+license:            BSD3
+license-file:       LICENSE
+copyright:          Copyright: (c) 2016-2022 Pasqualino `Titto` Assini
+maintainer:         tittoassini@gmail.com
+author:             Pasqualino `Titto` Assini
+tested-with: GHC ==8.4.4 || ==8.6.5 || ==8.8.4 || ==8.10.7 || == 9.0.2 || == 9.2.4 || == 9.4.2
 build-type:         Simple
 extra-source-files:
   stack.yaml
@@ -60,7 +57,7 @@ library
     Flat.Memory
     Flat.Run
     Flat.Repr
-    Flat.Tutorial
+    -- Flat.Tutorial
     Flat.Types
 
   hs-source-dirs:   src
@@ -138,17 +135,45 @@ library
   else 
     build-depends: hashable >= 1.4.0.2
 
+
+-- test-suite ref
+--   type:             exitcode-stdio-1.0
+--   main-is:          Reference.hs
+--   hs-source-dirs:   test
+--   other-modules:
+--     Test.Data
+--     Test.Data.Arbitrary
+--     Test.Data.Flat
+--     Test.Data.Values
+--     Test.Data2
+--     Test.Data2.Flat
+--     Test.E
+--     Test.E.Arbitrary
+--     Test.E.Flat
+
+--   default-language: Haskell2010
+--   build-depends:
+--       base
+--     , flat
+--     , zm
+--     , ghc-prim
+--     , quickcheck-text
+--     , tasty-hunit
+--     , tasty-quickcheck
+--     , text
+
+
 test-suite spec
   type:             exitcode-stdio-1.0
   main-is:          Spec.hs
   cpp-options:      -DLIST_BIT -DTEST_DECBITS
 
-  if impl(ghc <8.6)
-    cpp-options: -DENUM_LARGE
+  -- if impl(ghc <8.6)
+  cpp-options: -DENUM_LARGE 
 
   -- -DETA_VERSION -Dghcjs_HOST_OS
 
-  -- ghc-options: -O1 
+  ghc-options: -O0
   if impl(ghc >8)
     ghc-options:
       -Wno-unused-top-binds -Wno-type-defaults -Wno-missing-signatures
@@ -232,6 +257,7 @@ test-suite doc-static
     DocTest.Flat.Bits
     DocTest.Flat.Decoder.Prim
     DocTest.Flat.Endian
+    DocTest.Flat.Repr
     DocTest.Flat.Instances.Array
     DocTest.Flat.Instances.Base
     DocTest.Flat.Instances.ByteString
@@ -280,16 +306,16 @@ test-suite repr
 
   ghc-options: -rtsopts
 
-test-suite ghcjs-cons
-  type:             exitcode-stdio-1.0
-  main-is:          Cons.hs
-  hs-source-dirs:   test
-  default-language: Haskell2010
-  build-depends:
-      base
-    , flat
-    , bytestring
-    , jsaddle
+-- test-suite ghcjs-cons
+--   type:             exitcode-stdio-1.0
+--   main-is:          Cons.hs
+--   hs-source-dirs:   test
+--   default-language: Haskell2010
+--   build-depends:
+--       base
+--     , flat
+--     , bytestring
+--     , jsaddle
 
-  ghc-options: -rtsopts
+--   ghc-options: -rtsopts
 
