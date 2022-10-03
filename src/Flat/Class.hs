@@ -21,26 +21,27 @@ module Flat.Class
   , getSize
   , module GHC.Generics
   , GFlatEncode,GFlatDecode,GFlatSize
-  , SizeOf(..),skip
+  , SizeOf(..)
   )
 where
 
-import           Data.Bits    (Bits (unsafeShiftL, (.|.)))
-import           Data.Word    (Word16)
-import           Flat.Decoder (ConsState (..), Get, consBits, consBool,
-                               consClose, consOpen, dBool)
-import           Flat.Encoder (Encoding, NumBits, eBits16, mempty)
-import           GHC.Base     (Any)
+import           Data.Bits          (Bits (unsafeShiftL, (.|.)))
+import           Data.Word          (Word16)
+import           Flat.Decoder.Prim  (ConsState (..), consBits, consBool,
+                                     consClose, consOpen, dBool)
+import           Flat.Decoder.Types (Get)
+import           Flat.Encoder       (Encoding, NumBits, eBits16, mempty)
+import           GHC.Base           (Any)
 import           GHC.Generics
-import           GHC.TypeLits (Nat, type (+), type (<=))
-import           Prelude      hiding (mempty)
+import           GHC.TypeLits       (Nat, type (+), type (<=))
+import           Prelude            hiding (mempty)
 
 #if MIN_VERSION_base(4,9,0)
-import Data.Kind
+import           Data.Kind
 #endif
 
 #if ! MIN_VERSION_base(4,11,0)
-import           Data.Semigroup((<>))
+import           Data.Semigroup     ((<>))
 #endif
 
 
@@ -52,7 +53,7 @@ import           Data.Semigroup((<>))
 -- #define INL 0
 
 #if INL == 1
-import           GHC.Exts     (inline)
+import           GHC.Exts           (inline)
 #endif
 
 -- import           Data.Proxy
@@ -99,21 +100,18 @@ class Flat a where
     {-# NOINLINE encode #-}
 #endif
 
--- skip :: (Generic a, GFlatSize (Rep a),GFlatDecode (Rep a)) => Proxy a -> Get (SNumBits
-    -- default skip :: (Generic a, GFlatSize (Rep a)) => a -> NumBits -> NumBits
-
+-- | Skip a value, return its size in bits
 skip :: forall a. (GFlatSize (Rep a),GFlatDecode (Rep a)) => Get (SizeOf a)
 skip = SizeOf . (gsize 0 :: Rep a Any -> NumBits) <$> (gget :: Get (Rep a Any))
 {-# INLINE skip #-}
 
--- Special type used to calculate
+-- | Decode to the size in bits of a value rather than to the value itself (see "Flat.Repr")
 newtype SizeOf a = SizeOf NumBits deriving Show
 
 instance (GFlatSize (Rep a),GFlatDecode (Rep a)) => Flat (SizeOf a) where
     size = error "unused"
     encode = error "unused"
 
-    -- To create the representation we just re 'flat' the parsed value (this could be optimised by copying directly the parsed representation)
     decode = skip
 
 
@@ -469,9 +467,9 @@ instance (GFlatSize a) => GFlatSizeNxt (C1 c a) where
 -- |Calculate size in bits of constructor
 -- vs proxy implementation: similar compilation time but much better run times (at least for Tree N, -70%)
 #if MIN_VERSION_base(4,9,0)
-class GFlatSizeSum (f :: Type -> Type) where 
-#else 
-class GFlatSizeSum (f :: * -> *) where 
+class GFlatSizeSum (f :: Type -> Type) where
+#else
+class GFlatSizeSum (f :: * -> *) where
 #endif
     gsizeSum :: NumBits -> f a ->  NumBits
 
@@ -490,7 +488,7 @@ instance (GFlatSize a) => GFlatSizeSum (C1 c a) where
 -- |Calculate number of constructors
 #if MIN_VERSION_base(4,9,0)
 type family NumConstructors (a :: Type -> Type) :: Nat where
-#else 
+#else
 type family NumConstructors (a :: * -> *) :: Nat where
 #endif
   NumConstructors (C1 c a) = 1
