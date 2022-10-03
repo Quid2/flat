@@ -1,7 +1,8 @@
 {-# LANGUAGE DeriveAnyClass      #-}
 {-# LANGUAGE DeriveGeneric       #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE CPP       #-}
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE StrictData #-}
 
 -- |Pre-value and post-value byte alignments
 module Flat.Filler (
@@ -16,8 +17,8 @@ module Flat.Filler (
     ) where
 
 import Flat.Class ( Generic, Flat(..) )
-import Flat.Encoder ( eFiller, sFillerMax )
-import Flat.Decoder ( Get )
+import Flat.Encoder.Strict ( eFiller, sFillerMax )
+import Flat.Decoder.Types ( Get )
 import Control.DeepSeq ( NFData )
 import Data.Typeable ( Typeable )
 
@@ -74,6 +75,7 @@ postAlignedDecoder dec = do
   _::Filler <- decode
   return v
 
+-- | @since 0.5
 preAlignedDecoder :: Get b -> Get b
 preAlignedDecoder dec = do
   _::Filler <- decode
