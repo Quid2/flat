@@ -2,9 +2,9 @@
 module Main where
 import qualified Data.ByteString as B
 import           Data.List       (foldl')
-import           Flat
-import           Flat.Decoder
-import           Flat.Repr
+import           Flat            (Decoded, Flat (..), flat, unflat, unflatWith)
+import           Flat.Decoder    (Get, listTDecoder)
+import           Flat.Repr       (Repr, unrepr)
 import qualified ListT           as L
 import           System.TimeIt   (timeIt)
 
@@ -25,7 +25,7 @@ giga = 1000000000
 instance Show Big where show b = "Big of " ++ show (gigas b) ++ "Gbytes"
 
 instance Flat Big where
-    -- The encoded form is just the number of giga elements
+    -- The encoded form is just the number of giga zeros (e.g. 5 for 5Giga zeros)
     size big = size (gigas big)
     encode big = encode (gigas big)
 
@@ -34,7 +34,7 @@ instance Flat Big where
 
 -- Run this as: cabal run FlatRepr -- +RTS  -M2g
 main :: IO ()
-main = tskip
+main = tbig
 
 tbig = do
     let numOfBigs = 5
@@ -51,18 +51,6 @@ tbig = do
 
     tstBig bigsFile
 
--- >>> tskip
-tskip = do
-            let v = flat ('a',"abc",'z')
-            print $ unflatWith dec v
-    where
-        dec :: Get (Char,Int,Char)
-        dec = do
-            a <- decode
-            SizeOf b :: SizeOf String<- skip
-            c <- decode
-            return (a,b,c)
-
 -- If we unserialise a list of Bigs and then process them (e.g. print them out) we end up in trouble, too much memory is required.
 tstBig :: B.ByteString -> IO ()
 tstBig bigsFile = timeIt $ do
@@ -70,7 +58,7 @@ tstBig bigsFile = timeIt $ do
     let Right (bs :: [Big]) = unflat bigsFile
     mapM_ print bs
 
--- So we unserialise instead them to a list of their flat representation, to be unflatted on demand later on
+-- So instead we unserialise them to a list of their flat representations, to be unflatted on demand later on
 tstRepr :: B.ByteString -> IO ()
 tstRepr bigsFile = timeIt $ do
     print "Decode to [FlatRepl Big]:"
@@ -85,10 +73,3 @@ tstListT bigsFile = timeIt $ do
     print "Decode to ListT IO Big:"
     stream :: L.ListT IO Big <- listTDecoder decode bigsFile
     L.traverse_ print stream
-
-
--- tstSize :: B.ByteString -> IO ()
--- tstSize bigsFile = timeIt $ do
---     print "Decode to [SizeOf Big]:"
---     let Right (bs :: [SizeOf Big]) = unflat bigsFile
---     mapM_ print bs
