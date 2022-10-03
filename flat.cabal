@@ -267,7 +267,7 @@ test-suite doc-static
     DocTest.Flat.Instances.Text
     DocTest.Flat.Instances.Unordered
     DocTest.Flat.Instances.Vector
-    DocTest.Flat.Tutorial
+    -- DocTest.Flat.Tutorial
     DocTest.Flat.Encoder.Prim
     DocTest.Flat.Instances.Extra
 
