@@ -39,7 +39,7 @@ module Flat.Encoder.Prim
 
   , varWordF
 
-  , writeWord8
+  , updateWord8
   , w7l
 
     -- * Exported for testing only
@@ -287,7 +287,7 @@ eShortBytesF bs = eFillerF >=> eShortBytesF_ bs
   where
     eShortBytesF_ :: SBS.ShortByteString -> Prim
     eShortBytesF_ bs@(SBS.SBS arr) (S op _ 0) = writeArray arr 0 (SBS.length bs) op
-    eShortBytesF_ _ _ = undefined -- impossible
+    eShortBytesF_ _ _ = error "impossible"
 
 -- data Array a = Array0 | Array1 a ... | Array255 ...
 writeArray :: ByteArray# -> Int -> Int -> Ptr Word8 -> IO S
@@ -425,24 +425,25 @@ eByteAligned :: Word8 -> Prim
 eByteAligned t (S op _ _) = pokeWord op t
 
 {-|
->>> enc $ \s-> eWord8F 0 s >>= writeWord8 255 s
+>>> enc $ \s-> eWord8F 0 s >>= updateWord8 255 s
 "11111111"
 
->>> enc $ \s0 -> eTrueF s0 >>= \s1 -> eWord8F 255 s1 >>= eWord8F 255 >>= writeWord8 0 s1
+>>> enc $ \s0 -> eTrueF s0 >>= \s1 -> eWord8F 255 s1 >>= eWord8F 255 >>= updateWord8 0 s1
 "10000000 01111111 1"
 
->>> enc $ \s0 -> eFalseF s0 >>= \s1 -> eWord8F 0 s1 >>= writeWord8 255 s1
+>>> enc $ \s0 -> eFalseF s0 >>= \s1 -> eWord8F 0 s1 >>= updateWord8 255 s1
 "01111111 1"
 
->>> enc $ \s0 -> eFalseF s0 >>= \s1 -> eWord8F 0 s1 >>= writeWord8 255 s1 >>= eFalseF
+>>> enc $ \s0 -> eFalseF s0 >>= \s1 -> eWord8F 0 s1 >>= updateWord8 255 s1 >>= eFalseF
 "01111111 10"
 
->>> enc $ \s0 -> eTrueF s0 >>= \s1 -> eWord8F 255 s1 >>= eTrueF >>= writeWord8 0 s1 >>= eTrueF
+>>> enc $ \s0 -> eTrueF s0 >>= \s1 -> eWord8F 255 s1 >>= eTrueF >>= updateWord8 0 s1 >>= eTrueF
 "10000000 011"
--}
 
-writeWord8 :: Word8 -> S -> Prim
-writeWord8 t mem s = do
+@since 0.5
+-}
+updateWord8 :: Word8 -> S -> Prim
+updateWord8 t mem s = do
   uncache s
   pokeWord8 t mem
   cache s

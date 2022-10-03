@@ -133,7 +133,7 @@ encodeArrayWith f ws = Encoding $ go ws
       s' <- eWord8F 0 s
       (n, sn, l) <- gol l 0 s'
       -- update actual number of elements
-      s'' <- writeWord8 n s sn
+      s'' <- updateWord8 n s sn
       if null l
         then eWord8F 0 s''
         else go l s''
