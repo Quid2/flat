@@ -1,16 +1,16 @@
 module Flat.Decoder.Run(strictDecoder,listTDecoder) where
 
-import Foreign ( Ptr, plusPtr, withForeignPtr )
+import           Control.Exception        (Exception, try)
 import qualified Data.ByteString          as B
-import ListT ( ListT(..) )
 import qualified Data.ByteString.Internal as BS
-import Control.Exception ( try, Exception )
-import Flat.Decoder.Types
-    ( tooMuchSpace, S(S), GetResult(..), Get(runGet), DecodeException )
-import System.IO.Unsafe ( unsafePerformIO )
-import Flat.Decoder.Prim ( dBool )
+import           Flat.Decoder.Prim        (dBool)
+import           Flat.Decoder.Types       (DecodeException, Get (runGet),
+                                           GetResult (..), S (S), tooMuchSpace)
+import           Foreign                  (Ptr, plusPtr, withForeignPtr)
+import           ListT                    (ListT (..))
+import           System.IO.Unsafe         (unsafePerformIO)
 
--- | Given a decoder and an input buffer returns either the decoded value or an error  (if the input buffer is not fully consumed) 
+-- | Given a decoder and an input buffer returns either the decoded value or an error  (if the input buffer is not fully consumed)
 strictDecoder :: Get a -> B.ByteString -> Either DecodeException a
 strictDecoder get bs =
   strictDecoder_ get bs $ \(GetResult s'@(S ptr' o') a) endPtr ->
@@ -43,9 +43,17 @@ strictDecoder_ get (BS.PS base off len) check =
 --       GetResult (S ptr' o') a <- runGet get endPtr (S ptr 0)
 --       return (a, BS.PS base (ptr' `minusPtr` base0) (endPtr `minusPtr` ptr'), o')
 
+{-| 
+Decode a list of values, one value at a time.
 
+Useful in case that the decoded values takes a lot more memory than the encoded ones.
+
+See test/FlatRepr.hs for a test and an example of use.
+
+@since 0.5
+-}
 listTDecoder :: Get a -> BS.ByteString -> IO (ListT IO a)
-listTDecoder get (BS.PS base off len) = 
+listTDecoder get (BS.PS base off len) =
     withForeignPtr base $ \base0 -> do
         let ptr = base0 `plusPtr` off
             endPtr = ptr `plusPtr` len
@@ -58,4 +66,3 @@ listTDecoder get (BS.PS base off len) =
                         return $ Just (a, ListT $ go s'')
                     else return Nothing
         return $ ListT (go s)
-
