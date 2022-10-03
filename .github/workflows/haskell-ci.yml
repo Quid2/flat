@@ -27,9 +27,14 @@ jobs:
     strategy:
       matrix:
         include:
-          # - compiler: ghc-9.2.2
+          - compiler: ghc-9.4.2
+            compilerKind: ghc
+            compilerVersion: 9.4.2
+            setup-method: ghcup
+            allow-failure: false
+          # - compiler: ghc-9.2.4
           #   compilerKind: ghc
-          #   compilerVersion: 9.2.2
+          #   compilerVersion: 9.2.4
           #   setup-method: ghcup
           #   allow-failure: false
           # - compiler: ghc-9.0.2
@@ -52,6 +57,8 @@ jobs:
           #   compilerVersion: 8.6.5
           #   setup-method: hvr-ppa
           #   allow-failure: false
+
+          # UNTESTED
           # - compiler: ghc-8.4.4
           #   compilerKind: ghc
           #   compilerVersion: 8.4.4
