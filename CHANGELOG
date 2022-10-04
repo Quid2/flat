@@ -1,5 +1,17 @@
 Significant and compatibility-breaking changes.
 
+Version 0.5:
+    - Compatibility with ghc 9.0.2 & 9.2.4 & 9.4.2
+    - Compatibility with text-2.0
+    - Fixed https://github.com/Quid2/flat/issues/23 that could cause an encoding failure for non byte aligned Arrays 
+    - Fixed https://github.com/Quid2/flat/pull/26 that could cause the decoder to read beyond the end of the decoding buffer (causing a SEGFAULT on ghcjs)
+    - Merged https://github.com/Quid2/flat/pull/22 - fails correctly on invalid UTF-8 text 
+    - Added a few ways to partially or incrementally decode values, see Flat.Repr and Flat.Decoder.Run.listTDecoder
+    - Moved strictDecoder from Flat.Decoder.Types to Flat.Decoder
+    - Removed Flat instance for Semigroup.Option from Flat.Instances.Base
+    - Moved overlapping/specialised Flat instance for [Char] to Flat.Instances.Extra
+    - Added a few extra functions
+
 Version 0.4.4:
 	- Added instances for Identity, Monoid.Dual/All/Any/Sum/Product/Alt, Semigroup.Min/Max/First/Last/Option 
 
