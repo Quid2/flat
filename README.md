@@ -84,7 +84,7 @@ Tested with:
 
 * [GHCJS](https://github.com/ghcjs/ghcjs)
 
-Note: versions of `flat` prior to 0.33 encode `Double` values incorrectly when they are not aligned with a byte boundary.
+  * Note: versions of `flat` prior to 0.33 encode `Double` values incorrectly when they are not aligned with a byte boundary.
 
 
 
@@ -94,17 +94,17 @@ Note: versions of `flat` prior to 0.33 encode `Double` values incorrectly when t
 
 * Longish compilation times
 
-`flat` relies more than other serialisation libraries on extensive inlining for its good performance, this unfortunately leads to longer compilation times. 
+  * `flat` relies more than other serialisation libraries on extensive inlining for its good performance, this unfortunately leads to longer compilation times. 
 
-If you have many data types or very large ones this might become an issue.
+    If you have many data types or very large ones this might become an issue.
 
-A couple of good practices that will eliminate or mitigate this problem are:
+    A couple of good practices that will eliminate or mitigate this problem are:
 
-  * During development, turn optimisations off (`stack --fast` or `-O0` in the cabal file).
+      * During development, turn optimisations off (`stack --fast` or `-O0` in the cabal file).
 
-  * Keep your serialisation code in a separate module or modules.
+      * Keep your serialisation code in a separate module or modules.
 
-See also the [full list of open issues](https://github.com/Quid2/flat/issues).
+* See also the [full list of open issues](https://github.com/Quid2/flat/issues).
 
 ### Ports for other languages
 
