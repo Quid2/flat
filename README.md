@@ -3,11 +3,6 @@
 
 [![Hackage version](https://img.shields.io/hackage/v/flat.svg)](http://hackage.haskell.org/package/flat)
 
-[![Stackage LTS 6](http://stackage.org/package/flat/badge/lts-6)](http://stackage.org/lts/package/flat)
-[![Stackage LTS 9](http://stackage.org/package/flat/badge/lts-9)](http://stackage.org/lts/package/flat)
-[![Stackage LTS 11](http://stackage.org/package/flat/badge/lts-11)](http://stackage.org/lts/package/flat)
-[![Stackage LTS 12](http://stackage.org/package/flat/badge/lts-12)](http://stackage.org/lts/package/flat)
-[![Stackage LTS 12](http://stackage.org/package/flat/badge/lts-14)](http://stackage.org/lts/package/flat)
 [![Stackage LTS 16](http://stackage.org/package/flat/badge/lts-16)](http://stackage.org/lts/package/flat)
 [![Stackage LTS 18](http://stackage.org/package/flat/badge/lts-18)](http://stackage.org/lts/package/flat)
 [![Stackage LTS 19](http://stackage.org/package/flat/badge/lts-19)](http://stackage.org/lts/package/flat)
@@ -63,8 +58,8 @@ For some hard data, see this [comparison of the major haskell serialisation libr
 
 Briefly:
  * Size: `flat` produces significantly smaller binaries than all other libraries (3/4 times usually)
- * Serialization: `store`, `persist` and `flat` are faster
- * Deserialization: `store`, `flat`, `persist` and `cereal` are faster
+ * Serialization time: `store`, `persist` and `flat` are faster
+ * Deserialization time: `store`, `flat`, `persist` and `cereal` are faster
  * Transfer time (serialisation time + transport time on the network + deserialisation at the receiving end): `flat` is usually faster for all but the highest network speeds
 
 ### Documentation
@@ -84,16 +79,12 @@ Get the latest stable version from [hackage](https://hackage.haskell.org/package
 
 Tested with:
 
-* [GHC](https://www.haskell.org/ghc/) 7.10.3 .. 9.4.2 (x64)
+* [GHC](https://www.haskell.org/ghc/) 7.10.3 to 9.4.2 (x64)
 
 
 * [GHCJS](https://github.com/ghcjs/ghcjs)
-  * Caveats:
-    * short bytestrings (Data.ByteString.Short) that seem unsupported by `ghcjs`.
-* Current version short bytestrings (Data.ByteString.Short) that seem unsupported by `ghcjs`.
-* Versions of `flat` prior to 0.33 encode `Double` values incorrectly when they are not aligned with a byte boundary.
-* !Performance in untested, as the 
-Passes all tests in the `flat` testsuite, except for those relative to short bytestrings (Data.ByteString.Short) that seem unsupported by `ghcjs`.
+
+Note: versions of `flat` prior to 0.33 encode `Double` values incorrectly when they are not aligned with a byte boundary.
 
 
 
