@@ -10,7 +10,7 @@ license-file:       LICENSE
 copyright:          Copyright: (c) 2016-2022 Pasqualino `Titto` Assini
 maintainer:         tittoassini@gmail.com
 author:             Pasqualino `Titto` Assini
-tested-with: GHC ==8.4.4 || ==8.6.5 || ==8.8.4 || ==8.10.7 || == 9.0.2 || == 9.2.4 || == 9.4.2
+tested-with:        GHC ==7.10.3 || ==8.4.4 || ==8.6.5 || ==8.8.4 || ==8.10.7 || ==9.0.2 || ==9.2.4 || ==9.4.2
 build-type:         Simple
 extra-source-files:
   stack.yaml
@@ -57,7 +57,7 @@ library
     Flat.Memory
     Flat.Run
     Flat.Repr
-    -- Flat.Tutorial
+    Flat.Tutorial
     Flat.Types
 
   hs-source-dirs:   src
@@ -267,7 +267,7 @@ test-suite doc-static
     DocTest.Flat.Instances.Text
     DocTest.Flat.Instances.Unordered
     DocTest.Flat.Instances.Vector
-    -- DocTest.Flat.Tutorial
+    DocTest.Flat.Tutorial
     DocTest.Flat.Encoder.Prim
     DocTest.Flat.Instances.Extra
 

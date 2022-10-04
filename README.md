@@ -1,21 +1,71 @@
 
-[![Build Status](https://travis-ci.org/Quid2/flat.svg?branch=master)](https://travis-ci.org/Quid2/flat)
+![Build Status](https://github.com/Quid2/flat/actions/workflows/haskell-ci.yml/badge.svg)
+
 [![Hackage version](https://img.shields.io/hackage/v/flat.svg)](http://hackage.haskell.org/package/flat)
-[![Stackage Nightly](http://stackage.org/package/flat/badge/nightly)](http://stackage.org/nightly/package/model)
-[![Stackage LTS](http://stackage.org/package/flat/badge/lts)](http://stackage.org/lts/package/model)
+
+[![Stackage LTS 6](http://stackage.org/package/flat/badge/lts-6)](http://stackage.org/lts/package/flat)
+[![Stackage LTS 9](http://stackage.org/package/flat/badge/lts-9)](http://stackage.org/lts/package/flat)
+[![Stackage LTS 11](http://stackage.org/package/flat/badge/lts-11)](http://stackage.org/lts/package/flat)
+[![Stackage LTS 12](http://stackage.org/package/flat/badge/lts-12)](http://stackage.org/lts/package/flat)
+[![Stackage LTS 12](http://stackage.org/package/flat/badge/lts-14)](http://stackage.org/lts/package/flat)
+[![Stackage LTS 16](http://stackage.org/package/flat/badge/lts-16)](http://stackage.org/lts/package/flat)
+[![Stackage LTS 18](http://stackage.org/package/flat/badge/lts-18)](http://stackage.org/lts/package/flat)
+[![Stackage LTS 19](http://stackage.org/package/flat/badge/lts-19)](http://stackage.org/lts/package/flat)
+[![Stackage Nightly](http://stackage.org/package/flat/badge/nightly)](http://stackage.org/nightly/package/flat)
+
+Haskell implementation of [Flat](http://quid2.org/docs/Flat.pdf), a principled, portable and compact binary data format ([specs](http://quid2.org)).
 
 
-Haskell implementation of [Flat](http://quid2.org/docs/Flat.pdf), a principled, language-independent and efficient binary data format.
+### How To Use It For Fun and Profit
+
+```haskell
+{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
+```
+
+```haskell
+import Flat
+```
+
+
+
+```haskell
+data Direction = North | South | Center | East | West deriving (Show,Generic,Flat)
+```
+
+Use **flat** to encode: 
+
+```haskell
+flat $ [North,South]
+-> "\149"
+```
+
+
+and **unflat** to decode:
+
+```haskell
+unflat (flat $ [North,South]) :: Decoded [Direction]
+-> Right [ North , South ]
+```
+
+
+And thanks to Flat's bit-encoding, this little list fits in a single byte (rather than the five that would be required by a byte encoding):
+
+```haskell
+flatBits $ [North,South]
+-> "10010101"
+```
+
+
 
 ### Performance
 
 For some hard data, see this [comparison of the major haskell serialisation libraries](https://github.com/haskell-perf/serialization).
 
 Briefly:
- * Transfer time (serialisation time + transport time on the network + deserialisation at the receiving end): `flat` is usually faster for all but the highest network speeds
  * Size: `flat` produces significantly smaller binaries than all other libraries (3/4 times usually)
  * Serialization: `store`, `persist` and `flat` are faster
  * Deserialization: `store`, `flat`, `persist` and `cereal` are faster
+ * Transfer time (serialisation time + transport time on the network + deserialisation at the receiving end): `flat` is usually faster for all but the highest network speeds
 
 ### Documentation
 
@@ -25,22 +75,61 @@ Briefly:
 
 * [Flat Format Specification](http://quid2.org/docs/Flat.pdf)
 
+
 ### Installation
 
 Get the latest stable version from [hackage](https://hackage.haskell.org/package/flat).
 
-### Other Stuff You Might Like
+### Compatibility
 
-#### [ZM - Language independent, reproducible, absolute types](https://github.com/Quid2/zm)
+Tested with:
+
+* [GHC](https://www.haskell.org/ghc/) 7.10.3 .. 9.4.2 (x64)
+
+
+* [GHCJS](https://github.com/ghcjs/ghcjs)
+  * Caveats:
+    * short bytestrings (Data.ByteString.Short) that seem unsupported by `ghcjs`.
+* Current version short bytestrings (Data.ByteString.Short) that seem unsupported by `ghcjs`.
+* Versions of `flat` prior to 0.33 encode `Double` values incorrectly when they are not aligned with a byte boundary.
+* !Performance in untested, as the 
+Passes all tests in the `flat` testsuite, except for those relative to short bytestrings (Data.ByteString.Short) that seem unsupported by `ghcjs`.
+
+
+
+### Known Bugs and Infelicities
+
+* Data types with more than 512 constructors are currently unsupported
+
+* Longish compilation times
+
+`flat` relies more than other serialisation libraries on extensive inlining for its good performance, this unfortunately leads to longer compilation times. 
+
+If you have many data types or very large ones this might become an issue.
+
+A couple of good practices that will eliminate or mitigate this problem are:
+
+  * During development, turn optimisations off (`stack --fast` or `-O0` in the cabal file).
+
+  * Keep your serialisation code in a separate module or modules.
+
+See also the [full list of open issues](https://github.com/Quid2/flat/issues).
+
+### Ports for other languages
+
+[Rust](https://www.rust-lang.org/) and [TypeScript-JavaScript](https://github.com/Quid2/ts) ports are under development.
+
+
+Get in touch if you would like to help porting `flat` to other languages.
+
+### Acknowledgements
+
+`flat` reuses ideas and readapts code from various packages, mainly: `store`, `binary-bits` and `binary` and includes bug fixes from a number of contributors.
+
+### Other Stuff You Might Like
 
 To decode `flat` encoded data you need to know the type of the serialised data.
 
 This is ok for applications that do not require long-term storage and that do not operate in open distributed systems.
 
-For those who do, you might want to supplement `flat` with something like [ZM](https://github.com/Quid2/zm).
-
-#### Ports for other languages
-
-[TypeScript-JavaScript](https://github.com/Quid2/ts) and [Purescript](https://www.purescript.org/) ports are under development.
-
-Get in touch if you would like to help porting `flat` to other languages.
+For those who do, you might want to supplement `flat` with [ZM - Language independent, reproducible, absolute types](https://github.com/Quid2/zm).
