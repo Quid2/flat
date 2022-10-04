@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP                #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE FlexibleInstances  #-}
+{-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE StandaloneDeriving #-}
 
 -- | Flat instances for the base library
@@ -60,6 +61,29 @@ import           Data.Functor.Identity (Identity (..))
 
 -- >>> y
 
+-- | @since 0.4.4
+#if MIN_VERSION_base(4,8,0)
+instance Flat Monoid.All where
+    encode (Monoid.All a) = encode a
+    size (Monoid.All a) = size a
+    decode = Monoid.All <$> decode
+
+{- |
+
+>>> let w = Just (11::Word8); a = Alt w <> Alt (Just 24) in tst a == tst w
+True
+
+>>> let w = Just (11::Word8); a = Alt Nothing <> Alt w in tst a == tst w
+True
+
+@since 0.4.4
+-}
+instance Flat (f a) => Flat (Monoid.Alt f a) where
+    encode (Monoid.Alt a) = encode a
+    size (Monoid.Alt a) = size a
+    decode = Monoid.Alt <$> decode
+#endif
+
 #if MIN_VERSION_base(4,9,0)
 -- | @since 0.4.4
 instance Flat a => Flat (Identity a) where
@@ -73,12 +97,6 @@ instance Flat a => Flat (Monoid.Dual a) where
     encode (Monoid.Dual a) = encode a
     size (Monoid.Dual a) = size a
     decode = Monoid.Dual <$> decode
-
--- | @since 0.4.4
-instance Flat Monoid.All where
-    encode (Monoid.All a) = encode a
-    size (Monoid.All a) = size a
-    decode = Monoid.All <$> decode
 
 -- | @since 0.4.4
 instance Flat Monoid.Any where
@@ -99,21 +117,6 @@ instance Flat a => Flat (Monoid.Product a) where
     decode = Monoid.Product <$> decode
 
 #if MIN_VERSION_base(4,9,0)
-{- |
-
->>> let w = Just (11::Word8); a = Alt w <> Alt (Just 24) in tst a == tst w
-True
-
->>> let w = Just (11::Word8); a = Alt Nothing <> Alt w in tst a == tst w
-True
-
-@since 0.4.4
--}
-instance Flat (f a) => Flat (Monoid.Alt f a) where
-    encode (Monoid.Alt a) = encode a
-    size (Monoid.Alt a) = size a
-    decode = Monoid.Alt <$> decode
-
 -- | @since 0.4.4
 instance Flat a => Flat (Semigroup.Min a) where
     encode (Semigroup.Min a) = encode a

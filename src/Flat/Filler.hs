@@ -2,7 +2,6 @@
 {-# LANGUAGE DeriveGeneric       #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE StrictData #-}
 
 -- |Pre-value and post-value byte alignments
 module Flat.Filler (
@@ -24,7 +23,7 @@ import Data.Typeable ( Typeable )
 
 -- |A meaningless sequence of 0 bits terminated with a 1 bit (easier to implement than the reverse)
 -- Useful to align an encoded value at byte/word boundaries.
-data Filler = FillerBit Filler
+data Filler = FillerBit !Filler
             | FillerEnd
   deriving (Show, Eq, Ord, Typeable, Generic, NFData)
 
