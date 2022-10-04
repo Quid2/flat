@@ -19,7 +19,7 @@ on:
 jobs:
   linux:
     name: Haskell-CI - Linux - ${{ matrix.compiler }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 60
     container:
       image: buildpack-deps:bionic
@@ -69,11 +69,11 @@ jobs:
           #   compilerVersion: 8.2.2
           #   setup-method: hvr-ppa
           #   allow-failure: false
-          # - compiler: ghc-8.0.2
-          #   compilerKind: ghc
-          #   compilerVersion: 8.0.2
-          #   setup-method: hvr-ppa
-          #   allow-failure: false
+          - compiler: ghc-8.0.2
+            compilerKind: ghc
+            compilerVersion: 8.0.2
+            setup-method: hvr-ppa
+            allow-failure: false
 
           # test this locally
           # - compiler: ghc-7.10.3
