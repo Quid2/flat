@@ -1,16 +1,22 @@
+# For ghc 7.10.3, use cabal instead
+
 # Supported stack versions
-# For lts-6.35 see stack-6.35.yaml
+
+# resolver: lts-9.21 # ghc 8.0.2
+
+# resolver: lts-11.22 # ghc 8.2.2
+
+# resolver: lts-12.26 # ghc 8.4.4
 
 # resolver: lts-14.27 # ghc 8.6.5
 
-# last
 # resolver: lts-16.31 # ghc 8.8.4
 
 resolver: lts-18.28 # ghc 8.10.7
 
-# resolver: lts-19.5 # ghc 9.0.2
+# resolver: lts-19.26 # ghc 9.0.2
 
-# resolver: nightly-2022-04-24 # ghc 9.2.2
+# resolver: nightly-2022-09-30 # ghc 9.2.4
 
 packages:
   - .
@@ -19,6 +25,19 @@ packages:
   # - ../EXTERNAL/doctest
 
 extra-deps:
-  # Modified doctest, used to generate static tests
-  - git: https://github.com/tittoassini/doctest
-    commit: 3954e94449901764e28cfed1c35490af970e9b01
+  # Modified doctest, used to generate static tests (run by doc-static)
+  # - git: https://github.com/tittoassini/doctest
+  #   commit: 3954e94449901764e28cfed1c35490af970e9b01
+
+  # - hashable-1.4.0.2@sha256:0cddd0229d1aac305ea0404409c0bbfab81f075817bd74b8b2929eff58333e55,5005
+
+  # for ghcjs-cons
+  # - jsaddle-0.9.8.2@sha256:e8c003801eb9364fcd6b1e0cda34f072a537bcfa767e6eb8c626836dae77ba04,4419
+  # - ref-tf-0.4.0.2@sha256:69de3550250e0cd69f45d080359cb314a9487c915024349c75b78732bbee9332,1134
+
+  # for text-2.0:
+  # - text-2.0
+  # - Cabal-3.6.3.0@sha256:ff97c442b0c679c1c9876acd15f73ac4f602b973c45bde42b43ec28265ee48f4,12459
+  # - parsec-3.1.15.0@sha256:a162d4cc8884014ba35192545cad293af0529fe11497aad8834bbaaa3dfffc26,4429
+
+allow-newer: true

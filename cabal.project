@@ -1,11 +1,10 @@
 packages: .
 -- constraints: text >= 2.0
 
--- Note: for ghc 7.* only the spec test builds and run correctly
--- tests: true
+tests: true
 
--- Modified doctest, used to generate static tests (run as doc-static)
+-- Modified doctest, used to generate static tests (doc-static)
 --source-repository-package
 --    type: git
 --    location: https://github.com/tittoassini/doctest.git
---    tag: 631e32db47afba603c2bc20e2ecb6b584ca44fa9
+--    tag: 3954e94449901764e28cfed1c35490af970e9b01
