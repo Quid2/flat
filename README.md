@@ -43,7 +43,7 @@ unflat (flat $ [North,South]) :: Decoded [Direction]
 ```
 
 
-And thanks to Flat's bit-encoding, this little list fits in a single byte (rather than the five that would be required by a byte encoding):
+And thanks to Flat's bit-encoding, this little list fits in a single byte (rather than the five that would be required by a traditional byte encoding):
 
 ```haskell
 flatBits $ [North,South]
