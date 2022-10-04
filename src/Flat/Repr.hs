@@ -17,6 +17,7 @@ import           Flat.Run           (flat, unflat)
 
 {- | Flat representation of a value
 
+== Repr 
 It is occasionally useful to keep a decoded value, or part of it, in its encoded binary representation and decode it later on demand.
 
 To do so, just decode a value `a` to a `Repr a`.
@@ -31,17 +32,17 @@ To decode a `Repr a` to an `a`, we use `unrepr`:
 >>> let Right l = unflat (flat [1..5]) :: Decoded [Repr Int] in unrepr (l  !! 2)
 3
 
-See test/FlatRepr.hs for a test and a longer example of use.
+See "test/FlatRepr.hs" for a test and a longer example of use.
 
-
+== SizeOf
 If a decoded value is not required, it can be skipped completely using `SizeOf a`.
 
-For example, if we are not interested in the second and fourth component of the following tuple, we can decode it as:
+For example, to ignore the second and fourth component of the following tuple, it can be decoded as:
 
 >>> let v = flat ('a',"abc",'z',True) in unflat v :: Decoded (Char,SizeOf String,Char,SizeOf Bool)
 Right ('a',SizeOf 28,'z',SizeOf 1)
 
-The unused values have not been decoded and instead their size (in bits) has been returned.
+The unused values have not been decoded and instead their size (in bits) is returned.
 -}
 
 newtype Repr a = Repr {repr :: B.ByteString} deriving Show

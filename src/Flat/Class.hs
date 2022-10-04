@@ -65,9 +65,12 @@ getSize a = size a 0
 {-| Class of types that can be encoded/decoded
 
 Encoding a value involves three steps:
-- calculate the maximum size of the serialised value, using `size`
-- preallocate a buffer of the required size
-- encode the value in the buffer, using `encode`
+
+* calculate the maximum size of the serialised value, using `size`
+
+* preallocate a buffer of the required size
+
+* encode the value in the buffer, using `encode`
 -}
 class Flat a where
     -- |Return the encoding corrresponding to the value

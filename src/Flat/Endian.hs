@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP #-}
 -- | Endian utilities
+-- 
 -- Exported for testing purposes, but not meant to be used outside this package.
 module Flat.Endian
     (

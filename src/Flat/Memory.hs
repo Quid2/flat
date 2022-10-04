@@ -5,7 +5,7 @@
 {- |
 Memory access primitives.
 
-Includes code from the store-core package.
+Includes code from the [store-core](https://hackage.haskell.org/package/store-core) package.
 -}
 module Flat.Memory
   ( chunksToByteString
@@ -65,10 +65,11 @@ pokeByteString (BS.PS foreignPointer sourceOffset sourceLength) destPointer =
       sourceLength
     return (destPointer `plusPtr` sourceLength)
 
--- | Create a new bytestring, copying from sourcePtr sourceLength number of bytes
+-- Create a new bytestring, copying from sourcePtr sourceLength number of bytes
 -- peekByteString :: Ptr Word8 -> Int -> BS.ByteString
 -- peekByteString sourcePtr sourceLength = BS.unsafeCreate sourceLength $ \destPointer -> BS.memcpy destPointer sourcePtr sourceLength
 
+-- |Copy ByteArray to given pointer, returns new pointer
 pokeByteArray :: ByteArray# -> Int -> Int -> Ptr Word8 -> IO (Ptr Word8)
 pokeByteArray sourceArr sourceOffset len dest = do
   copyByteArrayToAddr sourceArr sourceOffset dest len
@@ -76,7 +77,9 @@ pokeByteArray sourceArr sourceOffset len dest = do
   return dest'
 {-# INLINE pokeByteArray #-}
 
+
 -- | Wrapper around @copyByteArrayToAddr#@ primop.
+--
 -- Copied from the store-core package
 copyByteArrayToAddr :: ByteArray# -> Int -> Ptr a -> Int -> IO ()
 copyByteArrayToAddr arr (I# offset) (Ptr addr) (I# len) =
@@ -112,6 +115,7 @@ chunksToByteArray (sourcePtr0, lens) = unsafePerformIO $ do
 
 
 -- | Wrapper around @copyAddrToByteArray#@ primop.
+-- 
 -- Copied from the store-core package
 copyAddrToByteArray
   :: Ptr a -> MutableByteArray (PrimState IO) -> Int -> Int -> IO ()

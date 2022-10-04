@@ -22,7 +22,8 @@ import Control.DeepSeq ( NFData )
 import Data.Typeable ( Typeable )
 
 -- |A meaningless sequence of 0 bits terminated with a 1 bit (easier to implement than the reverse)
--- Useful to align an encoded value at byte/word boundaries.
+-- 
+-- Used to align encoded values at byte/word boundaries.
 data Filler = FillerBit !Filler
             | FillerEnd
   deriving (Show, Eq, Ord, Typeable, Generic, NFData)
@@ -34,6 +35,7 @@ instance Flat Filler where
   -- use generated decode
 
 -- |A Post aligned value, a value followed by a filler
+-- 
 -- Useful to complete the encoding of a top-level value
 data PostAligned a = PostAligned { postValue :: a, postFiller :: Filler }
 #ifdef ETA_VERSION    
@@ -49,6 +51,7 @@ instance Flat a => Flat (PostAligned a) where
 
 
 -- |A Pre aligned value, a value preceded by a filler
+-- 
 -- Useful to prealign ByteArrays, Texts and any structure that can be encoded more efficiently when byte aligned.  
 data PreAligned a = PreAligned { preFiller :: Filler, preValue :: a }
   deriving (Show, Eq, Ord, Typeable, Generic, NFData, Flat)
@@ -66,7 +69,6 @@ postAligned a = PostAligned a FillerEnd
 preAligned :: a -> PreAligned a
 preAligned = PreAligned FillerEnd
 
--- postAlignedDecoder :: Get a -> Get (PostAligned a)
 -- |Decode a value assuming that is PostAligned
 postAlignedDecoder :: Get b -> Get b
 postAlignedDecoder dec = do
@@ -74,7 +76,9 @@ postAlignedDecoder dec = do
   _::Filler <- decode
   return v
 
--- | @since 0.5
+-- |Decode a value assuming that is PreAligned
+-- 
+-- @since 0.5
 preAlignedDecoder :: Get b -> Get b
 preAlignedDecoder dec = do
   _::Filler <- decode

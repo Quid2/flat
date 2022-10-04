@@ -195,6 +195,7 @@ dBool = Get $ \endPtr s ->
 {- | Return the n most significant bits (up to maximum of 8)
 
 The bits are returned right shifted:
+
 >>> unflatWith (dBEBits8 3) [0b11100001::Word8] == Right 0b00000111
 True
 
@@ -210,6 +211,7 @@ dBEBits8 n = Get $ \endPtr s -> do
 {- | Return the n most significant bits (up to maximum of 16)
 
 The bits are returned right shifted:
+
 >>> pPrint . asBits <$> unflatWith (dBEBits16 11) [0b10110111::Word8,0b11100001]
 Right 00000101 10111111
 

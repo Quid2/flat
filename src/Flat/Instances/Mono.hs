@@ -113,9 +113,13 @@ instance (IsSequence r, Flat (Element r)) => Flat (AsArray r) where
   encode (AsArray a) = encodeSequence a
   decode = AsArray <$> decodeSequence
 
--- |Calculate size of an instance of IsSequence as the sum:
--- * of the size of all the elements
--- * plus the size of the array constructors (1 byte every 255 elements plus one final byte)
+{- |
+Calculate size of an instance of IsSequence as the sum:
+
+* of the size of all the elements
+
+* plus the size of the array constructors (1 byte every 255 elements plus one final byte)
+-}
 sizeSequence
   :: (IsSequence mono, Flat (Element mono)) => mono -> NumBits -> NumBits
 sizeSequence s acc =

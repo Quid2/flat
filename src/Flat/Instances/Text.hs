@@ -39,7 +39,7 @@ Text (and Data.Text.Lazy) is encoded as a byte aligned array of bytes correspond
 (True,120,[1,12,240,144,141,136,240,144,141,136,240,144,141,136,0])
 #endif
 
-Strict and Lazy Text has the same encoding:
+Strict and Lazy Text have the same encoding:
 
 >>> tst (T.pack "abc") == tst (TL.pack "abc")
 True

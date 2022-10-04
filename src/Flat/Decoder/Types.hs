@@ -29,11 +29,15 @@ import qualified Control.Monad.Fail as Fail
 A decoder.
 
 Given:
+
 * end of input buffer
+
 * current position in input buffer
 
 Returns:
+
 * decoded value
+
 * new position in input buffer
 -}
 newtype Get a =

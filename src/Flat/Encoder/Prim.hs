@@ -252,12 +252,14 @@ low7 :: (Integral a) => a -> Word8
 low7 t = fromIntegral t .&. 0x7F
 
 -- | Encode text as UTF8 and encode the result as an array of bytes
+-- 
 -- PROB: encodeUtf8 calls a C primitive, not compatible with GHCJS (fixed in latest versions of GHCJS?)
 eUTF8F :: T.Text -> Prim
 eUTF8F = eBytesF . TE.encodeUtf8
 
--- PROB: Not compatible with GHCJS or ETA (that is big endian and writes contents in reverse order)
 -- | Encode text as UTF16 and encode the result as an array of bytes
+-- 
+-- PROB: Not compatible with GHCJS or ETA (that is big endian and writes contents in reverse order)
 #if ! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
 
 eUTF16F :: T.Text -> Prim
