@@ -43,7 +43,7 @@ and **unflat** to decode:
 
 > d4 =  unflat (flat [North,South]) :: Decoded [Direction]
 
-And thanks to Flat's bit-encoding, this little list fits in a single byte (rather than the five that would be required by a traditional byte encoding):
+And thanks to Flat's bit-encoding, this list fits in 1 byte (rather than the 5 bytes that would be required by a traditional byte encoding):
 
 > d5 =  flatBits [North,South]
 
@@ -65,7 +65,6 @@ Briefly:
 * [Hackage Package and Docs](http://hackage.haskell.org/package/flat)
 
 * [Flat Format Specification](http://quid2.org/docs/Flat.pdf)
-
 
 ### Installation
 
