@@ -37,15 +37,15 @@ Haskell implementation of [Flat](http://quid2.org/docs/Flat.pdf), a principled, 
 
 Use **flat** to encode: 
 
-> d3 =  flat $ [North,South]
+> d3 =  flat [North,South]
 
 and **unflat** to decode:
 
-> d4 =  unflat (flat $ [North,South]) :: Decoded [Direction]
+> d4 =  unflat (flat [North,South]) :: Decoded [Direction]
 
 And thanks to Flat's bit-encoding, this little list fits in a single byte (rather than the five that would be required by a traditional byte encoding):
 
-> d5 =  flatBits $ [North,South]
+> d5 =  flatBits [North,South]
 
 
 ### Performance

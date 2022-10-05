@@ -30,7 +30,7 @@ data Direction = North | South | Center | East | West deriving (Show,Generic,Fla
 Use **flat** to encode: 
 
 ```haskell
-flat $ [North,South]
+flat [North,South]
 -> "\149"
 ```
 
@@ -38,7 +38,7 @@ flat $ [North,South]
 and **unflat** to decode:
 
 ```haskell
-unflat (flat $ [North,South]) :: Decoded [Direction]
+unflat (flat [North,South]) :: Decoded [Direction]
 -> Right [ North , South ]
 ```
 
@@ -46,7 +46,7 @@ unflat (flat $ [North,South]) :: Decoded [Direction]
 And thanks to Flat's bit-encoding, this little list fits in a single byte (rather than the five that would be required by a traditional byte encoding):
 
 ```haskell
-flatBits $ [North,South]
+flatBits [North,South]
 -> "10010101"
 ```
 
