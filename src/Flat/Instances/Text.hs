@@ -3,21 +3,21 @@
 -- | Flat instances for the text library
 module Flat.Instances.Text(
   UTF8Text(..)
-#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION) && ! defined (ETA) 
+#if! defined (ETA_VERSION) && ! defined (ETA)
   ,UTF16Text(..)
 #endif
 ) where
 
+import qualified Data.Text           as T
+import qualified Data.Text.Lazy      as TL
 import           Flat.Instances.Util
-import qualified Data.Text             as T
-import qualified Data.Text.Lazy             as TL
 
 -- $setup
 -- >>> import Flat.Instances.Base()
 -- >>> import Flat.Instances.Test
 -- >>> import qualified Data.Text             as T
 -- >>> import qualified Data.Text.Lazy             as TL
--- >>> import Data.Word    
+-- >>> import Data.Word
 
 {-|
 Text (and Data.Text.Lazy) is encoded as a byte aligned array of bytes corresponding to its UTF8 encoding.
@@ -70,7 +70,7 @@ instance Flat UTF8Text where
   encode (UTF8Text t) = eUTF8 t
   decode = UTF8Text <$> dUTF8
 
-#if ! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION) && ! defined (ETA) 
+#if ! defined (ETA_VERSION) && ! defined (ETA)
 {-|
 >>> tst (UTF16Text $ T.pack "aaa")
 (True,72,[1,6,97,0,97,0,97,0,0])
@@ -79,13 +79,12 @@ instance Flat UTF8Text where
 (True,120,[1,12,0,216,72,223,0,216,72,223,0,216,72,223,0])
 -}
 
--- |A wrapper to encode/decode Text as UTF16 (faster but bigger)
+-- |A wrapper to encode/decode Text as UTF16
 newtype UTF16Text = UTF16Text {unUTF16::T.Text} deriving (Eq,Ord,Show)
 
 instance Flat UTF16Text where
   size (UTF16Text t) = sUTF16 t
   encode (UTF16Text t) = eUTF16 t
   decode = UTF16Text <$> dUTF16
-
 #endif
 

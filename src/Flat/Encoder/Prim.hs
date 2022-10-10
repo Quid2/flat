@@ -12,7 +12,7 @@ module Flat.Encoder.Prim
   , eBitsF
   , eFloatF
   , eDoubleF
-#if ! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
+#if ! defined (ETA_VERSION)
   , eUTF16F
 #endif
   , eUTF8F
@@ -63,7 +63,7 @@ import           Flat.Endian
 import           Flat.Memory
 import           Flat.Types
 
-#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION) && ! MIN_VERSION_text(2,0,0)
+#if ! defined (ETA_VERSION) && ! MIN_VERSION_text(2,0,0)
 import qualified Data.Text.Array                as TA
 import qualified Data.Text.Internal             as TI
 -- import           Data.FloatCast
@@ -252,16 +252,11 @@ low7 :: (Integral a) => a -> Word8
 low7 t = fromIntegral t .&. 0x7F
 
 -- | Encode text as UTF8 and encode the result as an array of bytes
--- 
--- PROB: encodeUtf8 calls a C primitive, not compatible with GHCJS (fixed in latest versions of GHCJS?)
 eUTF8F :: T.Text -> Prim
 eUTF8F = eBytesF . TE.encodeUtf8
 
 -- | Encode text as UTF16 and encode the result as an array of bytes
--- 
--- PROB: Not compatible with GHCJS or ETA (that is big endian and writes contents in reverse order)
-#if ! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
-
+#if ! defined (ETA_VERSION)
 eUTF16F :: T.Text -> Prim
 #if MIN_VERSION_text(2,0,0)
 eUTF16F = eBytesF . TE.encodeUtf16LE

@@ -1,6 +1,7 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE Trustworthy ,NoMonomorphismRestriction#-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE Trustworthy               #-}
 
 {- | Primitives to convert between Float\/Double and Word32\/Word64.
 
@@ -20,18 +21,10 @@ module Data.FloatCast
   )
 where
 
-import           Data.Word                      ( Word32
-                                                , Word64
-                                                )
-import           Data.Array.ST                  ( newArray
-                                                , readArray
-                                                , MArray
-                                                , STUArray
-                                                )
-import           Data.Array.Unsafe              ( castSTUArray )
-import           GHC.ST                         ( runST
-                                                , ST
-                                                )
+import           Data.Array.ST     (MArray, STUArray, newArray, readArray)
+import           Data.Array.Unsafe (castSTUArray)
+import           Data.Word         (Word32, Word64)
+import           GHC.ST            (ST, runST)
 -- import           Flat.Endian
 
 
@@ -93,22 +86,10 @@ wordToDouble :: Word64 -> Double
 wordToDouble x = runST (cast x)
 -- wordToDouble x = runST (cast $ fix64 x)
 
--- | 
+-- |
 -- >>> runST (cast (0xF0F1F2F3F4F5F6F7::Word64)) == (0xF0F1F2F3F4F5F6F7::Word64)
 -- True
 cast
   :: (MArray (STUArray s) a (ST s), MArray (STUArray s) b (ST s)) => a -> ST s b
 cast x = newArray (0 :: Int, 0) x >>= castSTUArray >>= flip readArray 0
 {-# INLINE cast #-}
-
--- Required for older versions of ghcjs
--- #ifdef ghcjs_HOST_OS
--- doubleToWord x = (`rotateR` 32) $ runST (cast x)
--- #else
--- doubleToWord x = runST (cast x)
--- #endif
--- #ifdef ghcjs_HOST_OS
--- wordToDouble x = runST (cast $ x `rotateR` 32) 
--- #else
--- wordToDouble x = runST (cast x) 
--- #endif

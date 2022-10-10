@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP #-}
 -- | Endian utilities
--- 
+--
 -- Exported for testing purposes, but not meant to be used outside this package.
 module Flat.Endian
     (
@@ -70,16 +70,3 @@ toBE16 = id
 #else
 toBE16 = byteSwap16
 #endif
-
--- Required for older versions of ghcjs
--- | Fix issue with `ghcjs` (different order of 32 bit halves of 64 values with respect to `ghc`)
--- fix64 :: Word64 -> Word64
--- fix64 = id
-
--- #ifdef ghcjs_HOST_OS
--- fix64 = (`rotateR` 32)
--- {-# NOINLINE fix64 #-}
--- #else
--- fix64 = id
--- {-# INLINE fix64 #-}
--- #endif

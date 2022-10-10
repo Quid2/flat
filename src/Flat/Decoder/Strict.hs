@@ -9,7 +9,7 @@ module Flat.Decoder.Strict
   , dLazyByteString
   , dShortByteString
   , dShortByteString_
-#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
+#if! defined (ETA_VERSION)
   , dUTF16
 #endif
   , dUTF8
@@ -44,7 +44,7 @@ import qualified Data.Text.Encoding             as T
 import           Flat.Decoder.Prim
 import           Flat.Decoder.Types
 
-#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION) && ! MIN_VERSION_text(2,0,0)
+#if! defined (ETA_VERSION) && ! MIN_VERSION_text(2,0,0)
 import qualified Data.Text.Array                as TA
 import qualified Data.Text.Internal             as T
 #endif
@@ -237,9 +237,11 @@ dUnsigned_ shl n = do
   if tw == w
     then return (v, shl)
     else dUnsigned_ (shl + 7) v
+
 --encode = encode . blob UTF8Encoding . L.fromStrict . T.encodeUtf8
 --decode = T.decodeUtf8 . L.toStrict . (unblob :: BLOB UTF8Encoding -> L.ByteString) <$> decode
-#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
+
+#if ! defined (ETA_VERSION)
 -- BLOB UTF16Encoding
 dUTF16 :: Get T.Text
 dUTF16 = do

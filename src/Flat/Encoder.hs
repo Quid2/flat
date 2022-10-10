@@ -1,4 +1,5 @@
-{-# LANGUAGE CPP   ,NoMonomorphismRestriction    #-}
+{-# LANGUAGE CPP                       #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 -- |Encoder and encoding primitives
 module Flat.Encoder (
     Encoding,
@@ -24,7 +25,7 @@ module Flat.Encoder (
     eTrue,
     eFalse,
     eBytes,
-#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
+#if ! defined (ETA_VERSION)
     eUTF16,
 #endif
     eLazyBytes,
@@ -58,9 +59,7 @@ module Flat.Encoder (
     sBytes,
     sLazyBytes,
     sShortBytes,
-#ifndef ghcjs_HOST_OS
     sUTF16,
-#endif
     sFillerMax,
     sBool,
     sUTF8Max,
@@ -70,11 +69,11 @@ module Flat.Encoder (
 #endif
     ) where
 
-import Flat.Encoder.Prim ( eTrueF, eFalseF )
-import           Flat.Encoder.Size(arrayBits)
+import           Flat.Encoder.Prim   (eFalseF, eTrueF)
+import           Flat.Encoder.Size   (arrayBits)
 import           Flat.Encoder.Strict
-import Flat.Encoder.Types ( NumBits, Size )
+import           Flat.Encoder.Types  (NumBits, Size)
 
 #if ! MIN_VERSION_base(4,11,0)
-import           Data.Semigroup((<>))
+import           Data.Semigroup      ((<>))
 #endif

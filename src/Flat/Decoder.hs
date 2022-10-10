@@ -10,7 +10,7 @@ module Flat.Decoder (
     dLazyByteString,
     dShortByteString,
     dShortByteString_,
-#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
+#if! defined (ETA_VERSION)
     dUTF16,
 #endif
     dUTF8,
