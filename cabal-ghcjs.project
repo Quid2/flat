@@ -1,10 +1,13 @@
 packages: .
 
--- equivalent to:
--- cabal --ghcjs --constraint "tasty -clock"
 compiler: ghcjs
+
+tests: true
+
+builddir: dist-ghcjs
 
 package tasty
     flags: -clock
 
+-- Not compatible with ghcjs
 -- constraints: text >= 2.0
