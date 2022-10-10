@@ -9,14 +9,12 @@ import qualified Data.ByteString.Lazy           as L
 import qualified Data.ByteString.Short.Internal as SBS
 import           Data.Char                      (ord)
 import qualified Data.Text                      as T
+import qualified Data.Text.Internal             as TI
+import           Data.ZigZag                    (ZigZag (zigZag))
 import           Flat.Encoder.Prim              (w7l)
 import           Flat.Types                     (Int16, Int32, Int64, Natural,
                                                  NumBits, Text, Word16, Word32,
                                                  Word64)
-#ifndef ghcjs_HOST_OS
-import qualified Data.Text.Internal             as TI
-#endif
-import           Data.ZigZag
 #include "MachDeps.h"
 -- A filler can take anything from 1 to 8 bits
 sFillerMax :: NumBits
@@ -117,17 +115,34 @@ sIntegral t =
   let vs = w7l t
    in length vs * 8
 
---sUTF8 :: T.Text -> NumBits
---sUTF8 t = fold
--- TOFIX: Wildly pessimistic and also slow as T.length is O(n)
 {-# INLINE sUTF8Max #-}
 sUTF8Max :: Text -> NumBits
-sUTF8Max = blobBits . (4 *) . T.length
-#ifndef ghcjs_HOST_OS
-{-# INLINE sUTF16 #-}
-sUTF16 :: T.Text -> NumBits
-sUTF16 = blobBits . textBytes
+sUTF8Max (TI.Text _ _ lenInUnits) =
+  let len =
+#if MIN_VERSION_text(2,0,0)
+        -- UTF-8 encoding, units are bytes
+        lenInUnits
+#else
+        -- UTF-16 encoding, units are 16 bits words
+        -- worst case: a utf-16 unit becomes a 3 bytes utf-8 encoding
+        lenInUnits * 3
 #endif
+  in blobBits len
+
+{-# INLINE sUTF16Max #-}
+sUTF16Max :: T.Text -> NumBits
+sUTF16Max (TI.Text _ _ lenInUnits) =
+  let len =
+#if MIN_VERSION_text(2,0,0)
+        -- UTF-8 encoding
+        -- worst case, a 1 byte UTF-8 char becomes a 2 bytes UTF-16 (ascii)
+        lenInUnits * 2
+#else
+        -- UTF-16 encoding
+        lenInUnits * 2
+#endif
+  in blobBits len
+
 {-# INLINE sBytes #-}
 sBytes :: B.ByteString -> NumBits
 sBytes = blobBits . B.length
@@ -139,18 +154,6 @@ sLazyBytes bs = 16 + L.foldrChunks (\b l -> blkBitsBS b + l) 0 bs
 {-# INLINE sShortBytes #-}
 sShortBytes :: SBS.ShortByteString -> NumBits
 sShortBytes = blobBits . SBS.length
-
-#ifndef ghcjs_HOST_OS
--- We are not interested in the number of unicode chars (returned by T.length, an O(n) operation)
--- just the number of bytes
--- > T.length (T.pack "\x1F600")
--- 1
--- > textBytes (T.pack "\x1F600")
--- 4
-{-# INLINE textBytes #-}
-textBytes :: T.Text -> Int
-textBytes (TI.Text _ _ w16Len) = w16Len * 2
-#endif
 
 {-# INLINE bitsToBytes #-}
 bitsToBytes :: Int -> Int
