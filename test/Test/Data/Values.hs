@@ -11,10 +11,10 @@ import qualified Data.ByteString                as B
 import qualified Data.ByteString.Lazy           as L
 import qualified Data.ByteString.Short.Internal as SBS
 import           Data.Char
-import           Flat
 import           Data.Foldable
 import           Data.Int
 import qualified Data.IntMap                    as IM
+import           Flat
 -- import qualified Data.IntSet                    as IS
 -- import           Data.List
 import qualified Data.Map                       as M
@@ -191,9 +191,16 @@ asciiTextT = ("asciiText", T.pack $ longS english )
 
 unicodeTextUTF8T = ("unicodeTextUTF8",UTF8Text unicodeText)
 
-#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
+chineseTextUTF8T = ("chineseTextUTF8",UTF8Text chineseText)
+
+#if ! defined (ETA_VERSION)
 unicodeTextUTF16T = ("unicodeTextUTF16",UTF16Text unicodeText)
+chineseTextUTF16T = ("chineseTextUTF16",UTF16Text chineseText)
 #endif
+
+-- chineseTextT = ("chineseText",chinesText)
+chineseText = T.pack $ longS chinese
+
 
 unicodeTextT = ("unicodeText",unicodeText)
 unicodeText = T.pack unicodeStr

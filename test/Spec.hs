@@ -1,61 +1,61 @@
-{-# LANGUAGE BinaryLiterals #-}
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE NegativeLiterals #-}
+{-# LANGUAGE BinaryLiterals            #-}
+{-# LANGUAGE CPP                       #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
+{-# LANGUAGE NegativeLiterals          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
 
 -- | Tests for the flat module
 module Main where
 
 import           Control.Monad
 import           Data.Bits
-import qualified Data.ByteString as B
-import qualified Data.ByteString.Lazy as L
+import qualified Data.ByteString       as B
+import qualified Data.ByteString.Lazy  as L
 import qualified Data.ByteString.Short as SBS
 import           Data.Char
 import           Data.Either
+import           Data.FloatCast
+import           Data.Int
+import           Data.Proxy
+import qualified Data.Sequence         as Seq
+import           Data.String           (fromString)
+import qualified Data.Text             as T
+import           Data.Text.Arbitrary
+import           Data.Word
 import           Flat
 import           Flat.Bits
 import           Flat.Decoder
-import qualified Flat.Encoder as E
-import qualified Flat.Encoder.Prim as E
-import qualified Flat.Encoder.Strict as E
-import           Data.Int
-import           Data.Proxy
-import qualified Data.Sequence as Seq
-import           Data.String (fromString)
-import qualified Data.Text as T
-import           Data.Word
+import qualified Flat.Encoder          as E
+import qualified Flat.Encoder.Prim     as E
+import qualified Flat.Encoder.Strict   as E
+import           Flat.Endian
 import           Numeric.Natural
 import           System.Exit
 import           Test.Data
-import           Test.Data.Arbitrary ()
+import           Test.Data.Arbitrary   ()
 import           Test.Data.Flat
-import           Test.Data.Values hiding (lbs, ns)
+import           Test.Data.Values      hiding (lbs, ns)
 import           Test.E
-import           Test.E.Arbitrary ()
+import           Test.E.Arbitrary      ()
 import           Test.E.Flat
 import           Test.Tasty
 import           Test.Tasty.HUnit
 import           Test.Tasty.QuickCheck as QC hiding (getSize)
-import           Flat.Endian
-import           Data.FloatCast
-import           Data.Text.Arbitrary
 -- import Test.QuickCheck.Arbitrary
-import qualified Data.Complex as B
-import qualified Data.Ratio as B
-import qualified Data.Map as C
-import qualified Data.Map.Strict as CS
-import qualified Data.Map.Lazy as CL
-import qualified Data.IntMap.Strict as CS
-import qualified Data.IntMap.Lazy as CL
+import qualified Data.Complex          as B
+import qualified Data.IntMap.Lazy      as CL
+import qualified Data.IntMap.Strict    as CS
+import qualified Data.Map              as C
+import qualified Data.Map.Lazy         as CL
+import qualified Data.Map.Strict       as CS
+import qualified Data.Ratio            as B
 -- import           Data.List
 -- import           Data.Ord
 #if MIN_VERSION_base(4,9,0)
-import qualified Data.List.NonEmpty as BI
+import qualified Data.List.NonEmpty    as BI
 #endif
 
 instance Arbitrary UTF8Text where
@@ -63,7 +63,7 @@ instance Arbitrary UTF8Text where
 
   shrink t = UTF8Text <$> shrink (unUTF8 t)
 
-#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
+#if! defined (ETA_VERSION)
 instance Arbitrary UTF16Text where
   arbitrary = UTF16Text <$> arbitrary
 
@@ -74,9 +74,6 @@ instance Arbitrary UTF16Text where
 -- instance Flat [Word8]
 -- instance Flat [Bool]
 main = do
-  -- #ifdef ghcjs_HOST_OS
-  --   print "GHCJS"
-  -- #endif
   -- printInfo
   -- print $ flat asciiStrT
   mainTest
@@ -96,16 +93,15 @@ tests :: TestTree
 tests = testGroup "Tests" [testPrimitives, testEncDec, testFlat]
 
 testPrimitives =
-  testGroup "conversion/memory primitives" [testEndian, testFloatingConvert]
+  testGroup "conversion/memory primitives" [testEndian, testFloatingConvert,testShifts ]
 
-  --,testShifts -- ghcjs fails this
 testEncDec = testGroup
   "encode/decode primitives"
   [ testEncodingPrim
   , testDecodingPrim
-#ifdef TEST_DECBITS  
+#ifdef TEST_DECBITS
   , testDecBits
-#endif  
+#endif
   ]
 
 testFlat = testGroup
@@ -141,7 +137,6 @@ conv f v e = testCase
   (unwords ["conv", sshow v, showB . flat $ v, "to", sshow e])
   $ f v @?= e
 
--- ghcjs bug on shiftR 0, see: https://github.com/ghcjs/ghcjs/issues/706
 testShifts = testGroup "Shifts" $ map tst [0 .. 33]
   where
     tst n = testCase ("shiftR " ++ show n)
@@ -262,7 +257,7 @@ testDecBits = testGroup "Decode Bits"
             return r
           -- we expect the first numBitsToTake bits of the value
           expectedD@(Right expected) :: Decoded a = Right
-            $ val `shR` (sz - numBitsToTake) -- ghcjs: shiftR fails, see: https://github.com/ghcjs/ghcjs/issues/706
+            $ val `shR` (sz - numBitsToTake)
           actualD@(Right actual) :: Decoded a = unflatRawWith dec vs
       in testCase
            (unwords
@@ -312,25 +307,31 @@ testSize = testGroup "Size"
     , sz bs (4 + 3 * 8)
     , sz stBS bsSize
     , sz lzBS bsSize
-#ifndef ghcjs_HOST_OS
     , sz shBS bsSize
-#endif
     , sz tx utf8Size
     , sz (UTF8Text tx) utf8Size
-#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
+#if ! defined (ETA_VERSION)
     , sz (UTF16Text tx) utf16Size
 #endif
     ]
   where
     tx = T.pack "txt"
 
-    utf8Size = 8 + 8 + 3 * 32 + 8
-
+#if MIN_VERSION_text(2,0,0)
+    utf8Size = 8 + 8 + (3 * 8) + 8
+#else
+    utf8Size = 8 + 8 + (3 * 3 * 8) + 8
+#endif
     utf16Size = 8 + 8 + 3 * 16 + 8
 
     bsSize = 8 + 8 + 3 * 8 + 8
 
-sz v e = [testCase (unwords ["size of", sshow v]) $ getSize v @?= e]
+sz v e = let calculated = getSize v
+             actual = B.length (flat v) * 8 - 1 -- FIX
+         in
+          [testCase (unwords ["size of", sshow v]) $ calculated @?= e
+          -- ,testCase (unwords ["calculated size <= actual", sshow v]) $ actual <= calculated @? unwords ["calculated size",show calculated,"actual",show actual]
+          ]
 
 -- E258_256 = 11111110 _257 = 111111110 _258 = 111111111
 testLargeEnum = testGroup "test enum with more than 256 constructors"
@@ -371,7 +372,7 @@ flatUnflatRT = testGroup
   , rt "String" (prop_Flat_roundtrip :: RT String)
 #if MIN_VERSION_base(4,9,0)
   , rt "NonEmpty" (prop_Flat_roundtrip :: RT (BI.NonEmpty Bool))
-#endif      
+#endif
   , rt "Maybe N" (prop_Flat_roundtrip :: RT (Maybe N))
   , rt "Ratio" (prop_Flat_roundtrip :: RT (B.Ratio Int32))
   , rt "Word8" (prop_Flat_Large_roundtrip :: RTL Word8)
@@ -385,14 +386,12 @@ flatUnflatRT = testGroup
   , rt "Double" (prop_Flat_roundtrip :: RT Double)
   , rt "Text" (prop_Flat_roundtrip :: RT T.Text)
   , rt "UTF8 Text" (prop_Flat_roundtrip :: RT UTF8Text)
-#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
+#if! defined (ETA_VERSION)
   , rt "UTF16 Text" (prop_Flat_roundtrip :: RT UTF16Text)
 #endif
   , rt "ByteString" (prop_Flat_roundtrip :: RT B.ByteString)
   , rt "Lazy ByteString" (prop_Flat_roundtrip :: RT L.ByteString)
-#ifndef ghcjs_HOST_OS
   , rt "Short ByteString" (prop_Flat_roundtrip :: RT SBS.ShortByteString)
-#endif
   , rt "Map.Strict" (prop_Flat_roundtrip :: RT (CS.Map Int Bool))
   , rt "Map.Lazy" (prop_Flat_roundtrip :: RT (CL.Map Int Bool))
   , rt "IntMap.Strict" (prop_Flat_roundtrip :: RT (CS.IntMap Bool))
@@ -635,13 +634,13 @@ flatTests = testGroup "flat/unflat Unit tests"
     , [trip (T.pack "abc")]
     , [trip unicodeText]
     , [trip unicodeTextUTF8T]
-    , [trip longBS, trip longLBS]
-#ifndef ghcjs_HOST_OS
-    , [trip longSBS]
-#endif
-#if! defined(ghcjs_HOST_OS) && ! defined (ETA_VERSION)
+    , [trip chineseTextUTF8T]
+#if ! defined (ETA_VERSION)
+    , [trip chineseTextUTF16T]
     , [trip unicodeTextUTF16T]
 #endif
+    , [trip longBS, trip longLBS]
+    , [trip longSBS]
     ]
 --al = (1:) -- prealign
   where
@@ -732,11 +731,9 @@ nsII = nsI_
 
 nsI_ = [((-) (2 ^ (((-) i 1) * 7)) 1, fromIntegral (8 * i)) | i <- [1 .. 10]]
 
-#ifndef ghcjs_HOST_OS
 shBS = SBS.toShort stBS
 
 longSBS = SBS.toShort longBS
-#endif
 
 sshow = take 80 . show
 
@@ -797,7 +794,7 @@ prop_common_unsigned n _ = let n2 :: h = fromIntegral n
 -- b1 :: BLOB UTF8
 -- b1 = BLOB UTF8 (preAligned (List255 [97,98,99]))
 -- -- b1 = BLOB (preAligned (UTF8 (List255 [97,98,99])))
- 
- 
- 
- 
+
+
+
+
