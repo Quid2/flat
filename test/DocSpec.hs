@@ -32,10 +32,13 @@ main = do
 
 runTests opts files = doctest $ opts ++ files
 
-runOpts = ["--fast", "-XCPP"]
+runOpts = ["--fast", "-XCPP","--verbose"]
 
 -- static tests are generated with ghcjs compatibility as they cannot be generated in ghcjs
-genOpts = runOpts ++ ["-Dghcjs_HOST_OS", "-DETA"]
+-- but this creates trouble with imports
+-- genOpts = runOpts ++ ["-Dghcjs_HOST_OS"]
+-- genOpts = runOpts ++ ["-Dghcjs_HOST_OS", "-DETA"]
+genOpts = runOpts
 
 exceptFiles :: Foldable t => t String -> FindClause Bool
 exceptFiles mdls =
