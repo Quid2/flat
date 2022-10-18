@@ -81,21 +81,9 @@ Tested with:
   * Caveat: not recently tested
 -->
 
-* [GHCJS](https://github.com/ghcjs/ghcjs)
+* [GHCJS](https://github.com/ghcjs/ghcjs) version 8.6.0.1 (GHC 8.6.2) 
 
 <!--
-Passes all tests in the `flat` testsuite, except for those relative to short bytestrings (Data.ByteString.Short) that seems unsupported by `ghcjs`.
--->
-  * Note: versions of `flat` prior to 0.33 encode `Double` values incorrectly when they are not aligned with a byte boundary.
-
-<!--
-PROBLEM: unicode 16
-
-Check [stack-ghcjs.yaml](https://github.com/Quid2/flat/blob/master/stack-ghcjs.yaml) to see with what versions of `ghcjs` it has been tested.
-
-If you use a different version of `ghcjs`, you might want to run the test suite by setting your compiler in [stack-ghcjs.yaml](https://github.com/Quid2/flat/blob/master/stack-ghcjs.yaml) and then running:
-
-`stack test --stack-yaml=stack-ghcjs.yaml`
 
 * [ETA](https://eta-lang.org/) 0.8.6b2 & etlas>=1.5.0.0
   * Caveats:
@@ -108,7 +96,7 @@ If you use a different version of `ghcjs`, you might want to run the test suite 
 
 ### Known Bugs and Infelicities
 
-* Data types with more than 512 constructors are currently unsupported
+* Data types with more than 512 constructors are currently unsupported (but support could be easily added if necessary)
 
 * Longish compilation times
 

@@ -1,8 +1,13 @@
 Significant and compatibility-breaking changes.
 
+Version 0.6:
+    - Added UTF16Text and Data.ByteString.Short support for ghcjs
+    - Improved speed and accuracy of encoded Text size calculation (for encoding)
+    - [**breaking**] Removed `textBytes` from Flat.Encoder.Size
+
 Version 0.5:
     - Compatibility with ghc 9.0.2 & 9.2.4 & 9.4.2
-    - Compatibility with text-2.0
+    - Compatibility with text-2.0 (GHC)
     - Fixed https://github.com/Quid2/flat/issues/23 that could cause an encoding failure for non byte aligned Arrays 
     - Fixed https://github.com/Quid2/flat/pull/26 that could cause the decoder to read beyond the end of the decoding buffer (causing a SEGFAULT on ghcjs)
     - Merged https://github.com/Quid2/flat/pull/22 - fails correctly on invalid UTF-8 text 

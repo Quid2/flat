@@ -1,0 +1,21 @@
+cradle:
+  multi:
+    - path: "./benchmarks"
+      config:
+        cradle:
+          none:
+    - path: "./"
+      config:
+        cradle:
+          stack:
+            - path: "./src"
+              component: "flat:lib"
+
+            - path: "./test/Spec.hs"
+              component: "flat:test:spec"
+
+            - path: "./test/DocTests.hs"
+              component: "flat:test:doc-static"
+
+            - path: "./test/FlatRepr.hs"
+              component: "flat:test:repr"
