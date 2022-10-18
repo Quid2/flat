@@ -19,7 +19,8 @@ on:
 jobs:
   linux:
     name: Haskell-CI - Linux - ${{ matrix.compiler }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+    #runs-on: macos-latest
     timeout-minutes: 60
     container:
       image: buildpack-deps:bionic
@@ -209,7 +210,7 @@ jobs:
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
           cat >> cabal.project <<EOF
           EOF
-          $HCPKG list --simple-output --names-only | perl -ne 'for (split /\s+/) { print "constraints: $_ installed\n" unless /^(flat)$/; }' >> cabal.project.local
+          $HCPKG list --simple-output --names-only | perl -ne 'for (split /\s+/) { print "constraints: $_ installed\n" unless /^(flat|text)$/; }' >> cabal.project.local
           cat cabal.project
           cat cabal.project.local
       - name: dump install plan
@@ -232,12 +233,12 @@ jobs:
       - name: build
         run: |
           $CABAL v2-build $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --write-ghc-environment-files=always
-      - name: test_with_text1
-        run: |
-          $CABAL v2-test $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --test-show-details=failures --constrain "text<2"
       - name: test_with_text2
         run: |
           $CABAL v2-test $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --test-show-details=failures --constrain "text>=2"
+      - name: test_with_text1
+        run: |
+          $CABAL v2-test $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --test-show-details=failures --constrain "text<2"
       - name: cabal check
         run: |
           cd ${PKGDIR_flat} || false
