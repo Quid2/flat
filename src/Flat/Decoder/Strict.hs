@@ -247,10 +247,10 @@ dUTF16 :: Get T.Text
 dUTF16 = do
   _ <- dFiller
 #if MIN_VERSION_text(2,0,0)
-  -- Checked decoding
+  -- Checked decoding (from UTF-8)
   T.decodeUtf16LE <$> dByteString_
 #else
-  -- Unchecked decoding
+  -- Unchecked decoding (already UTF16)
   (ByteArray array, lengthInBytes) <- dByteArray_
   return (T.Text (TA.Array array) 0 (lengthInBytes `div` 2))
 #endif

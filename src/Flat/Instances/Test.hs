@@ -13,7 +13,7 @@ module Flat.Instances.Test (
 import           Control.Monad                  ((>=>))
 import           Data.Word
 import           Flat.Bits                      (Bits, asBytes, bits,
-                                                 paddedBits, takeBits)
+                                                 paddedBits, takeBits,toBools)
 import           Flat.Class                     (Flat (..))
 import           Flat.Encoder.Prim              (eFillerF)
 import           Flat.Encoder.Strict            (Encoding (Encoding),
@@ -24,7 +24,7 @@ import           Text.PrettyPrint.HughesPJClass (prettyShow)
 
 -- | Returns: result of flat/unflat test, encoding size in bits, byte encoding
 tst :: (Eq a, Flat a) => a -> (Bool, NumBits, [Word8])
-tst v = (unflat (flat v) == Right v, size v 0, showBytes v)
+tst v = (unflat (flat v) == Right v && size v 0 >= length (toBools (bits v)), size v 0, showBytes v)
 
 -- | Returns: result of flat/unflat test, encoding size in bits, bits encoding
 tstBits :: (Eq a, Flat a) => a -> (Bool, NumBits, String)
