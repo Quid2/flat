@@ -57,8 +57,6 @@ jobs:
           #   compilerVersion: 8.6.5
           #   setup-method: hvr-ppa
           #   allow-failure: false
-
-          # UNTESTED
           # - compiler: ghc-8.4.4
           #   compilerKind: ghc
           #   compilerVersion: 8.4.4
@@ -237,6 +235,9 @@ jobs:
       - name: tests
         run: |
           $CABAL v2-test $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --test-show-details=failures
+      - name: testswithtext2
+        run: |
+          $CABAL v2-test $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --test-show-details=failures --constrain "text>=2"
       - name: cabal check
         run: |
           cd ${PKGDIR_flat} || false
