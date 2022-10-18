@@ -68,6 +68,8 @@ jobs:
           #   compilerVersion: 8.2.2
           #   setup-method: hvr-ppa
           #   allow-failure: false
+
+          # keep this to test text-1
           - compiler: ghc-8.0.2
             compilerKind: ghc
             compilerVersion: 8.0.2
@@ -238,7 +240,9 @@ jobs:
           $CABAL v2-test $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --test-show-details=failures --constrain "text>=2"
       - name: test_with_text1
         run: |
-          $CABAL v2-test $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --test-show-details=failures --constrain "text<2"
+          if [ "${{ matrix.compilerVersion }}" = "8.0.2" ]; then
+            $CABAL v2-test $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --test-show-details=failures --constrain "text<2"
+          fi
       - name: cabal check
         run: |
           cd ${PKGDIR_flat} || false
