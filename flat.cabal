@@ -1,6 +1,6 @@
 cabal-version:      >=1.10
 name:               flat
-version:            0.5
+version:            0.5.1
 homepage:           http://quid2.org
 synopsis:           Principled and efficient bit-oriented binary serialization.
 description:        Reference implementation of `flat`, a principled and efficient binary serialization format.
@@ -133,35 +133,7 @@ library
       semigroups < 0.19
       , hashable              >=1.2.4.0  && <=1.2.7.0
   else 
-    build-depends: hashable >= 1.4.0.2
-
-
--- test-suite ref
---   type:             exitcode-stdio-1.0
---   main-is:          Reference.hs
---   hs-source-dirs:   test
---   other-modules:
---     Test.Data
---     Test.Data.Arbitrary
---     Test.Data.Flat
---     Test.Data.Values
---     Test.Data2
---     Test.Data2.Flat
---     Test.E
---     Test.E.Arbitrary
---     Test.E.Flat
-
---   default-language: Haskell2010
---   build-depends:
---       base
---     , flat
---     , zm
---     , ghc-prim
---     , quickcheck-text
---     , tasty-hunit
---     , tasty-quickcheck
---     , text
-
+    build-depends: hashable >= 1.4.0.1
 
 test-suite spec
   type:             exitcode-stdio-1.0
@@ -228,9 +200,8 @@ test-suite spec
       , text
       , QuickCheck >= 2.14.2 
 
--- -- dynamic doctests and generation of static doctests
--- -- Usable only with recent versions of ghc (no ghcjs or eta)
-
+-- dynamic doctests and generation of static doctests
+-- Usable only with recent versions of ghc (no ghcjs or eta)
 -- test-suite doc
 --   type:             exitcode-stdio-1.0
 --   main-is:          DocSpec.hs
@@ -245,7 +216,6 @@ test-suite spec
 --     , QuickCheck >= 2.14.2 
 
 -- static doctests (faster, useful for test coverage and to test ghcjs and eta)
-
 test-suite doc-static
   type:             exitcode-stdio-1.0
   main-is:          DocTests.hs
@@ -306,9 +276,22 @@ test-suite repr
 
   ghc-options: -rtsopts
 
--- test-suite ghcjs-cons
+-- test-suite text
 --   type:             exitcode-stdio-1.0
---   main-is:          Cons.hs
+--   main-is:          TextSize.hs
+--   hs-source-dirs:   test
+--   default-language: Haskell2010
+--   build-depends:
+--       base
+--     , flat
+--     , text <2
+
+--   ghc-options: -rtsopts
+
+
+-- test-suite ghcjs
+--   type:             exitcode-stdio-1.0
+--   main-is:          GHCJS.hs
 --   hs-source-dirs:   test
 --   default-language: Haskell2010
 --   build-depends:
