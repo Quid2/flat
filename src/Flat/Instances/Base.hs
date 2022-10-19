@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP                #-}
 {-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE FlexibleContexts   #-}
 {-# LANGUAGE FlexibleInstances  #-}
-{-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE StandaloneDeriving #-}
 
 -- | Flat instances for the base library
@@ -44,7 +44,7 @@ import           Data.Functor.Identity (Identity (..))
 
 {- ORMOLU_DISABLE -}
 -- $setup
--- >>> :set -XNegativeLiterals
+-- >>> :set -XNegativeLiterals -XTypeApplications
 -- >>> import Flat.Instances.Test
 -- >>> import Data.Fixed
 -- >>> import Data.Int
@@ -298,6 +298,66 @@ As this is a variable length encoding, values are encoded in the same way, whate
 
 >>> all (test (3::Word) ==) [test (3::Word16),test (3::Word32),test (3::Word64)]
 True
+
+
+Word/Int decoders return an error if the encoded value is outside their valid range:
+
+>>> unflat @Word16 (flat @Word32 $ fromIntegral @Word16 maxBound)
+Right 65535
+
+>>> unflat @Word16 (flat @Word32 $ fromIntegral @Word16 maxBound + 1)
+Left (BadEncoding ...
+
+>>> unflat @Word32 (flat @Word64 $ fromIntegral @Word32 maxBound)
+Right 4294967295
+
+>>> unflat @Word32 (flat @Word64 $ fromIntegral @Word32 maxBound + 1)
+Left (BadEncoding ...
+
+>>> unflat @Word64 (flat @Natural $ fromIntegral @Word64 maxBound)
+Right 18446744073709551615
+
+>>> unflat @Word64 (flat @Natural $ fromIntegral @Word64 maxBound + 1)
+Left (BadEncoding ...
+
+
+
+>>> unflat @Int16 (flat @Int32 $ fromIntegral @Int16 maxBound)
+Right 32767
+
+>>> unflat @Int16 (flat @Int32 $ fromIntegral @Int16 maxBound + 1)
+Left (BadEncoding ...
+
+>>> unflat @Int32 (flat @Int64 $ fromIntegral @Int32 maxBound)
+Right 2147483647
+
+>>> unflat @Int32 (flat @Int64 $ fromIntegral @Int32 maxBound + 1)
+Left (BadEncoding ...
+
+>>> unflat @Int64 (flat @Integer $ fromIntegral @Int64 maxBound)
+Right 9223372036854775807
+
+>>> unflat @Int64 (flat @Integer $ fromIntegral @Int64 maxBound + 1)
+Left (BadEncoding ...
+
+
+>>> unflat @Int16 (flat @Int32 $ fromIntegral @Int16 minBound)
+Right (-32768)
+
+>>> unflat @Int16 (flat @Int32 $ fromIntegral @Int16 minBound - 1)
+Left (BadEncoding ...
+
+>>> unflat @Int32 (flat @Int64 $ fromIntegral @Int32 minBound)
+Right (-2147483648)
+
+>>> unflat @Int32 (flat @Int64 $ fromIntegral @Int32 minBound - 1)
+Left (BadEncoding ...
+
+>>> unflat @Int64 (flat @Integer $ fromIntegral @Int64 minBound)
+Right (-9223372036854775808)
+
+>>> unflat @Int64 (flat @Integer $ fromIntegral @Int64 minBound - 1)
+Left (BadEncoding ...
 -}
 instance Flat Word where
     size = sWord
