@@ -100,15 +100,13 @@ Tested with:
 
 * Longish compilation times
 
-  * `flat` relies more than other serialisation libraries on extensive inlining for its good performance, this unfortunately leads to longer compilation times. 
+  * To improve performance, `flat` relies on extensive inlining. This unfortunately leads to longer compilation times.
 
-    If you have many data types or very large ones this might become an issue.
-
-    A couple of good practices that will eliminate or mitigate this problem are:
+    If you have many data types or very large ones, you might want to: 
 
       * During development, turn optimisations off (`stack --fast` or `-O0` in the cabal file).
 
-      * Keep your serialisation code in a separate module or modules.
+      * Keep your serialisation code in separate modules.
 
 * See also the [full list of open issues](https://github.com/Quid2/flat/issues).
 

@@ -81,27 +81,22 @@ Tested with:
 * [GHC](https://www.haskell.org/ghc/) 7.10.3 to 9.4.2 (x64)
 
 
-* [GHCJS](https://github.com/ghcjs/ghcjs)
-
-  * Note: versions of `flat` prior to 0.33 encode `Double` values incorrectly when they are not aligned with a byte boundary.
-
+* [GHCJS](https://github.com/ghcjs/ghcjs) version 8.6.0.1 (GHC 8.6.2) 
 
 
 ### Known Bugs and Infelicities
 
-* Data types with more than 512 constructors are currently unsupported
+* Data types with more than 512 constructors are currently unsupported (but support could be easily added if necessary)
 
 * Longish compilation times
 
-  * `flat` relies more than other serialisation libraries on extensive inlining for its good performance, this unfortunately leads to longer compilation times. 
+  * To improve performance, `flat` relies on extensive inlining. This unfortunately leads to longer compilation times.
 
-    If you have many data types or very large ones this might become an issue.
-
-    A couple of good practices that will eliminate or mitigate this problem are:
+    If you have many data types or very large ones, you might want to: 
 
       * During development, turn optimisations off (`stack --fast` or `-O0` in the cabal file).
 
-      * Keep your serialisation code in a separate module or modules.
+      * Keep your serialisation code in separate modules.
 
 * See also the [full list of open issues](https://github.com/Quid2/flat/issues).
 
