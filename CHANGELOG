@@ -1,9 +1,10 @@
 Significant and compatibility-breaking changes.
 
-Version 0.6:
+Version 0.5.2:
+    - Fixed https://github.com/Quid2/flat/issues/28 that could cause an undetected overflow when decoding out of range Int/Word values
     - Added UTF16Text and Data.ByteString.Short support for ghcjs
     - Improved speed and accuracy of encoded Text size calculation (for encoding)
-    - [**breaking**] Removed `textBytes` from Flat.Encoder.Size
+    - [**breaking**] Removed `textBytes` from Flat.Encoder.Size (breaking but insignificant)
 
 Version 0.5:
     - Compatibility with ghc 9.0.2 & 9.2.4 & 9.4.2

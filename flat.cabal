@@ -1,6 +1,6 @@
 cabal-version:      >=1.10
 name:               flat
-version:            0.5.1
+version:            0.5.2
 homepage:           http://quid2.org
 synopsis:           Principled and efficient bit-oriented binary serialization.
 description:        Reference implementation of `flat`, a principled and efficient binary serialization format.
@@ -202,6 +202,7 @@ test-suite spec
 
 -- dynamic doctests and generation of static doctests
 -- Usable only with recent versions of ghc (no ghcjs or eta)
+
 -- test-suite doc
 --   type:             exitcode-stdio-1.0
 --   main-is:          DocSpec.hs
