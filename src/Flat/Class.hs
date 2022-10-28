@@ -21,7 +21,6 @@ module Flat.Class
   , getSize
   , module GHC.Generics
   , GFlatEncode,GFlatDecode,GFlatSize
-  , SizeOf(..)
   )
 where
 
@@ -31,7 +30,6 @@ import           Flat.Decoder.Prim  (ConsState (..), consBits, consBool,
                                      consClose, consOpen, dBool)
 import           Flat.Decoder.Types (Get)
 import           Flat.Encoder       (Encoding, NumBits, eBits16, mempty)
-import           GHC.Base           (Any)
 import           GHC.Generics
 import           GHC.TypeLits       (Nat, type (+), type (<=))
 import           Prelude            hiding (mempty)
@@ -102,21 +100,6 @@ class Flat a where
     {-# NOINLINE decode #-}
     {-# NOINLINE encode #-}
 #endif
-
--- | Skip a value, return its size in bits
-skip :: forall a. (GFlatSize (Rep a),GFlatDecode (Rep a)) => Get (SizeOf a)
-skip = SizeOf . (gsize 0 :: Rep a Any -> NumBits) <$> (gget :: Get (Rep a Any))
-{-# INLINE skip #-}
-
--- | Decode to the size in bits of a value rather than to the value itself (see "Flat.Repr")
-newtype SizeOf a = SizeOf NumBits deriving Show
-
-instance (GFlatSize (Rep a),GFlatDecode (Rep a)) => Flat (SizeOf a) where
-    size = error "unused"
-    encode = error "unused"
-
-    decode = skip
-
 
 -- |Generic Encoder
 class GFlatEncode f where gencode :: f a -> Encoding

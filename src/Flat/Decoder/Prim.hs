@@ -22,7 +22,9 @@ module Flat.Decoder.Prim (
     dLazyByteString_,
     dByteArray_,
 
-    ConsState(..),consOpen,consClose,consBool,consBits
+    ConsState(..),consOpen,consClose,consBool,consBits,
+
+    sizeOf,binOf
     ) where
 
 import           Control.Monad        (when)
@@ -30,11 +32,13 @@ import qualified Data.ByteString      as B
 import qualified Data.ByteString.Lazy as L
 import           Data.FloatCast       (wordToDouble, wordToFloat)
 import           Data.Word            (Word16, Word32, Word64, Word8)
-import           Flat.Decoder.Types   (Get (Get), GetResult (..), S (..),
-                                       badEncoding, badOp, notEnoughSpace)
+import           Flat.Decoder.Types   (Get (Get, runGet), GetResult (..),
+                                       S (..), badEncoding, badOp,
+                                       notEnoughSpace)
 import           Flat.Endian          (toBE16, toBE32, toBE64)
 import           Flat.Memory          (ByteArray, chunksToByteArray,
-                                       chunksToByteString, minusPtr)
+                                       chunksToByteString, minusPtr,
+                                       peekByteString)
 import           Foreign              (Bits (unsafeShiftL, unsafeShiftR, (.&.), (.|.)),
                                        FiniteBits (finiteBitSize), Ptr,
                                        Storable (peek), castPtr, plusPtr,
@@ -410,3 +414,26 @@ getChunksInfo = Get $ \endPtr s -> do
    when (usedBits s /=0) $ badEncoding endPtr s "usedBits /= 0"
    (currPtr',ns) <- getChunks (currPtr s) id
    return $ GetResult (s {currPtr=currPtr'}) (currPtr s `plusPtr` 1,ns)
+
+{- | Given a value's decoder, returns the size in bits of the encoded value
+
+@since 0.6
+-}
+sizeOf :: Get a -> Get Int
+sizeOf g =
+    Get $ \end s -> do
+      GetResult s' _ <- runGet g end s
+      return $ GetResult s' $ (currPtr s' `minusPtr` currPtr s) * 8 - usedBits s + usedBits s'
+
+{- | Given a value's decoder, returns the value's bit encoding.
+
+The encoding starts at the returned bit position in the return bytestring's first byte
+and ends in an unspecified bit position in its final byte
+
+@since 0.6
+-}
+binOf :: Get a -> Get (B.ByteString,Int)
+binOf g =
+    Get $ \end s -> do
+      GetResult s' _ <- runGet g end s
+      return $ GetResult s' (peekByteString (currPtr s) (currPtr s' `minusPtr` currPtr s + if usedBits s' == 0 then 0 else 1),usedBits s)

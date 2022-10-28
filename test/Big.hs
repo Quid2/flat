@@ -1,10 +1,18 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+
+{-
+Test different ways of handlings a data type that has large values and a small encoding.
+
+To run with limited memory: cabal run big -- +RTS  -M2g
+-}
+
 module Main where
 import qualified Data.ByteString as B
 import           Data.List       (foldl')
 import           Flat            (Decoded, Flat (..), flat, unflat, unflatWith)
+import           Flat.AsBin      (AsBin, unbin)
+import           Flat.AsSize
 import           Flat.Decoder    (Get, listTDecoder)
-import           Flat.Repr       (Repr, unrepr)
 import qualified ListT           as L
 import           System.TimeIt   (timeIt)
 
@@ -32,7 +40,6 @@ instance Flat Big where
     -- The decoded form is massive
     decode = newBig <$> decode
 
--- Run this as: cabal run FlatRepr -- +RTS  -M2g
 main :: IO ()
 main = tbig
 
@@ -41,13 +48,14 @@ tbig = do
 
     -- A serialised list of Big values
     let bigsFile = flat $ replicate numOfBigs $ newBig 1
+    print "Encoding Time"
     timeIt $ print $ B.length bigsFile
 
-    -- tstSize bigsFile
+    tstAsSize bigsFile
+
+    tstAsBin bigsFile
 
     tstListT bigsFile
-
-    tstRepr bigsFile
 
     tstBig bigsFile
 
@@ -59,11 +67,17 @@ tstBig bigsFile = timeIt $ do
     mapM_ print bs
 
 -- So instead we unserialise them to a list of their flat representations, to be unflatted on demand later on
-tstRepr :: B.ByteString -> IO ()
-tstRepr bigsFile = timeIt $ do
-    print "Decode to [FlatRepl Big]:"
-    let Right (bsR :: [Repr Big]) = unflat bigsFile
-    let bs = map unrepr bsR
+tstAsBin :: B.ByteString -> IO ()
+tstAsBin bigsFile = timeIt $ do
+    print "Decode to [AsBin Big]:"
+    let Right (bsR :: [AsBin Big]) = unflat bigsFile
+    let bs = map unbin bsR
+    mapM_ print bs
+
+tstAsSize :: B.ByteString -> IO ()
+tstAsSize bigsFile = timeIt $ do
+    print "Decode to [AsSize Big]:"
+    let Right (bs :: [AsSize Big]) = unflat bigsFile
     mapM_ print bs
 
 -- Or: we extract one element at the time via a ListT

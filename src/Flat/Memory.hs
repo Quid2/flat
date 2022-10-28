@@ -15,29 +15,25 @@ module Flat.Memory
   , pokeByteString
   , unsafeCreateUptoN'
   , minusPtr
-  --, peekByteString
+  , peekByteString
   )
 where
 
-import Control.Monad ( foldM_, when )
-import           Control.Monad.Primitive        ( PrimMonad(..) )
-import qualified Data.ByteString.Internal      as BS
-import           Data.Primitive.ByteArray       ( MutableByteArray(..)
-                                                , ByteArray#
-                                                , ByteArray
-                                                , newByteArray
-                                                , unsafeFreezeByteArray
-                                                )
-import Foreign ( Word8, Ptr, withForeignPtr, minusPtr, plusPtr )
-import           GHC.Prim                       ( copyAddrToByteArray#
-                                                , copyByteArrayToAddr#
-                                                )
-import           GHC.Ptr                        ( Ptr(..) )
-import           GHC.Types                      ( IO(..)
-                                                , Int(..)
-                                                )
-import System.IO.Unsafe ( unsafeDupablePerformIO, unsafePerformIO )
-import qualified Data.ByteString               as B
+import           Control.Monad            (foldM_, when)
+import           Control.Monad.Primitive  (PrimMonad (..))
+import qualified Data.ByteString          as B
+import qualified Data.ByteString.Internal as BS
+import           Data.Primitive.ByteArray (ByteArray, ByteArray#,
+                                           MutableByteArray (..), newByteArray,
+                                           unsafeFreezeByteArray)
+import           Foreign                  (Ptr, Word8, minusPtr, plusPtr,
+                                           withForeignPtr)
+import           GHC.Prim                 (copyAddrToByteArray#,
+                                           copyByteArrayToAddr#)
+import           GHC.Ptr                  (Ptr (..))
+import           GHC.Types                (IO (..), Int (..))
+import           System.IO.Unsafe         (unsafeDupablePerformIO,
+                                           unsafePerformIO)
 
 unsafeCreateUptoN' :: Int -> (Ptr Word8 -> IO (Int, a)) -> (BS.ByteString, a)
 unsafeCreateUptoN' l f = unsafeDupablePerformIO (createUptoN' l f)
@@ -65,9 +61,15 @@ pokeByteString (BS.PS foreignPointer sourceOffset sourceLength) destPointer =
       sourceLength
     return (destPointer `plusPtr` sourceLength)
 
--- Create a new bytestring, copying from sourcePtr sourceLength number of bytes
--- peekByteString :: Ptr Word8 -> Int -> BS.ByteString
--- peekByteString sourcePtr sourceLength = BS.unsafeCreate sourceLength $ \destPointer -> BS.memcpy destPointer sourcePtr sourceLength
+{-| Create a new bytestring, copying sourceLen bytes from sourcePtr
+
+@since 0.6
+-}
+peekByteString ::
+  Ptr Word8 -- ^ sourcePtr
+  -> Int -- ^ sourceLen
+  -> BS.ByteString
+peekByteString sourcePtr sourceLength = BS.unsafeCreate sourceLength $ \destPointer -> BS.memcpy destPointer sourcePtr sourceLength
 
 -- |Copy ByteArray to given pointer, returns new pointer
 pokeByteArray :: ByteArray# -> Int -> Int -> Ptr Word8 -> IO (Ptr Word8)
@@ -115,7 +117,7 @@ chunksToByteArray (sourcePtr0, lens) = unsafePerformIO $ do
 
 
 -- | Wrapper around @copyAddrToByteArray#@ primop.
--- 
+--
 -- Copied from the store-core package
 copyAddrToByteArray
   :: Ptr a -> MutableByteArray (PrimState IO) -> Int -> Int -> IO ()
