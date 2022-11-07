@@ -74,7 +74,7 @@ Get the latest stable version from [hackage](https://hackage.haskell.org/package
 
 Tested with:
 
-* [GHC](https://www.haskell.org/ghc/) 7.10.3 to 9.4.2 (x64)
+* [GHC](https://www.haskell.org/ghc/) 7.10.3 to 9.4.3 (x64)
 
 <!--
 * [GHC](https://www.haskell.org/ghc/) 7.10.3/LLVM 3.5.2 (Arm7)
