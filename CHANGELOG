@@ -1,5 +1,11 @@
 Significant and compatibility-breaking changes.
 
+
+Version 0.6:
+    - [**breaking**] Renamed Repr to AsBin and SizeOf to AsSize
+    - Faster AsBin implementation 
+    - Fixed AsSize implementation (SizeOf worked only for types with custom size implementation and returned max size, not actual size)
+
 Version 0.5.2:
     - Fixed https://github.com/Quid2/flat/issues/28 that could cause an undetected overflow when decoding out of range Int/Word values
     - Added UTF16Text and Data.ByteString.Short support for ghcjs

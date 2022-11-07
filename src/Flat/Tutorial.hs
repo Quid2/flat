@@ -109,6 +109,8 @@ There are a few wrapper types that modify the way encoding and/or decoding occur
 
 * 'Flat.Instances.Mono.AsArray' and 'Flat.Instances.Mono.AsList' encode/decode a sequence as a List or Array respectively, see "Flat.Instances.Mono" for details.
 
+* 'Flat.Instances.Text.UTF8Text' and 'Flat.Instances.Text.UTF16Text' encode/decode a Text as UTF8 or UTF16 respectively.
+
 -}
 
 
