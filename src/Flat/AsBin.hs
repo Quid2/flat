@@ -21,7 +21,7 @@ import           Flat.Decoder.Prim              (binOf)
 import           Flat.Decoder.Types             (Get (Get, runGet),
                                                  GetResult (GetResult),
                                                  S (S, currPtr, usedBits))
-import           Flat.Run                       (unflatRawWith)
+import           Flat.Run                       (unflatRawWithOffset)
 import           Foreign                        (plusPtr)
 import           Text.PrettyPrint.HughesPJClass (Doc, Pretty (pPrint),
                                                  prettyShow, text)
@@ -90,7 +90,10 @@ Right (False,False,AsBin {repr = "?\193", offsetBits = 2})
 (False,False,255,True)
 -}
 
-data AsBin a = AsBin {repr :: B.ByteString,offsetBits::Int} deriving Show
+data AsBin a = AsBin {
+    repr        :: B.ByteString -- ^ Flat encoding of the value (encoding starts after offset bits in the first byte and ends in an unspecified position in the last byte)
+    ,offsetBits :: Int -- ^ First byte offset: number of unused most significant bits in the first byte
+    } deriving Show
 
 instance Flat a => Pretty (AsBin a) where
     pPrint :: AsBin a -> Doc
@@ -99,12 +102,12 @@ instance Flat a => Pretty (AsBin a) where
 -- | Decode a value
 unbin :: Flat a => AsBin a -> a
 unbin a =
-    case unflatRawWith off (repr a) of
+    case unflatRawWithOffset dec (repr a) (offsetBits a) of
         Right a -> a
-        Left e  -> error (show e) -- impossible
+        Left e  -> error (show e) -- impossible, as it is a valid encoding
     where
-        off = Get $ \end (S ptr 0) -> do
-          GetResult s' a <- runGet decode end (S ptr (offsetBits a))
+        dec = Get $ \end s -> do
+          GetResult s' a <- runGet decode end s
           let s'' = S (currPtr s' `plusPtr` if usedBits s' == 0 then 0 else 1) 0
           return $ GetResult s'' a
 

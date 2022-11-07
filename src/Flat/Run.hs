@@ -11,12 +11,14 @@ module Flat.Run (
     unflatWith,
     unflatRaw,
     unflatRawWith,
+    unflatRawWithOffset,
 ) where
 
 import qualified Data.ByteString         as B
 import           Data.ByteString.Convert (AsByteString (..))
 import           Flat.Class              (Flat (decode, encode), getSize)
 import           Flat.Decoder            (Decoded, Get, strictDecoder)
+import           Flat.Encoder            (NumBits)
 import qualified Flat.Encoder            as E
 import           Flat.Filler             (postAligned, postAlignedDecoder)
 
@@ -38,7 +40,10 @@ unflatRaw = unflatRawWith decode
 
 -- |Unflat unpadded value, using provided decoder
 unflatRawWith :: AsByteString b => Get a -> b -> Decoded a
-unflatRawWith dec bs = strictDecoder dec (toByteString bs) 0
+unflatRawWith dec bs = unflatRawWithOffset dec bs 0
+
+unflatRawWithOffset :: AsByteString b => Get a -> b -> NumBits -> Decoded a
+unflatRawWithOffset dec bs = strictDecoder dec (toByteString bs)
 
 -- unflatRawWith :: AsByteString b => Get a -> b -> Decoded a
 -- unflatRawWith dec bs = unflatRawWithOffset dec bs 0
