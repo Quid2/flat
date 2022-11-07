@@ -56,7 +56,7 @@ The result is a 'Flat.Decoded' value: 'Either' a 'Flat.DecodeException' or the a
 A pecularity of Flat is that it uses an optimal bit-encoding rather than
 the usual byte-oriented one.
 
-One bit is all we need for a 'Result' or for an empty 'List' value:
+One bit is sufficient to encode a 'Result' or an empty 'List':
 
 >>> flatBits Good
 "1"
@@ -64,7 +64,7 @@ One bit is all we need for a 'Result' or for an empty 'List' value:
 >>> flatBits (Nil::List Direction)
 "0"
 
-Two or three bits suffice for a 'Direction' value:
+Two or three bits suffice for a 'Direction':
 
 >>> flatBits South
 "01"
@@ -100,6 +100,15 @@ For example:
 
 >>> flatBits $ Just True
 "11"
+
+=== Wrapper Types
+
+There are a few wrapper types that modify the way encoding and/or decoding occur.
+
+* "Flat.AsBin" and "Flat.AsSize" decode to a value's flat binary representation or size in bits respectively.
+
+* 'Flat.Instances.Mono.AsArray' and 'Flat.Instances.Mono.AsList' encode/decode a sequence as a List or Array respectively, see "Flat.Instances.Mono" for details.
+
 -}
 
 

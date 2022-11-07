@@ -11,6 +11,10 @@ import           System.FilePath.Find
 import           Test.DocTest         (doctest, genTests)
 t = main
 
+{-
+Note: Some doctests won't compile with ghc 7.10.3 (as they use TypeApplication syntax)
+-}
+
 -- e.g.: stack test :doc --file-watch --fast --test-arguments="Data.ZigZag Flat.Instances Flat.Instances.Base"
 main :: IO ()
 main = do

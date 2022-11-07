@@ -168,6 +168,12 @@ encodeList = encodeListWith encode . otoList
 decodeList :: (IsSequence b, Flat (Element b)) => Get b
 decodeList = S.fromList <$> decodeListWith decode
 
+{-|
+Sets are saved as lists of values.
+
+>>> tstBits $ AsSet (Data.Set.fromList ([False,True,False]::[Bool]))
+(True,5,"10110")
+-}
 newtype AsSet a =
   AsSet
     { unSet :: a
