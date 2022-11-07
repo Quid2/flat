@@ -1,6 +1,6 @@
 cabal-version:      >=1.10
 name:               flat
-version:            0.5.3
+version:            0.6
 homepage:           http://quid2.org
 synopsis:           Principled and efficient bit-oriented binary serialization.
 description:
