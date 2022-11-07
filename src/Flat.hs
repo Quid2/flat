@@ -11,9 +11,11 @@ module Flat
   )
 where
 
+import           Flat.AsBin     as X
+import           Flat.AsSize    as X
 import           Flat.Class
 import           Flat.Decoder
 import           Flat.Filler
-import           Flat.Instances                as X
-import           Flat.Run                      as X
-import           Flat.Types                     ( )
+import           Flat.Instances as X
+import           Flat.Run       as X
+import           Flat.Types     ()
