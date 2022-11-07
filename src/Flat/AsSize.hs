@@ -11,7 +11,7 @@ In 0.5.X this type was called @SizeOf@.
 
 @since 0.6
 -}
-module Flat.AsSize(AsSize) where
+module Flat.AsSize(AsSize(..)) where
 
 import           Flat.Class         (Flat (..))
 import           Flat.Decoder.Prim  (sizeOf)
@@ -53,7 +53,7 @@ Various encodings:
 >>> unflat (flat (False,[T.pack "",T.pack "a",T.pack "主"],'a')) :: Decoded (AsSize Bool,AsSize [T.Text],AsSize Char)
 Right (AsSize 1,AsSize 96,AsSize 8)
 -}
-newtype AsSize a = AsSize NumBits deriving Show
+newtype AsSize a = AsSize NumBits deriving (Eq,Ord,Show)
 
 instance Flat a => Flat (AsSize a) where
     size :: Flat a => AsSize a -> NumBits -> NumBits
