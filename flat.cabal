@@ -71,7 +71,7 @@ library
     Flat.Instances.Vector
     Flat.Memory
     Flat.Run
-    Flat.TH
+    -- Flat.TH
     Flat.Tutorial
     Flat.Types
 
