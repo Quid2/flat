@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 -- | Flat instances for the text library
 module Flat.Instances.Text(
@@ -64,7 +65,7 @@ The default encoding is UTF8:
 True
 -}
 -- |A wrapper to encode/decode Text as UTF8
-newtype UTF8Text = UTF8Text {unUTF8::T.Text} deriving (Eq,Ord,Show)
+newtype UTF8Text = UTF8Text {unUTF8::T.Text} deriving (Eq,Ord,Show,Generic)
 
 instance Flat UTF8Text where
   size (UTF8Text t) = sUTF8Max t
@@ -81,7 +82,7 @@ instance Flat UTF8Text where
 -}
 
 -- |A wrapper to encode/decode Text as UTF16
-newtype UTF16Text = UTF16Text {unUTF16::T.Text} deriving (Eq,Ord,Show)
+newtype UTF16Text = UTF16Text {unUTF16::T.Text} deriving (Eq,Ord,Show,Generic)
 
 instance Flat UTF16Text where
   size (UTF16Text t) = sUTF16 t
