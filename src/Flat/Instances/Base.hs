@@ -45,6 +45,7 @@ import           Data.Functor.Identity (Identity (..))
 {- ORMOLU_DISABLE -}
 -- $setup
 -- >>> :set -XNegativeLiterals -XTypeApplications
+-- >>> :set -XDeriveAnyClass -XDeriveGeneric
 -- >>> import Flat.Instances.Test
 -- >>> import Data.Fixed
 -- >>> import Data.Int
@@ -59,7 +60,11 @@ import           Data.Functor.Identity (Identity (..))
 -- >>> let y = 33
 {- ORMOLU_ENABLE -}
 
--- >>> y
+{- Other tests (disabled)
+>>> data SomeData = SomeData !Int64 !Word8 !Double deriving (Generic, Show, Flat,Eq )
+>>> test $ SomeData 1 1 1
+(True,80,"00000010 00000001 00111111 11110000 00000000 00000000 00000000 00000000 00000000 00000000")
+-}
 
 -- | @since 0.4.4
 #if MIN_VERSION_base(4,8,0)
