@@ -2,6 +2,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
 {-# LANGUAGE ScopedTypeVariables    #-}
+{-# LANGUAGE InstanceSigs #-}
 
 -- |<https://gist.github.com/mfuerstenau/ba870a29e16536fdbaba ZigZag encoding> of signed integrals.
 module Data.ZigZag (ZigZag(..)) where
@@ -119,9 +120,11 @@ instance ZigZag Int32 Word32
 instance ZigZag Int64 Word64
 
 instance ZigZag Integer Natural where
+  zigZag :: Integer -> Natural
   zigZag x
     | x >= 0 = fromIntegral $ x `shiftL` 1
     | otherwise = fromIntegral $ negate (x `shiftL` 1) - 1
 
+  zagZig :: Natural -> Integer
   zagZig u = let s = fromIntegral u
              in ((s `shiftR` 1) `xor` negate (s .&. 1))
